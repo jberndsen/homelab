@@ -85,8 +85,8 @@ current network and subscription design:
 **STOP:** Do not stop the old `nuc` Plex server or mark Plex accepted until the
 owner chooses one of: place all Plex players on the Plex subnet, obtain the
 needed Plex subscription, or replace Plex with an accepted alternative. The
-separate [Jellyfin experiment](11-jellyfin-experiment.md) is the current
-non-destructive alternative evaluation.
+separate [Jellyfin plan](11-jellyfin.md) is the current non-destructive
+alternative.
 
 ## Rollback
 

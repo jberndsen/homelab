@@ -1,17 +1,17 @@
-# Jellyfin experiment
+# Jellyfin
 
-This is an evaluation of Jellyfin as a possible Plex replacement, not a
-numbered migration cutover. It must run alongside the new K3s Plex deployment
-and the still-running old `nuc` Plex server. Do not stop, scale down, alter,
-or copy configuration from either Plex server while this experiment is active.
+Jellyfin is deployed as a separate media service while the new K3s Plex
+deployment and the still-running old `nuc` Plex server remain available. Do
+not stop, scale down, alter, or copy configuration from either Plex server
+while Jellyfin is being accepted.
 
 ## Objective and acceptance question
 
-Determine whether Jellyfin can play the existing NAS Movies and TV libraries
-from the laptop on `192.168.1.118/24` and representative Plex-client subnets
-through the existing Traefik ingress, without Plex's Remote Watch Pass or Plex
-Pass requirement. This is a user-experience test, not a claim that Jellyfin
-will satisfy every Plex feature or client requirement.
+Deploy Jellyfin with the existing NAS Movies and TV libraries and verify
+playback from the laptop on `192.168.1.118/24` and representative client
+subnets through the existing Traefik ingress, without Plex's Remote Watch Pass
+or Plex Pass requirement. Record any client or feature differences before
+deciding whether to retire Plex.
 
 Jellyfin has no account-claim-token flow. Create a fresh local administrator
 through its first-run setup; do not import Plex metadata, user data, watch
@@ -19,7 +19,7 @@ history, or configuration.
 
 ## Preconditions and owner gates
 
-1. **Owner:** confirm that this parallel experiment is acceptable and that the
+1. **Owner:** confirm that this parallel Jellyfin deployment is acceptable and that the
    NAS libraries remain read-only to Jellyfin.
 2. **Agent:** verify that the K3s node remains Ready, `media-nfs` is Bound,
    Traefik remains reachable at `192.168.30.103`, and current Plex workloads
@@ -32,12 +32,24 @@ history, or configuration.
    intended client subnet.
 5. **Agent:** resolve a current stable `jellyfin/jellyfin` image to an immutable
    manifest digest, record the resolved version/digest in the review, and use
-   that digest in the experiment manifests. Do not deploy a floating tag.
+   that digest in the Jellyfin manifests. Do not deploy a floating tag.
+
+### Manifest sizing and image-resolution record (2026-07-28)
+
+- The K3s node was Ready; `media-nfs` and `plex-config` were Bound; and the
+  K3s Plex deployment was Available.
+- The VM root filesystem had 81 GiB free. Jellyfin requests 10 GiB each
+  for `jellyfin-config` and `jellyfin-cache`. These are starting planning
+  allocations, not hard quotas; monitor actual usage during scans and software
+  transcoding.
+- The official Docker Hub `jellyfin/jellyfin:latest` stable manifest list
+  resolved to `sha256:aefb67e6a7ff1debdd154a78a7bbb780fd0c873d8639210a7f6a2016ad2b35db`.
+  The manifests pin this digest.
 
 ## Proposed isolated Kubernetes design
 
-Create a separate `infrastructure/node-main/09-jellyfin-experiment/`
-Kustomization only after the above gates pass:
+Create `infrastructure/node-main/09-jellyfin/` only after the above gates
+pass:
 
 - Namespace: `media`; labels: `app.kubernetes.io/name: jellyfin` and
   `app.kubernetes.io/part-of: media-stack`.
@@ -65,7 +77,7 @@ guidance supports a subdomain route, which matches the existing Traefik design.
 After manifests are reviewed and the DNS gate passes:
 
 ```bash
-kubectl apply -k infrastructure/node-main/09-jellyfin-experiment
+kubectl apply -k infrastructure/node-main/09-jellyfin
 kubectl -n media rollout status deployment/jellyfin --timeout=600s
 kubectl -n media get pod,service,ingress,pvc -l app.kubernetes.io/name=jellyfin
 kubectl -n media logs deployment/jellyfin
@@ -79,7 +91,7 @@ At `http://jellyfin.home.arpa`:
 3. Allow the initial scan to finish. Verify that file browsing and metadata
    matching do not require NAS write access.
 4. Keep DLNA disabled. Do not configure internet exposure, NAT forwarding, or
-   a public DNS name for this experiment.
+   a public DNS name for Jellyfin.
 
 ## Acceptance tests
 
@@ -99,9 +111,9 @@ Run each check before considering Jellyfin as a replacement candidate:
 
 ## Decision, rollback, and cleanup
 
-The owner makes the replacement decision only after all acceptance tests pass.
-If Jellyfin is accepted, write a dedicated Plex retirement/cutover plan before
-stopping either Plex server or changing Homepage widgets. If it is rejected:
+The owner makes the Plex retirement decision only after all acceptance tests
+pass. Write a dedicated Plex retirement/cutover plan before stopping either
+Plex server or changing Homepage widgets. If Jellyfin needs to be withdrawn:
 
 ```bash
 kubectl -n media scale deployment/jellyfin --replicas=0
@@ -109,4 +121,4 @@ kubectl -n media scale deployment/jellyfin --replicas=0
 
 Keep the Jellyfin local PVCs for diagnosis until the owner explicitly approves
 their deletion. Never delete NAS media. Restarting or retaining either Plex
-server remains independent of this experiment.
+server remains independent of Jellyfin deployment.
