@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: media-nfs-permission-test
+  namespace: media
+  labels:
+    app.kubernetes.io/name: media-nfs-permission-test
+    app.kubernetes.io/part-of: media-stack
+spec:
+  restartPolicy: Never
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 988
+  containers:
+    - name: test
+      image: python:3.13-alpine@sha256:399babc8b49529dabfd9c922f2b5eea81d611e4512e3ed250d75bd2e7683f4b0
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+      command:
+        - python3
+        - -c
+        - |
+          import os
+
+          test_id = f".k3s-nfs-test-{os.environ['HOSTNAME']}"
+          directories = [
+              "/data/Downloads",
+              "/data/Video/Movies",
+              "/data/Video/TV Shows",
+              "/data/Music/Lossless",
+          ]
+          test_paths = []
+
+          def write_and_fsync(path):
+              with open(path, "w", encoding="utf-8") as file:
+                  file.write("NFS permission test\\n")
+                  file.flush()
+                  os.fsync(file.fileno())
+
+          try:
+              print(f"uid={os.getuid()} gid={os.getgid()} groups={os.getgroups()}")
+              for directory in directories:
+                  print(directory, os.stat(directory))
+                  os.listdir(directory)
+                  operation = os.path.join(directory, f"{test_id}.operation")
+                  renamed = f"{operation}.renamed"
+                  test_paths.extend([operation, renamed])
+                  write_and_fsync(operation)
+                  os.rename(operation, renamed)
+                  os.unlink(renamed)
+
+              source = os.path.join(directories[0], f"{test_id}.source")
+              test_paths.append(source)
+              write_and_fsync(source)
+              source_inode = os.stat(source).st_ino
+              for directory in directories[1:]:
+                  link = os.path.join(directory, f"{test_id}.link")
+                  test_paths.append(link)
+                  os.link(source, link)
+                  assert os.stat(link).st_ino == source_inode, "hardlink inode mismatch"
+
+              print("NFS permission, fsync, and hardlink test passed")
+          finally:
+              for path in reversed(test_paths):
+                  try:
+                      os.unlink(path)
+                  except FileNotFoundError:
+                      pass
+      volumeMounts:
+        - name: media
+          mountPath: /data
+  volumes:
+    - name: media
+      persistentVolumeClaim:
+        claimName: media-nfs

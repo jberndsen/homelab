@@ -1,0 +1,6 @@
+# K3s server configuration for /etc/rancher/k3s/config.yaml.
+# After installing this file on the VM, run:
+#   sudo systemctl restart k3s
+#   sudo k3s secrets-encrypt rotate-keys
+#   sudo systemctl restart k3s
+secrets-encryption: true

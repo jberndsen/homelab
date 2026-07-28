@@ -1,0 +1,201 @@
+services:
+  plex: 
+    image: lscr.io/linuxserver/plex
+    container_name: plex
+    devices:
+       - /dev/dri:/dev/dri     
+    ports:
+       - 32400:32400
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - VERSION=docker
+    volumes:
+      - nas-series:/media/series
+      - nas-movies:/media/movies
+      - plex-config:/config
+    restart: unless-stopped 
+    
+  transmission:
+    image: haugene/transmission-openvpn
+    container_name: transmission
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    volumes:
+      - nas-downloads:/data
+      - transmission-config:/config
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - OPENVPN_PROVIDER=${OPENVPN_PROVIDER}
+      - NORDVPN_COUNTRY=${NORDVPN_COUNTRY}
+      - NORDVPN_PROTOCOL=${NORDVPN_PROTOCOL}
+      - LOCAL_NETWORK=${TRANSMISSION_LOCAL_NETWORK}
+      - TRANSMISSION_RPC_USERNAME=${TRANSMISSION_RPC_USERNAME}
+      - TRANSMISSION_RPC_PASSWORD=${TRANSMISSION_RPC_PASSWORD}
+      - TRANSMISSION_RPC_AUTHENTICATION_REQUIRED=${TRANSMISSION_RPC_AUTHENTICATION_REQUIRED}
+      - HEALTH_CHECK_HOST=${HEALTH_CHECK_HOST}
+      - TRANSMISSION_DOWNLOAD_DIR=${TRANSMISSION_DOWNLOAD_DIR}
+      - TRANSMISSION_INCOMPLETE_DIR=${TRANSMISSION_INCOMPLETE_DIR}
+      - TRANSMISSION_WATCH_DIR=${TRANSMISSION_WATCH_DIR}
+      - WEBPROXY_ENABLED=true
+      - WEBPROXY_PORT=8888  
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+    ports:
+      - 9091:9091
+    secrets:
+      - openvpn_creds
+#movies   
+  radarr:
+    image: lscr.io/linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - radarr-config:/config
+      - nas-downloads:/data
+      - nas-movies:/movies
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+  
+#series
+  sonarr:
+    image: lscr.io/linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - sonarr-config:/config
+      - nas-downloads:/data
+      - nas-series:/series
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+      
+#music
+  lidarr:
+    image: lscr.io/linuxserver/lidarr
+    container_name: lidarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - lidarr-config:/config
+      - nas-downloads:/data
+      - nas-music:/music
+    ports:
+      - 8686:8686
+    restart: unless-stopped
+
+#indexers
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - prowlarr-config:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+  
+  flaresolverr:
+    # DockerHub mirror flaresolverr/flaresolverr:latest
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${FLARE_SOLVERR_LOG_LEVEL:-info}
+      - LOG_HTML=${FLARE_SOLVERR_LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${FLARE_SOLVERR_CAPTCHA_SOLVER:-none}
+      - TZ=${TIMEZONE}
+    ports:
+      - 8191:8191
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=21600 #6 hours
+    security_opt:
+      - apparmor=unconfined
+    volumes:
+       - /var/run/docker.sock:/var/run/docker.sock
+
+#dashboard
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+    ports:
+      - 3000:3000
+    volumes:
+      - homepage-config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+
+volumes:
+  nas-downloads:
+    name: nas-downloads
+    driver_opts:
+      type: nfs
+      o: addr=${NAS_LOCATION},rw,nfsvers=3  
+      device: :${NAS_SHARED_MEDIA_PATH}/Downloads
+
+  nas-movies:
+    name: nas-movies
+    driver_opts:
+      type: nfs
+      o: addr=${NAS_LOCATION},rw,nfsvers=3  
+      device: :${NAS_SHARED_MEDIA_PATH}/Video/Movies
+        
+  nas-series:
+    name: nas-series
+    driver_opts:
+      type: nfs
+      o: addr=${NAS_LOCATION},rw,nfsvers=3  
+      device: :${NAS_SHARED_MEDIA_PATH}/Video/TV Shows
+  
+  nas-music:
+    name: nas-music
+    driver_opts:
+      type: nfs
+      o: addr=${NAS_LOCATION},rw,nfsvers=3  
+      device: :${NAS_SHARED_MEDIA_PATH}/Music/Lossless
+
+  plex-config:
+    name: plex-config
+  transmission-config:
+    name: transmission-config
+  radarr-config:
+    name: radarr-config
+  sonarr-config:
+    name: sonarr-config
+  lidarr-config:
+    name: lidarr-config
+  prowlarr-config:
+    name: prowlarr-config
+  homepage-config:
+    name: homepage-config
+
+secrets:
+  openvpn_creds:
+    file: ./openvpn_creds
+

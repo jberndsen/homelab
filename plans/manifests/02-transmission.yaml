@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: transmission-config
+  namespace: media
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: transmission-baseline
+  namespace: media
+data:
+  settings.json: |
+    {
+      "bind-address-ipv4": "0.0.0.0",
+      "blocklist-enabled": false,
+      "cache-size-mb": 4,
+      "dht-enabled": true,
+      "download-dir": "/data/Downloads/completed",
+      "download-queue-enabled": false,
+      "download-queue-size": 15,
+      "encryption": 1,
+      "idle-seeding-limit": 2,
+      "idle-seeding-limit-enabled": true,
+      "incomplete-dir": "/data/Downloads/incomplete",
+      "incomplete-dir-enabled": true,
+      "lpd-enabled": false,
+      "peer-limit-global": 240,
+      "peer-limit-per-torrent": 60,
+      "peer-port": 51413,
+      "peer-port-random-on-start": false,
+      "pex-enabled": true,
+      "port-forwarding-enabled": false,
+      "ratio-limit": 0.1,
+      "ratio-limit-enabled": true,
+      "rpc-authentication-required": true,
+      "rpc-bind-address": "0.0.0.0",
+      "rpc-host-whitelist-enabled": false,
+      "rpc-port": 9091,
+      "rpc-url": "/transmission/",
+      "rpc-whitelist-enabled": false,
+      "seed-queue-enabled": false,
+      "speed-limit-down-enabled": false,
+      "speed-limit-up-enabled": false,
+      "start-added-torrents": false,
+      "tcp-enabled": true,
+      "umask": 2,
+      "utp-enabled": false,
+      "watch-dir": "/data/Downloads/watch",
+      "watch-dir-enabled": true
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transmission
+  namespace: media
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: transmission
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: transmission
+        app.kubernetes.io/part-of: media-stack
+    spec:
+      terminationGracePeriodSeconds: 60
+      initContainers:
+        - name: seed-config
+          image: docker.io/library/alpine@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
+          command: ["/bin/sh", "-ec"]
+          args:
+            - 'test -s /config/settings.json || cp /baseline/settings.json /config/settings.json'
+          volumeMounts:
+            - {name: config, mountPath: /config}
+            - {name: baseline, mountPath: /baseline}
+      containers:
+        - name: transmission
+          image: lscr.io/linuxserver/transmission@sha256:8ae5bb0b1be8289bc4d89f246639f50def76c5bc265eba7223bc56e6aa9e9182
+          imagePullPolicy: IfNotPresent
+          env:
+            - {name: PUID, value: "1000"}
+            - {name: PGID, value: "988"}
+            - {name: UMASK, value: "002"}
+            - {name: TZ, value: Europe/Amsterdam}
+            - {name: PEERPORT, value: "51413"}
+            - name: USER
+              valueFrom: {secretKeyRef: {name: transmission-rpc, key: username}}
+            - name: PASS
+              valueFrom: {secretKeyRef: {name: transmission-rpc, key: password}}
+          ports:
+            - {name: http, containerPort: 9091, protocol: TCP}
+          startupProbe: {tcpSocket: {port: http}, periodSeconds: 5, failureThreshold: 60}
+          readinessProbe: {tcpSocket: {port: http}, periodSeconds: 10, failureThreshold: 3}
+          volumeMounts:
+            - {name: config, mountPath: /config}
+            - {name: media, mountPath: /data}
+      volumes:
+        - name: config
+          persistentVolumeClaim: {claimName: transmission-config}
+        - name: media
+          persistentVolumeClaim: {claimName: media-nfs}
+        - name: baseline
+          configMap: {name: transmission-baseline}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: transmission, namespace: media}
+spec:
+  selector: {app.kubernetes.io/name: transmission}
+  ports: [{name: http, port: 9091, targetPort: http}]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: {name: transmission, namespace: media}
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: transmission.home.arpa
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: {service: {name: transmission, port: {name: http}}}

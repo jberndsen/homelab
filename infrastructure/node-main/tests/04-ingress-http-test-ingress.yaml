@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-http-test
+  namespace: media
+  labels:
+    app.kubernetes.io/name: ingress-http-test
+    app.kubernetes.io/part-of: media-stack
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: ingress-test.home.arpa
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ingress-http-test
+                port:
+                  name: http
