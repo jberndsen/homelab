@@ -109,6 +109,16 @@ Run each check before considering Jellyfin as a replacement candidate:
 5. Compare the required client experience with Plex: library browsing,
    playback, account/user needs, and any features that matter to the owner.
 
+### Observed direct-play acceptance (2026-07-28)
+
+- Browser playback from the migration laptop (`192.168.1.118/24`) passed
+  through `http://jellyfin.home.arpa`.
+- Playback on the NVIDIA Shield Android Jellyfin client also passed.
+- The owner has accepted direct play for the current use case. No deliberately
+  forced software-transcode case has been run, so software-transcode capacity
+  remains unvalidated and must not be assumed for a future client or media
+  format.
+
 ## Decision, rollback, and cleanup
 
 The owner makes the Plex retirement decision only after all acceptance tests
