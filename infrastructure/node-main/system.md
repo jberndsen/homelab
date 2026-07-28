@@ -33,3 +33,15 @@
 - Initial Plex migration will rely on direct play and software transcoding only. Hardware transcoding is deferred; it is not expected to be available and no Plex Pass subscription is present.
 - Plex is used through both browser and native clients. Remote Access and DLNA are not required. The initial replacement will be LAN-only through `http://plex.home.arpa` and Traefik, will not publish direct port `32400`, and must remain unpublished for remote access.
 - Homepage will retain its five explicit Plex, Sonarr, Radarr, Lidarr, and Prowlarr widgets. Docker/Kubernetes discovery and container-status integration are not required, so Homepage receives no Kubernetes API RBAC and no runtime socket.
+
+## Migrated workloads
+
+- Prowlarr was migrated on 2026-07-28. It runs as a single replica in the
+  `media` namespace from the pinned LinuxServer image digest declared in
+  `05-prowlarr/02-deployment.yaml`. Its 2 GiB `/config` PVC uses the
+  node-local `local-path` StorageClass, and it is available on the isolated
+  LAN at `http://prowlarr.home.arpa` through Traefik. The old Docker Compose
+  container on `node-secondary` is stopped and retained intact as rollback.
+- FlareSolverr is intentionally decommissioned because it is broken; it is
+  not a K3s workload. Prowlarr must not retain a FlareSolverr proxy
+  configuration.

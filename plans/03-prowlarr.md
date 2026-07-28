@@ -25,7 +25,9 @@ At `http://prowlarr.home.arpa`:
 2. Wait for restart; verify version, authentication, logs, and health.
 3. Disable or leave failing old Radarr/Sonarr/Lidarr application integrations
    until each destination step exists. Do not run Full Sync to stale URLs.
-4. Test every relevant indexer.
+4. Remove any restored FlareSolverr proxy configuration. FlareSolverr was
+   intentionally decommissioned and will not be migrated.
+5. Test every relevant indexer.
 
 STOP on database downgrade errors, failed indexers, or missing restored data.
 
