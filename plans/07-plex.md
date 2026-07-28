@@ -60,6 +60,34 @@ ssh jeroen@192.168.1.33 'cd /home/jeroen && docker compose stop plex'
 Monitor VM disk use; 30 GiB is a starting allocation and Plex metadata can
 grow beyond it.
 
+## Observed playback blocker (2026-07-28)
+
+The fresh K3s Plex server is claimed and available at `http://plex.home.arpa`.
+Its configuration PVC is bound, its media mount is read-only at `/data`, and
+the Movies and TV libraries can be created and scanned. The old claimed `nuc`
+Plex server remains running.
+
+Browser playback from the migration laptop cannot be accepted under the
+current network and subscription design:
+
+- The laptop is `192.168.1.118/24` on the `192.168.1.0/24` subnet.
+- `plex.home.arpa` resolves to Traefik at `192.168.30.103`; traffic reaches it
+  through gateway `192.168.1.1`, so the browser and ingress are on distinct
+  subnets/VLANs.
+- Plex is therefore classifying the playback as remote and requests a Remote
+  Watch Pass or Plex Pass. This is Plex's documented behavior for a player
+  that cannot make a same-subnet local connection; the documented extra LAN
+  Networks preference itself requires an active Plex Pass.
+- The current design intentionally has no Plex Pass, publishes no direct
+  `32400` port, and keeps Plex behind Traefik. Do not weaken authentication or
+  use an unauthenticated-network exception as a workaround.
+
+**STOP:** Do not stop the old `nuc` Plex server or mark Plex accepted until the
+owner chooses one of: place all Plex players on the Plex subnet, obtain the
+needed Plex subscription, or replace Plex with an accepted alternative. The
+separate [Jellyfin experiment](11-jellyfin-experiment.md) is the current
+non-destructive alternative evaluation.
+
 ## Rollback
 
 ```bash
