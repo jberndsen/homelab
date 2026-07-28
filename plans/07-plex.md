@@ -25,7 +25,7 @@ Then:
 ```bash
 chmod 600 plans/runtime/plex-claim.yaml
 kubectl apply -f plans/runtime/plex-claim.yaml
-kubectl apply -f plans/manifests/07-plex.yaml
+kubectl apply -k infrastructure/node-main/08-plex
 kubectl -n media rollout status deployment/plex --timeout=600s
 kubectl -n media logs deployment/plex
 ```
