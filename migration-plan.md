@@ -151,9 +151,9 @@ For each application:
 3. Create a fresh application administrator, connect only to the accepted
    K3s Radarr and Sonarr Services using their existing API keys, and configure
    OpenSubtitles.com as its single initial provider.
-4. Apply the agreed default profile to all existing and future Radarr/Sonarr
-   items: English required, Dutch optional, forced allowed, hearing-impaired
-   disabled, and embedded tracks accepted.
+4. Apply the agreed English-only default profile to all existing and future
+   Radarr/Sonarr items. Embedded English tracks satisfy the requirement, so
+   external subtitles are downloaded only when needed.
 5. Test one movie and one episode before enabling the automatic search for the
    full existing library. Keep generated subtitle files and the PVC when
    diagnosing or rolling back.

@@ -18,12 +18,10 @@ accepted K3s Radarr and Sonarr instances.
   for `bazarr.home.arpa`; do not expose a direct LAN port.
 - Create a fresh Bazarr administrator and retain the credentials only in the
   password manager.
-- Configure a single default language profile for all existing and future
-  Radarr movies and Sonarr episodes: English is required; Dutch is requested
-  when available but must not block English; forced subtitles are allowed;
-  hearing-impaired subtitles are disabled. Embedded English/Dutch tracks
-  satisfy the respective requirement, so external subtitles are downloaded
-  only when needed.
+- Configure a single English-only default language profile for all existing
+  and future Radarr movies and Sonarr episodes. Embedded English tracks
+  satisfy the requirement, so external subtitles are downloaded only when
+  needed.
 - Use OpenSubtitles.com as the sole initial provider. Its credentials stay in
   Bazarr's local configuration, not in version control. Do not configure
   OpenSubtitles.org: Bazarr supports it only for VIP users.
@@ -120,10 +118,9 @@ At `http://bazarr.home.arpa`:
    LAN UI.
 3. Add Radarr at `http://radarr:7878` with its existing API key. Save and run
    Bazarr's connection test. Repeat for Sonarr at `http://sonarr:8989`.
-4. Create and assign the agreed default language profile to both the movie and
-   series collections: English mandatory; Dutch optional; forced permitted;
-   hearing-impaired disabled. Enable embedded-subtitle detection so an
-   existing embedded English or Dutch track is not downloaded again.
+4. Create and assign the agreed English-only default language profile to both
+   the movie and series collections. Enable embedded-subtitle detection so an
+   existing embedded English track is not downloaded again.
 5. Add OpenSubtitles.com as the only provider, enter its account credentials,
    save, and run the provider test. Do not add OpenSubtitles.org or a second
    provider during this step.
