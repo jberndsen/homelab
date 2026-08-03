@@ -20,6 +20,18 @@
   `http://jellyfin.home.arpa` from the laptop on `192.168.1.118/24` and from
   the NVIDIA Shield Android client. Software-transcode capacity is
   unvalidated.
+- Bazarr is deployed in the `media` namespace at `http://bazarr.home.arpa`,
+  using LinuxServer `v1.6.0-ls356` pinned to manifest digest
+  `sha256:ab401a0f361cfad328e444838b13d5b334b189d0f556fc91a3623eb581df36df`.
+  It has healthy local `bazarr-config` storage, a ClusterIP Service, and a
+  Traefik Ingress. Bazarr uses an English-only profile with embedded-subtitle
+  detection, connects to the K3s Radarr, Sonarr, and Jellyfin Services, and
+  uses OpenSubtitles.com as its sole provider. Manual movie and episode
+  subtitle downloads and embedded-subtitle detection passed. The initial
+  existing-library search downloaded 21 subtitles before the OpenSubtitles.com
+  daily limit was reached; the provider is temporarily throttled. Jellyfin's
+  connection test passed, but an automatic metadata-refresh after a subtitle
+  download remains unverified until the provider allowance resets.
 - Homepage is deployed to K3s in the `media` namespace at
   `http://homepage.home.arpa`, with a ClusterIP Service and Traefik Ingress.
   Its pod, Service, and ingress health checks pass, but browser/widget
