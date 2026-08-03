@@ -154,7 +154,10 @@ For each application:
 4. Apply the agreed English-only default profile to all existing and future
    Radarr/Sonarr items. Embedded English tracks satisfy the requirement, so
    external subtitles are downloaded only when needed.
-5. Test one movie and one episode before enabling the automatic search for the
+5. Configure Bazarr's optional Jellyfin integration with a dedicated API key
+   and in-cluster URL, so Jellyfin refreshes movie and episode metadata after
+   subtitle downloads.
+6. Test one movie and one episode before enabling the automatic search for the
    full existing library. Keep generated subtitle files and the PVC when
    diagnosing or rolling back.
 

@@ -27,6 +27,10 @@ accepted K3s Radarr and Sonarr instances.
   OpenSubtitles.org: Bazarr supports it only for VIP users.
 - Connect through in-cluster DNS using the existing Radarr and Sonarr API
   keys: `http://radarr:7878` and `http://sonarr:8989`.
+- Configure the optional Jellyfin integration using `http://jellyfin:8096`, a
+  dedicated Jellyfin API key named `Bazarr`, and the existing Movies and TV
+  libraries. Enable immediate movie and series metadata refresh after a
+  subtitle download. Keep the API key only in Bazarr's local configuration.
 
 Bazarr does not independently discover media; it works from the media that
 Radarr and Sonarr index. Its upstream project documents both the Radarr/Sonarr
@@ -122,15 +126,20 @@ At `http://bazarr.home.arpa`:
    the movie and series collections. Enable embedded-subtitle detection so an
    existing embedded English track is not downloaded again.
 5. Add OpenSubtitles.com as the only provider, enter its account credentials,
-   save, and run the provider test. Do not add OpenSubtitles.org or a second
-   provider during this step.
-6. Enable automatic searches/downloads for newly added Radarr/Sonarr items.
+   save, and confirm that it is enabled. Do not add OpenSubtitles.org or a
+   second provider during this step.
+6. Create a dedicated Jellyfin API key named `Bazarr`, then configure Bazarr's
+   Jellyfin integration with `http://jellyfin:8096`. Select the existing Movies
+   and TV libraries and enable immediate movie and series metadata refresh
+   after a subtitle download. Save and test the connection. Keep the API key
+   only in Jellyfin and Bazarr; never add it to Git.
+7. Enable automatic searches/downloads for newly added Radarr/Sonarr items.
    First perform a manual missing-subtitle search for one representative movie
    and one representative episode. Confirm that each selected subtitle is
    written beside the correct file below `/data/Video/Movies` or
    `/data/Video/TV Shows`, is readable by UID `1000`/GID `988`, and plays in a
    representative client.
-7. After those two tests pass, start the full automatic search for the
+8. After those two tests pass, start the full automatic search for the
    existing Radarr and Sonarr libraries. Allow Bazarr/OpenSubtitles to throttle
    requests; do not add providers or bypass rate limits to accelerate it.
 
@@ -148,17 +157,19 @@ Required acceptance:
   `http://bazarr.home.arpa` requires the new login.
 - Both `http://radarr:7878` and `http://sonarr:8989` connection tests pass in
   Bazarr.
-- The OpenSubtitles.com provider test passes and no OpenSubtitles.org provider
-  is enabled.
+- OpenSubtitles.com is enabled as the sole provider, and no OpenSubtitles.org
+  provider is enabled.
+- Bazarr's Jellyfin connection test passes; a downloaded subtitle refreshes
+  the corresponding Jellyfin movie or episode metadata.
 - A controlled movie and episode each have the expected subtitle behavior;
   subtitles are not duplicated where embedded tracks satisfy the profile.
 - Newly indexed test content triggers Bazarr automatically, and the full
   existing-library queue proceeds without repeated authentication or
   filesystem-permission errors.
 
-Record the actual image version/digest, Bazarr URL, observed provider test,
-and acceptance result in `infrastructure/node-main/system.md` **only after**
-this step has passed.
+Record the actual image version/digest, Bazarr URL, observed provider and
+Jellyfin integration tests, and acceptance result in
+`infrastructure/node-main/system.md` **only after** this step has passed.
 
 ## Rollback
 
