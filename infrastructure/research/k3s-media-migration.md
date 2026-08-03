@@ -16,7 +16,7 @@ which must be verified before a workload is applied.
   read/write access to the existing media directories. The NAS remains the
   media authority. Keep application databases/configuration on local K3s
   storage: Servarr explicitly warns that SQLite AppData on NFS/SMB will
-  eventually corrupt. [Lidarr FAQ](https://wiki.servarr.com/lidarr/faq)
+  eventually corrupt. [Radarr FAQ](https://wiki.servarr.com/radarr/faq)
 - The desired outcome is a fresh K3s deployment for each app, using each
   app's supported export/backup restore path; Plex history is intentionally
   discarded. Do not copy Compose volumes or application configuration
@@ -117,7 +117,7 @@ tested NFS backup/restore path.
 ## Servarr paths: `/data` is the hardlink-safe layout
 
 `/movies`, `/tv` (or `/series`), `/music`, and `/downloads` are **not** paths
-required by Radarr, Sonarr, or Lidarr. They are convenient optional paths in
+required by Radarr or Sonarr. They are convenient optional paths in
 some image examples. For example, LinuxServer's Sonarr example labels `/tv`
 and `/downloads` optional and explicitly says that this easy layout loses
 hardlinks and atomic moves; its Radarr example likewise exposes optional
@@ -129,7 +129,7 @@ The authoritative Servarr recommendation is a **single common volume mounted
 at the same in-container path, such as `/data`, in Transmission and every
 importing *arr Pod**. It gives the concrete layout `data/downloads/...` and
 `data/media/{movies,music,tv}`, mounting all of it as `/data` in Radarr,
-Sonarr, and Lidarr. Then download and library folders appear as one filesystem
+and Sonarr. Then download and library folders appear as one filesystem
 to the application, making a hardlink and atomic rename possible. Separate
 `/downloads` and `/movies`/`/tv` mounts can look like different filesystems
 inside a container even when the host storage is one filesystem, forcing
@@ -139,8 +139,8 @@ copy-and-delete instead. [Servarr Docker Guide](https://wiki.servarr.com/docker-
 **Conclusion for this migration:** retain the proposed unified mount but adopt
 the Servarr naming precisely: mount the relevant NAS common parent at `/data`,
 set Transmission's download directory beneath `/data/downloads` (optionally
-separate torrent categories), and configure Radarr/Sonarr/Lidarr roots beneath
-`/data/media/movies`, `/data/media/tv`, and `/data/media/music`. The actual NAS
+separate torrent categories), and configure Radarr/Sonarr roots beneath
+`/data/media/movies` and `/data/media/tv`. The actual NAS
 directory names may differ, but the internal hierarchy and the one shared
 mount must be identical. This supersedes the earlier illustrative
 `/data/movies`, `/data/series`, `/data/music` wording where the NAS permits the
@@ -219,7 +219,7 @@ The prescribed dependency order is sound, with these concrete gates:
    used only when Cloudflare is detected. Only after that, create/test each
    Prowlarr application integration. [Prowlarr FAQ](https://wiki.servarr.com/prowlarr/faq),
    [Prowlarr settings](https://wiki.servarr.com/prowlarr/settings)
-5. **Radarr, Sonarr, Lidarr**: for each app, take/download its built-in backup
+5. **Radarr and Sonarr**: for each app, take/download its built-in backup
    before any upgrade/cutover. Deploy it fresh with local `/config`, canonical
    NAS mounts and a stable/current app version; restore through **System →
    Backup → Restore Backup**. A backup restored across changed paths does not
@@ -228,8 +228,7 @@ The prescribed dependency order is sound, with these concrete gates:
    Transmission, test the connection, inspect an existing completed download,
    and perform one controlled import. Servarr's documented Restore Backup flow
    is available for [Radarr](https://wiki.servarr.com/radarr/faq),
-   [Sonarr](https://wiki.servarr.com/sonarr/faq), and
-   [Lidarr](https://wiki.servarr.com/lidarr/faq). Do **not** add a Remote Path
+   [Sonarr](https://wiki.servarr.com/sonarr/faq). Do **not** add a Remote Path
    Mapping when all Pods share the same canonical path; add one only when the
    downloader reports a different path, and test it with an actual import.
 6. **Plex**: deploy a fresh local config/metadata store and mount media

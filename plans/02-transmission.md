@@ -2,7 +2,7 @@
 
 ## Preconditions and owner gate
 
-- Steps 1–2 passed.
+- Steps 1 passed.
 - Owner confirms the old Transmission queue is empty. Check again immediately
   before cutover; do not run both clients against an active queue.
 - Owner chooses a new RPC password; do not reuse the password committed in the

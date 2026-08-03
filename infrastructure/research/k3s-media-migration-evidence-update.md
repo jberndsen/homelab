@@ -19,7 +19,7 @@ manifests without addressing the gates below**. The most important corrections
 are:
 
 1. Use one NFS mount of the common `media` parent at `/data` in Transmission,
-   Radarr, Sonarr, and Lidarr. Separate download/library PVs or separate mounts
+   Radarr and Sonarr. Separate download/library PVs or separate mounts
    recreate the filesystem boundary that the Servarr layout is intended to
    avoid and can make hardlinks fail even when the server directories reside
    on the same NAS filesystem. Servarr's documented layout is a single common
@@ -102,9 +102,9 @@ are:
   size is likewise not guaranteed to act as a hard filesystem quota. K3s
   documents local-path as its default local storage provisioner.
   [K3s storage](https://docs.k3s.io/add-ons/storage)
-- `/config` for Transmission, Prowlarr, Radarr, Sonarr, Lidarr, and Plex must
+- `/config` for Transmission, Prowlarr, Radarr, Sonarr, and Plex must
   remain on separate local-path PVCs. Servarr warns that its SQLite database on
-  NFS/SMB will eventually corrupt. [Lidarr FAQ](https://wiki.servarr.com/lidarr/faq)
+  NFS/SMB will eventually corrupt. [Radarr FAQ](https://wiki.servarr.com/radarr/faq)
 - For Plex, mount only the movie and TV paths it needs and set those
   `volumeMounts` read-only. Kubernetes notes that `readOnly` is per container
   mount, not a change to the underlying volume. [Kubernetes volumes](https://kubernetes.io/docs/concepts/storage/volumes/#read-only-mounts)
@@ -302,7 +302,7 @@ be a materially different network design, not a prerequisite implied by K3s.
   newer application version cannot be used by an older version; the tag name
   alone is not proof. [Prowlarr FAQ](https://wiki.servarr.com/prowlarr/faq)
 - A restored backup may contain application URLs, API keys, and sync settings
-  that still target the old Radarr/Sonarr/Lidarr endpoints. Review these before
+  that still target the old Radarr/Sonarr endpoints. Review these before
   permitting a sync. Point in-cluster application entries at ClusterIP DNS as
   each destination exists, test them, and only then enable the intended sync
   level. Prowlarr documents that Full Sync overwrites many destination indexer
@@ -311,21 +311,20 @@ be a materially different network design, not a prerequisite implied by K3s.
   intended indexer the same tag; an untagged proxy is disabled and it is used
   only when Cloudflare is detected. [Prowlarr FlareSolverr settings](https://wiki.servarr.com/prowlarr/settings#indexer-proxies)
 
-### Radarr, Sonarr, and Lidarr
+### Radarr and Sonarr
 
 - For each app separately: trigger its built-in backup while healthy, download
   the ZIP off the host, then stop the old container before restoring. The
   built-in backup is the supported live workflow; the shutdown requirement in
   Servarr's documentation applies when copying AppData/database files directly,
   which this migration intentionally does not do.
-  [Radarr backup/restore](https://wiki.servarr.com/radarr/faq#how-do-i-backuprestore-radarr),
-  [Sonarr backup/restore](https://wiki.servarr.com/sonarr/faq#how-do-i-backuprestore-sonarr),
-  [Lidarr backup/restore](https://wiki.servarr.com/lidarr/faq#how-do-i-backuprestore-lidarr)
+  [Radarr backup/restore](https://wiki.servarr.com/radarr/faq#how-do-i-backuprestore-radarr)
+  and [Sonarr backup/restore](https://wiki.servarr.com/sonarr/faq#how-do-i-backuprestore-sonarr)
 - Restore only into the same or newer application/database version. After
   restore, authentication and API keys come from the backup, not a Kubernetes
   Secret, so verify access before judging an HTTP probe unhealthy.
-- Change roots to `/data/Video/Movies`, `/data/Video/TV Shows`, and
-  `/data/Music/Lossless`; configure Transmission to report paths under
+- Change roots to `/data/Video/Movies` and `/data/Video/TV Shows`; configure
+  Transmission to report paths under
   `/data/Downloads`. Do not add a Remote Path Mapping when both sides see the
   same path. Servarr defines mappings as translation for a path the app cannot
   otherwise access. [Sonarr Remote Path Mapping](https://wiki.servarr.com/sonarr/settings#remote-path-mappings)

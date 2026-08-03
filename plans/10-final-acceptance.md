@@ -19,8 +19,8 @@ Required:
 - every local config PVC Bound; `media-nfs` Bound with reclaim policy Retain
 - each hostname works from Default and Servers VLAN clients
 - Transmission uses NordVPN and fails closed
-- Prowlarr indexers and all three application integrations test successfully
-- Radarr/Sonarr/Lidarr import and hardlink tests passed
+- Prowlarr indexers and both application integrations test successfully
+- Radarr/Sonarr import and hardlink tests passed
 - Plex browser and native-client playback passed; Remote Access/DLNA/direct
   32400 remain disabled
 - every Homepage link/widget works without runtime socket or Kubernetes RBAC

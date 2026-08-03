@@ -15,13 +15,18 @@ kubectl -n media rollout status deployment/sonarr --timeout=300s
 
 At `http://sonarr.home.arpa` restore the ZIP, then:
 
-1. Change the series root to `/data/Video/TV Shows` and update series entries
-   without moving existing files.
-2. Configure/test Transmission at `http://transmission:9091`; use the existing
+1. Add `/data/Video/TV Shows` as a root folder. Then use **Series → Mass
+   Editor** to select every existing series and change its root folder to that
+   path. Do not enable any option that moves existing files: this is a database
+   path reassignment because the files are already on the NAS.
+2. Run a refresh/scan after the reassignment. In **System → Tasks**, run
+   **Check Health** and confirm there is no missing `/series` root-folder
+   warning before removing the old root-folder record.
+3. Configure/test Transmission at `http://transmission:9091`; use the existing
    series category if applicable. Add no Remote Path Mapping.
-3. Update Prowlarr's Sonarr URL to `http://sonarr:8989`, test, then enable the
+4. Update Prowlarr's Sonarr URL to `http://sonarr:8989`, test, then enable the
    intended sync level.
-4. Rescan and import one controlled completed download. Confirm expected
+5. Rescan and import one controlled completed download. Confirm expected
    source/destination inode equality, ownership/mode, and application health.
 
 STOP on any failed gate.

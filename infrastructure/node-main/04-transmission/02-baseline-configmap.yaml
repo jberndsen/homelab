@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: transmission-baseline
+  namespace: media
+  labels:
+    app.kubernetes.io/name: transmission
+    app.kubernetes.io/part-of: media-stack
+data:
+  settings.json: |
+    {
+      "bind-address-ipv4": "0.0.0.0",
+      "blocklist-enabled": false,
+      "cache-size-mb": 4,
+      "dht-enabled": true,
+      "download-dir": "/data/Downloads/completed",
+      "download-queue-enabled": true,
+      "download-queue-size": 15,
+      "encryption": 1,
+      "idle-seeding-limit": 2,
+      "idle-seeding-limit-enabled": true,
+      "incomplete-dir": "/data/Downloads/incomplete",
+      "incomplete-dir-enabled": true,
+      "lpd-enabled": false,
+      "peer-limit-global": 240,
+      "peer-limit-per-torrent": 60,
+      "peer-port": 51413,
+      "peer-port-random-on-start": false,
+      "pex-enabled": true,
+      "port-forwarding-enabled": false,
+      "ratio-limit": 0.1,
+      "ratio-limit-enabled": true,
+      "rpc-authentication-required": true,
+      "rpc-bind-address": "0.0.0.0",
+      "rpc-host-whitelist-enabled": false,
+      "rpc-port": 9091,
+      "rpc-url": "/transmission/",
+      "rpc-whitelist-enabled": false,
+      "seed-queue-enabled": false,
+      "speed-limit-down-enabled": false,
+      "speed-limit-up-enabled": false,
+      "start-added-torrents": true,
+      "tcp-enabled": true,
+      "umask": 2,
+      "utp-enabled": false,
+      "watch-dir": "/data/Downloads/watch",
+      "watch-dir-enabled": true
+    }

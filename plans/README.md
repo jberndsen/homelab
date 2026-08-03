@@ -23,8 +23,8 @@ preconditions, owner confirmations, validation, and rollback procedure.
 - Namespace: `media`.
 - NAS: one retained NFSv3 PV for
   `192.168.1.32:/var/nfs/shared/media`, mounted once as `/data`.
-- Real paths: `/data/Downloads`, `/data/Video/Movies`,
-  `/data/Video/TV Shows`, and `/data/Music/Lossless`.
+- Real paths: `/data/Downloads`, `/data/Video/Movies`, and
+  `/data/Video/TV Shows`.
 - App configuration: one local-path PVC per stateful application.
 - LinuxServer images: `PUID=1000`, `PGID=988`, `UMASK=002`, and
   `TZ=Europe/Amsterdam`; do not force their init process to UID 1000.
@@ -32,8 +32,10 @@ preconditions, owner confirmations, validation, and rollback procedure.
 - DNS: individual UniFi A records under `home.arpa`.
 - All K3s workload egress intentionally follows VLAN 30's NordVPN route for
   this first migration. A dedicated Transmission network identity is deferred.
-- Every image reference is pinned to a registry manifest digest resolved on
-  2026-07-10. Digest updates are a separate reviewed operation.
+- Existing image references are pinned to registry manifest digests resolved
+  on 2026-07-10. Bazarr's stable image must be resolved to a reviewed
+  immutable digest immediately before its implementation; later digest updates
+  are separate reviewed operations.
 
 Pinned image metadata at resolution time:
 
@@ -43,7 +45,7 @@ Pinned image metadata at resolution time:
 | Prowlarr | `2.4.0.5397-ls153` |
 | Radarr | `6.2.1.10461-ls309` |
 | Sonarr | `4.0.19.2979-ls319` |
-| Lidarr | `3.1.0.4875-ls34` |
+| Bazarr | Resolve stable version and immutable digest at implementation time |
 | Plex | `1.43.2.10687-563d026ea-ls312` |
 | Homepage | `v1.13.2` |
 
@@ -54,7 +56,7 @@ Pinned image metadata at resolution time:
 3. [Prowlarr](03-prowlarr.md)
 4. [Radarr](04-radarr.md)
 5. [Sonarr](05-sonarr.md)
-6. [Lidarr](06-lidarr.md)
+6. [Bazarr — new service](12-bazarr.md)
 7. [Plex](07-plex.md)
 8. [Homepage](08-homepage.md)
 9. [Image updates and Watchtower decision](09-image-updates.md)

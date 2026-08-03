@@ -42,12 +42,11 @@ Current infrastructure facts are the system-of-record files in
 - Use retained, static NFS-backed Kubernetes storage. Do not introduce a CSI
   driver for this initial single-node deployment.
 - Mount the NAS `media` parent export exactly once at the common in-container
-  path `/data` in Transmission, Radarr, Sonarr, and Lidarr. Use its real,
+  path `/data` in Transmission, Radarr, and Sonarr. Use its real,
   case-sensitive subdirectories:
   - `/data/Downloads`
   - `/data/Video/Movies`
   - `/data/Video/TV Shows`
-  - `/data/Music/Lossless`
 - This common path is required for hardlink-safe imports. After each *arr
   backup restore, correct its root folders to the new `/data/...` locations;
   do not add a Remote Path Mapping when Transmission and the importer already
@@ -125,7 +124,7 @@ Current infrastructure facts are the system-of-record files in
 5. Test every restored indexer.
 6. Add/test Prowlarr’s integrations only after the destination apps exist.
 
-### 3. Radarr, Sonarr, Lidarr — one at a time
+### 3. Radarr and Sonarr — one at a time
 
 For each application:
 
@@ -143,7 +142,23 @@ For each application:
 8. Keep the old Compose service stopped but recoverable until the new service
    has passed these checks.
 
-### 4. Plex
+### 4. Bazarr — new K3s service
+
+1. Do not create a backup, stop a legacy container, or restore configuration:
+   Bazarr is a fresh service.
+2. Deploy it with a local `/config` PVC and the shared writable `/data` NFS
+   mount, behind a ClusterIP Service and `bazarr.home.arpa` Traefik Ingress.
+3. Create a fresh application administrator, connect only to the accepted
+   K3s Radarr and Sonarr Services using their existing API keys, and configure
+   OpenSubtitles.com as its single initial provider.
+4. Apply the agreed default profile to all existing and future Radarr/Sonarr
+   items: English required, Dutch optional, forced allowed, hearing-impaired
+   disabled, and embedded tracks accepted.
+5. Test one movie and one episode before enabling the automatic search for the
+   full existing library. Keep generated subtitle files and the PVC when
+   diagnosing or rolling back.
+
+### 5. Plex
 
 1. Do not export or copy Plex configuration, metadata, or watch history.
 2. Deploy a fresh server with its own local metadata PVC and NAS media mounted
@@ -157,7 +172,7 @@ For each application:
    native-client validation. Remote Access, DLNA, and direct port `32400`
    publication remain disabled.
 
-### 5. Homepage
+### 6. Homepage
 
 1. Deploy only after application URLs and health checks are stable.
 2. Recreate its configuration from source-controlled files; do not copy the

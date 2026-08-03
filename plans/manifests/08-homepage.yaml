@@ -30,14 +30,6 @@ data:
               type: radarr
               url: http://radarr:7878
               key: "{{HOMEPAGE_VAR_RADARR_KEY}}"
-        - Lidarr:
-            icon: lidarr.png
-            href: http://lidarr.home.arpa
-            description: Music management
-            widget:
-              type: lidarr
-              url: http://lidarr:8686
-              key: "{{HOMEPAGE_VAR_LIDARR_KEY}}"
         - Prowlarr:
             icon: prowlarr.png
             href: http://prowlarr.home.arpa

@@ -118,7 +118,7 @@ Do not delete the PV or PVC.
 Prepare the untracked backup directories used by later steps:
 
 ```bash
-mkdir -p plans/runtime/backups/{prowlarr,radarr,sonarr,lidarr}
+mkdir -p plans/runtime/backups/{prowlarr,radarr,sonarr}
 ```
 
 ## 5. Create LAN DNS record

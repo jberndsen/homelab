@@ -20,6 +20,12 @@
   `http://jellyfin.home.arpa` from the laptop on `192.168.1.118/24` and from
   the NVIDIA Shield Android client. Software-transcode capacity is
   unvalidated.
+- Homepage is deployed to K3s in the `media` namespace at
+  `http://homepage.home.arpa`, with a ClusterIP Service and Traefik Ingress.
+  Its pod, Service, and ingress health checks pass, but browser/widget
+  acceptance remains incomplete: the owner reported a `no available server`
+  message. The legacy Homepage container remains the rollback path until this
+  is diagnosed and the Jellyfin, Sonarr, Radarr, and Prowlarr widgets pass.
 - The VM has no `/dev/dri/renderD*` device. Jellyfin has no GPU device access
   and hardware transcoding is not configured.
 - Credentials are kept in untracked Kubernetes Secrets or the owner’s password
