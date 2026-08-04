@@ -45,8 +45,8 @@ Pinned image metadata at resolution time:
 | Prowlarr | `2.4.0.5397-ls153` |
 | Radarr | `6.2.1.10461-ls309` |
 | Sonarr | `4.0.19.2979-ls319` |
-| Bazarr | Resolve stable version and immutable digest at implementation time |
-| Plex | `1.43.2.10687-563d026ea-ls312` |
+| Bazarr | `v1.6.0-ls356` (`sha256:ab401a0f361cfad328e444838b13d5b334b189d0f556fc91a3623eb581df36df`) |
+| Jellyfin | Pinned to the recorded immutable manifest digest |
 | Homepage | `v1.13.2` |
 
 ## Execution order
@@ -57,7 +57,7 @@ Pinned image metadata at resolution time:
 4. [Radarr](04-radarr.md)
 5. [Sonarr](05-sonarr.md)
 6. [Bazarr — new service](12-bazarr.md)
-7. [Plex](07-plex.md)
+7. [Jellyfin](11-jellyfin.md)
 8. [Homepage](08-homepage.md)
 9. [Image updates and Watchtower decision](09-image-updates.md)
 10. [Final acceptance and retirement](10-final-acceptance.md)

@@ -32,7 +32,7 @@ Current infrastructure facts are the system-of-record files in
 - Never run old and new Transmission instances against the same active queue
   or media paths. Before its cutover, explicitly remind the owner to drain
   Transmission's active download queue.
-- Do not copy Docker volumes or application configuration directories. Plex
+- Do not copy Docker volumes or application configuration directories. Jellyfin
   is a fresh server/library scan; watch history is intentionally not retained.
 
 ## Storage and identity design
@@ -56,8 +56,8 @@ Current infrastructure facts are the system-of-record files in
   these images because their init process normally starts as root and drops
   the application to PUID/PGID. The NAS may all-squash remote identities, so
   this is a testable convention, not proof of server-side ownership semantics.
-- Keep every app's `/config` (including Plex metadata) on a separate K3s
-  `local-path` PVC, never NFS. Plan 30 GiB for Plex metadata and about 20 GiB
+- Keep every app's `/config` (including Jellyfin metadata) on a separate K3s
+  `local-path` PVC, never NFS. Plan 30 GiB for Jellyfin metadata and about 20 GiB
   total for the other stateful apps; monitor the VM filesystem because this is
   not a hard quota.
 
@@ -161,19 +161,23 @@ For each application:
    full existing library. Keep generated subtitle files and the PVC when
    diagnosing or rolling back.
 
-### 5. Plex
+Owner acceptance on 2026-08-04: Bazarr is complete for this migration. Any
+future provider-throttling or automatic Jellyfin-metadata-refresh issue is
+separate operational follow-up work, not a reason to reopen this migration.
+
+### 5. Jellyfin
 
 1. Do not export or copy Plex configuration, metadata, or watch history.
 2. Deploy a fresh server with its own local metadata PVC and NAS media mounted
    read-only where possible.
-3. Use direct play and software transcoding only. Hardware transcoding is
-   deferred: the VM does not expose a render node and no Plex Pass is present.
-4. Claim the new server, recreate movie and TV libraries using the `/data`
-   paths, then perform a fresh scan.
-5. Test playback from a LAN client before stopping the old Plex container.
-6. Use LAN-only `http://plex.home.arpa` through Traefik for both browser and
-   native-client validation. Remote Access, DLNA, and direct port `32400`
-   publication remain disabled.
+3. Accept direct play only. Do not configure or rely on transcoding; media
+   that requires it must be manually re-downloaded in a directly playable form.
+4. Create the fresh Jellyfin administrator, recreate movie and TV libraries
+   using the `/data` paths, then perform a fresh scan.
+5. Test direct playback from the intended LAN clients before stopping Plex.
+6. Use LAN-only `http://jellyfin.home.arpa` through Traefik for both browser
+   and native-client validation. Remote Access, DLNA, and direct application
+   port publication remain disabled.
 
 ### 6. Homepage
 
@@ -206,6 +210,6 @@ For every deployed application:
 - TLS, cert-manager, and external authentication.
 - Advanced encrypted/sealed secret management.
 - Dedicated DNS, wildcard records, or split-horizon `home.notech.foo`.
-- Plex hardware transcoding and GPU passthrough.
+- Jellyfin transcoding and GPU passthrough.
 - NetworkPolicy hardening after the current CNI enforcement behavior is
   verified.

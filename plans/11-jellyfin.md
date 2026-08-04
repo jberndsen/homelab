@@ -36,12 +36,11 @@ history, or configuration.
 
 ### Manifest sizing and image-resolution record (2026-07-28)
 
-- The K3s node was Ready; `media-nfs` and `plex-config` were Bound; and the
-  K3s Plex deployment was Available.
+- The K3s node was Ready and `media-nfs` was Bound before Jellyfin deployment.
 - The VM root filesystem had 81 GiB free. Jellyfin requests 10 GiB each
   for `jellyfin-config` and `jellyfin-cache`. These are starting planning
-  allocations, not hard quotas; monitor actual usage during scans and software
-  transcoding.
+  allocations, not hard quotas; monitor actual usage during scans and direct
+  playback.
 - The official Docker Hub `jellyfin/jellyfin:latest` stable manifest list
   resolved to `sha256:aefb67e6a7ff1debdd154a78a7bbb780fd0c873d8639210a7f6a2016ad2b35db`.
   The manifests pin this digest.
@@ -63,8 +62,9 @@ pass:
 - A ClusterIP Service on Jellyfin's HTTP port `8096` and a Traefik Ingress for
   `jellyfin.home.arpa`. Do not publish direct application ports, use host
   networking, enable DLNA, or create an external/NAT port-forward.
-- Use software transcoding only. The VM has no `/dev/dri/renderD*` node, so do
-  not pass GPU devices into the Pod or configure hardware acceleration.
+- Use direct play only. Do not configure or rely on transcoding. The VM has no
+  `/dev/dri/renderD*` node, so do not pass GPU devices into the Pod or
+  configure hardware acceleration.
 - Do not grant Kubernetes RBAC, mount runtime sockets, or give Jellyfin
   write access to NAS media.
 
@@ -102,8 +102,9 @@ Run each check before considering Jellyfin as a replacement candidate:
 2. Repeat browser or native-client playback from every other intended client
    subnet. Record the client subnet and result; do not infer that one VLAN
    proves the others.
-3. Confirm direct play of a representative file and one intentionally chosen
-   software-transcode case. Monitor Pod logs and VM CPU/RAM during the latter.
+3. Confirm direct play of representative media. Do not run a transcoding test:
+   the owner accepts a direct-play-only policy and will manually re-download
+   incompatible media.
 4. Confirm that no direct `8096` LAN port, DLNA listener, or remote/NAT
    exposure was introduced.
 5. Compare the required client experience with Plex: library browsing,
@@ -119,16 +120,27 @@ Run each check before considering Jellyfin as a replacement candidate:
   remains unvalidated and must not be assumed for a future client or media
   format.
 
+### Final owner acceptance and Plex cutover (2026-08-04)
+
+- The owner has accepted Jellyfin as the media server for the intended use
+  case: direct play only. Media will be selected or manually re-downloaded so
+  that it can stream directly; transcoding is neither required nor supported
+  by this acceptance.
+- The legacy Plex Compose service on `node-secondary` was stopped. Its
+  container, Compose configuration, and data remain intact as the rollback
+  path; no deletion was performed.
+
 ## Decision, rollback, and cleanup
 
-The owner makes the Plex retirement decision only after all acceptance tests
-pass. Write a dedicated Plex retirement/cutover plan before stopping either
-Plex server or changing Homepage widgets. If Jellyfin needs to be withdrawn:
+The owner accepted the direct-play-only Jellyfin use case and stopped the
+legacy Plex Compose service on 2026-08-04. Software-transcode testing is not a
+remaining acceptance gate: incompatible media must be manually re-downloaded
+in a direct-play-compatible form. If Jellyfin needs to be withdrawn:
 
 ```bash
 kubectl -n media scale deployment/jellyfin --replicas=0
 ```
 
 Keep the Jellyfin local PVCs for diagnosis until the owner explicitly approves
-their deletion. Never delete NAS media. Restarting or retaining either Plex
-server remains independent of Jellyfin deployment.
+their deletion. Never delete NAS media. The stopped legacy Plex service remains
+available for rollback until the owner explicitly approves its removal.

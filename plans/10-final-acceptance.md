@@ -21,15 +21,16 @@ Required:
 - Transmission uses NordVPN and fails closed
 - Prowlarr indexers and both application integrations test successfully
 - Radarr/Sonarr import and hardlink tests passed
-- Plex browser and native-client playback passed; Remote Access/DLNA/direct
-  32400 remain disabled
+- Jellyfin direct-play browser and native-client playback passed. The owner
+  accepts a direct-play-only media policy; no transcoding capacity is required
+  or assumed, and incompatible media must be manually re-downloaded.
 - every Homepage link/widget works without runtime socket or Kubernetes RBAC
-- VM filesystem has safe free space after Plex metadata creation
+- VM filesystem has safe free space after Jellyfin metadata/cache creation
 
-Owner confirms every migrated Compose service is stopped. Keep the stopped
-containers, Docker volumes, app backups, and K3s PVCs intact as rollback until
-the owner explicitly chooses a later retirement date. No deletion is
-authorized by this plan.
+The legacy Plex Compose service was stopped on 2026-08-04 after owner
+acceptance of Jellyfin. Keep its stopped container, Docker volumes, app
+backups, and K3s PVCs intact as rollback until the owner explicitly chooses a
+later retirement date. No deletion is authorized by this plan.
 
 Update the relevant `infrastructure/*/system.md` after each executed step with
 actual versions, observed public IP, NFS identity/modes, DNS records, backup

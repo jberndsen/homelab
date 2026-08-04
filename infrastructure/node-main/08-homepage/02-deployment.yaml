@@ -64,6 +64,11 @@ spec:
               drop:
                 - ALL
           volumeMounts:
+            # Recent Homepage releases create optional configuration files (for
+            # example proxmox.yaml) on first start. Keep the directory writable
+            # while overlaying our managed configuration files below.
+            - name: config-runtime
+              mountPath: /app/config
             - name: config
               mountPath: /app/config/services.yaml
               subPath: services.yaml
@@ -91,6 +96,8 @@ spec:
             - name: config-logs
               mountPath: /app/config/logs
       volumes:
+        - name: config-runtime
+          emptyDir: {}
         - name: config
           configMap:
             name: homepage-config

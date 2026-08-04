@@ -159,8 +159,9 @@ Required acceptance:
   Bazarr.
 - OpenSubtitles.com is enabled as the sole provider, and no OpenSubtitles.org
   provider is enabled.
-- Bazarr's Jellyfin connection test passes; a downloaded subtitle refreshes
-  the corresponding Jellyfin movie or episode metadata.
+- Bazarr's Jellyfin connection test passes. A downloaded subtitle's automatic
+  Jellyfin metadata refresh is configured; its runtime observation is not a
+  migration acceptance gate.
 - A controlled movie and episode each have the expected subtitle behavior;
   subtitles are not duplicated where embedded tracks satisfy the profile.
 - Newly indexed test content triggers Bazarr automatically, and the full
@@ -170,6 +171,13 @@ Required acceptance:
 Record the actual image version/digest, Bazarr URL, observed provider and
 Jellyfin integration tests, and acceptance result in
 `infrastructure/node-main/system.md` **only after** this step has passed.
+
+### Final owner acceptance (2026-08-04)
+
+The owner accepts Bazarr as complete for this migration. The provider's daily
+throttle and the not-yet-observed automatic Jellyfin metadata refresh are not
+remaining migration gates. If either causes a practical problem later, create
+a separate follow-up plan rather than reopening this migration step.
 
 ## Rollback
 
