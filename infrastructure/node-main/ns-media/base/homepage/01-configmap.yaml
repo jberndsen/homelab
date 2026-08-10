@@ -2,10 +2,8 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: homepage-config
-  namespace: media
   labels:
     app.kubernetes.io/name: homepage
-    app.kubernetes.io/part-of: media-stack
 data:
   services.yaml: |
     - Media:

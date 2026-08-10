@@ -2,10 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: radarr
-  namespace: media
   labels:
     app.kubernetes.io/name: radarr
-    app.kubernetes.io/part-of: media-stack
 spec:
   replicas: 1
   progressDeadlineSeconds: 600
@@ -18,7 +16,6 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: radarr
-        app.kubernetes.io/part-of: media-stack
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 60

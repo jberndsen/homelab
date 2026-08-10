@@ -10,3 +10,6 @@
   available.
 - Credentials are kept in untracked Kubernetes Secrets or the owner’s password
   manager; version-controlled manifests contain no credential values.
+- `ns-media` is the manifest root for the Kubernetes `media` namespace.
+- Ubuntu Server VM has package nfs-common installed.
+- K3s secrets config in `node-main/secrets-encryption/k3s-server-config.yaml` is applied.

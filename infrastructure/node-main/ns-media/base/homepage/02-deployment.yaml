@@ -2,10 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: homepage
-  namespace: media
   labels:
     app.kubernetes.io/name: homepage
-    app.kubernetes.io/part-of: media-stack
 spec:
   replicas: 1
   progressDeadlineSeconds: 600
@@ -16,7 +14,6 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: homepage
-        app.kubernetes.io/part-of: media-stack
     spec:
       automountServiceAccountToken: false
       securityContext:
