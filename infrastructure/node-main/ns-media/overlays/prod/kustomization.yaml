@@ -1,0 +1,8 @@
+resources:
+  - ../../base
+
+labels:
+  - pairs:
+      env: prod
+    includeSelectors: false
+    includeTemplates: true
