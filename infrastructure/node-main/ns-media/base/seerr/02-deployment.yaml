@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seerr
+  labels:
+    app.kubernetes.io/name: seerr
+spec:
+  replicas: 1
+  progressDeadlineSeconds: 600
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: seerr
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: seerr
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      initContainers:
+        - name: prepare-config
+          # Seerr v3.2.0, reviewed 2026-08-11.
+          image: ghcr.io/seerr-team/seerr@sha256:c4cbd5121236ac2f70a843a0b920b68a27976be57917555f1c45b08a1e6b2aad
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - chown -R 1000:1000 /app/config
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - CHOWN
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+      containers:
+        - name: seerr
+          # Seerr v3.2.0, reviewed 2026-08-11.
+          image: ghcr.io/seerr-team/seerr@sha256:c4cbd5121236ac2f70a843a0b920b68a27976be57917555f1c45b08a1e6b2aad
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TZ
+              value: Europe/Amsterdam
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 5055
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /api/v1/settings/public
+              port: http
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /api/v1/settings/public
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: seerr-config

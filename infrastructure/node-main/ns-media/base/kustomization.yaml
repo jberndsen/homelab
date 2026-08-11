@@ -9,9 +9,10 @@ resources:
   - prowlarr
   - radarr
   - sonarr
-  - homepage
-  - jellyfin
   - bazarr
+  - seerr
+  - jellyfin
+  - homepage
 
 labels:
   - pairs:
