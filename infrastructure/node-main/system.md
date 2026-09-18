@@ -13,3 +13,6 @@
 - `ns-media` is the manifest root for the Kubernetes `media` namespace.
 - Ubuntu Server VM has package nfs-common installed.
 - K3s secrets config in `node-main/secrets-encryption/k3s-server-config.yaml` is applied.
+- The owner keeps the source YAML files on the dev laptop, outside the K3s VM.
+- The owner's intended baseline for application data recovery is Proxmox VM
+  backups.
