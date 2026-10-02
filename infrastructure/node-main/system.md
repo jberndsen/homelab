@@ -12,8 +12,11 @@
   password is in `/etc/nut/upsmon.conf` and the owner's password manager.
   `nut-monitor.service` is enabled and running; authenticated UPS status
   queries work. The UPS certificate is not verified.
-- Its Ubuntu Server VM is `192.168.30.103`; it runs K3s `v1.36.2+k3s1` and is
-  accessible over SSH.
+- Its Ubuntu Server VM (VM `103`) is `192.168.30.103`; it runs K3s
+  `v1.36.2+k3s1` and is accessible over SSH. Its only virtual NIC is attached
+  to `vmbr0`. The guest's default route and route to the Default VLAN NAS
+  (`192.168.1.32`) both use `ens18` via `192.168.30.1`, not host interface
+  `vmbr0.1`.
 - Traefik is installed by K3s and ServiceLB exposes HTTP/HTTPS at
   `192.168.30.103`.
 - The cluster uses Flannel VXLAN with Pod CIDR `10.42.0.0/24`.
