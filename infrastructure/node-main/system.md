@@ -1,6 +1,17 @@
 # Current state
 
 - `node-main` runs Proxmox VE 9.2 on VLAN `30` at `192.168.30.5`.
+- `vmbr0` bridges `nic0` and uses gateway `192.168.30.1`. Its tagged VLAN `1`
+  interface `vmbr0.1` has `192.168.1.39/24` and a direct route to the UPS at
+  `192.168.1.34`; both interfaces are in `/etc/network/interfaces`.
+- Proxmox is the only physical UPS shutdown target. VM `102` (`vm-haos`) and
+  VM `103` (`vm-ubuntu-k3s`) have working QEMU guest agents and Start at boot
+  enabled. Guest shutdown during an outage has not been tested.
+- NUT `nut-client` is installed with `MODE=netclient` and a `secondary`
+  monitor for `ups@192.168.1.34:3493` using username `ups` and TLS. The
+  password is in `/etc/nut/upsmon.conf` and the owner's password manager.
+  `nut-monitor.service` is enabled and running; authenticated UPS status
+  queries work. The UPS certificate is not verified.
 - Its Ubuntu Server VM is `192.168.30.103`; it runs K3s `v1.36.2+k3s1` and is
   accessible over SSH.
 - Traefik is installed by K3s and ServiceLB exposes HTTP/HTTPS at
