@@ -14,3 +14,11 @@ cluster work. Start with `kubectl get nodes -o wide`.
 For stateful image updates, review the release, take an application-native
 backup, update one pinned digest, wait for rollout, and run the application's
 smoke test. Do not introduce unattended updates or runtime socket access.
+
+# Repository
+
+The public repository is `https://github.com/jberndsen/homelab`, with default
+branch `main`. Local `origin` uses `git@github.com:jberndsen/homelab.git`.
+The owner authorizes pushing task-related changes to this repository. Keep
+plaintext credentials, private keys, and local reference files out of commits.
+Update the relevant system records whenever confirmed infrastructure facts change.

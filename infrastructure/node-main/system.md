@@ -19,14 +19,30 @@
   `vmbr0.1`.
 - Traefik is installed by K3s and ServiceLB exposes HTTP/HTTPS at
   `192.168.30.103`.
+- On 2026-10-06, the K3s VM reported 8 vCPUs and approximately 16 GiB RAM,
+  with no memory/disk/PID pressure. Traefik runs image
+  `rancher/mirrored-library-traefik:3.7.4`; all media Ingress resources publish
+  `192.168.30.103` in their status.
 - The cluster uses Flannel VXLAN with Pod CIDR `10.42.0.0/24`.
 - The VM has no `/dev/dri/renderD*` device; hardware transcoding is not
   available.
 - Credentials are kept in untracked Kubernetes Secrets or the owner’s password
   manager; version-controlled manifests contain no credential values.
 - `ns-media` is the manifest root for the Kubernetes `media` namespace.
+- On 2026-10-06, all eight media Deployments were available and all nine PVCs
+  were Bound. The eight local-path PVs use reclaim policy `Delete`; the shared
+  NAS PV `media-nfs-pv` uses `Retain`. The owner chose to keep these policies.
 - Ubuntu Server VM has package nfs-common installed.
 - K3s secrets config in `node-main/secrets-encryption/k3s-server-config.yaml` is applied.
 - The owner keeps the source YAML files on the dev laptop, outside the K3s VM.
+- As of 2026-10-06, the repository is also published at
+  `https://github.com/jberndsen/homelab`, with default branch `main`.
+  The dev laptop's `origin` uses SSH; the public HTTPS clone URL is
+  `https://github.com/jberndsen/homelab.git`.
 - The owner's intended baseline for application data recovery is Proxmox VM
   backups.
+- The owner selected `smb://192.168.1.32/backups/NUC/kubernetes` for encrypted
+  Sealed Secrets key backups and an adjacent recovery `README.md`. On the dev
+  laptop this is mounted at `/Volumes/backups/NUC/kubernetes`; SMB connectivity
+  and directory access were verified on 2026-10-06. The backup passphrase will
+  be stored in the owner's password manager. The key backup is not yet created.
