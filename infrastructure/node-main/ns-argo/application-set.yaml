@@ -33,7 +33,7 @@ spec:
         namespace: '{{ if eq (index .path.segments 2) "ns-sealed-secrets" }}kube-system{{ else }}{{ index .path.segments 2 | trimPrefix "ns-" }}{{ end }}'
       syncPolicy:
         automated:
-          enabled: false
-          prune: false
-          selfHeal: false
+          enabled: true
+          prune: true
+          selfHeal: true
           allowEmpty: false
