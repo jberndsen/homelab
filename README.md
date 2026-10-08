@@ -10,10 +10,12 @@ K3s media stack on `node-main`, with deployable configuration under
 - [Staged Argo CD and Sealed Secrets plan](argocd-plan.md)
 - [Next steps](TODO.md)
 - [Argo bootstrap lesson](lessons/0001-argocd-bootstrap.html)
+- [Sealed Secrets recovery lesson](lessons/0002-sealed-secrets-recovery.html)
 
-Argo checkpoint 1 is complete: the installation and admin access are verified.
-Resume at Execution 3 / checkpoint 2 in the plan for Sealed Secrets and its key
-backup. Media is still managed manually until the adoption checkpoint passes.
+Argo checkpoint 2 is complete: Sealed Secrets and independent encrypted NAS key
+recovery are verified, and the owner confirmed password-manager storage.
+Paused before checkpoint 3. Media remains manually managed, with automatic sync
+disabled; adoption requires the Proxmox backup gate in the plan.
 Git stores configuration; application data recovery depends
 on Proxmox backups, and NAS media needs its own backup. Credentials and private
 exports must stay out of this public repository.

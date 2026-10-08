@@ -12,9 +12,8 @@ Ready and its three CRDs Established. HTTP UI, health and version checks passed.
 The owner completed admin password rotation and replacement-password login;
 the initial-password Secret is absent. Eight media Deployments remain available
 and nine PVCs Bound, with Deployment specs/images and PVC/PV identities,
-bindings and PV specs matching the private baseline. No Applications or
-ApplicationSets exist. Resume at **Execution 3: Install Sealed Secrets and secure
-recovery — checkpoint 2** in the plan, in a new session as requested by the owner.
+bindings and PV specs matching the private baseline. At checkpoint 1, no
+Applications or ApplicationSets existed. Checkpoint 2's resulting state is below.
 
 This installs Argo CD only. No ApplicationSet or Applications are included, so
 media is still managed manually. Do not adopt media until the later backup and
@@ -108,6 +107,24 @@ requests/limits; check actual usage after bootstrap.
 
 ## Checkpoint 2: controller and independent key recovery
 
+**Verified complete on 2026-10-08; paused before checkpoint 3.**
+The owner confirmed the passphrase is saved in their password manager as
+`Homelab Sealed Secrets key backup`. `sealed-secrets` is Synced/Healthy, its sync Succeeded, CRD
+Established and controller Ready. Exactly `media` and `sealed-secrets` exist,
+with automatic sync disabled and no deletion finalizers. Media has no sync
+history; its ignored-Secret render error is expected until checkpoint 3.
+All eight media Deployments and nine PVCs remain healthy, with Deployment/PVC
+specs and UIDs and PV specs/UIDs/bindings matching the private pre-Argo baseline.
+
+The actual NAS backup `sealed-secrets-keys-2026-10-08T184312Z.yaml.age` was
+decrypted and matched the full key export. Controller validation and offline
+recovery of a harmless strict-scope test passed. The active certificate and
+every current key are covered; SHA-256 certificate fingerprint:
+`b77a5acd6d48fc4bf2d7620d1da9a443cd4c205789efbf0de1726c3e14e6b1a4`.
+No test objects were applied or production keys replaced. Protected temporary
+plaintext files were removed. The adjacent NAS `README.md` contains the dated
+inventory and exact backup, verification, restoration and cleanup commands.
+
 Sealed Secrets is pinned to **v0.40.0**, reviewed on 2026-10-08 with its
 [release notes](https://github.com/bitnami/sealed-secrets/releases/tag/v0.40.0)
 and published advisories. This version includes fixes for
@@ -170,7 +187,8 @@ Install laptop tools with `brew install kubeseal age`. Key recovery uses
 **smb://192.168.1.32/backups/NUC/kubernetes**, mounted at
 **/Volumes/backups/NUC/kubernetes**, with exact backup/restore commands in the
 adjacent NAS **README.md**. The owner keeps its age passphrase in their password
-manager, outside Git and chat. Only encrypted `.yaml.age` backups, public
+manager under **Homelab Sealed Secrets key backup**, outside Git and chat.
+Only encrypted `.yaml.age` backups, public
 certificates, fingerprint inventories and recovery documentation belong there.
 Keep private keys in protected local temporary files and clean them after use.
 

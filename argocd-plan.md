@@ -16,11 +16,30 @@ as instructed below.
   workload, CRD, HTTP, node-pressure and media/storage baseline checks passed.
 - See [the bootstrap guide](infrastructure/node-main/ns-argo/SETUP.md) and
   [node-main record](infrastructure/node-main/system.md) for the resulting state.
-  Argo has no Applications/ApplicationSets; media is still manually managed.
-- The owner requested a separate clean context for the next stage. Resume at
-  **Execution 3 / checkpoint 2: Install Sealed Secrets and secure recovery**.
-  No Sealed Secrets controller, ApplicationSet, sealing keys or key backup has
-  been created. Recheck release notes/advisories and live state before continuing.
+  At checkpoint 1, Argo had no Applications/ApplicationSets; media remains
+  manually managed.
+- **Execution 3 / checkpoint 2 is complete and verified.** Reviewed Sealed Secrets
+  `v0.40.0` release/advisories; installed matching `kubeseal` and `age v1.3.2`.
+  Pushed bootstrap files in `5f95703`, then manually applied ApplicationSet
+  `node-main`. Exactly `media` and `sealed-secrets` were generated, with automatic
+  sync disabled and no deletion finalizers. Synced only Sealed Secrets: its
+  Application is Synced/Healthy, sync Succeeded, CRD Established and controller
+  Ready. Media has its expected ignored-Secret render error and has not synced.
+- Encrypted NAS backup `sealed-secrets-keys-2026-10-08T184312Z.yaml.age` covers
+  every current sealing key and the active certificate. NAS decryption matched
+  the full export, live controller validation passed, and offline recovery
+  recovered a harmless test value. No test objects were applied or production
+  keys replaced; temporary plaintext was removed. Recovery commands and public
+  certificate fingerprints are in the adjacent NAS `README.md`. The owner
+  confirmed the passphrase is saved as `Homelab Sealed Secrets key backup` in
+  their password manager.
+- Media Deployment/PVC specs and UIDs, PV specs/UIDs/bindings and availability
+  match the private pre-Argo baseline. No node pressure. **Pause at checkpoint
+  2; do not begin checkpoint 3 until the owner continues.**
+- Next session: **Execution 4 / checkpoint 3: Adopt media without replacing
+  data**. First confirm a fresh successful Proxmox backup of VM 103 and that
+  its included disks cover all application PVC data. Recheck active certificate
+  coverage against the verified key backup before sealing production Secrets.
 - The private baseline is `plans/runtime/argocd-baseline-2026-10-08.json` on the
   dev laptop (ignored, credential-free comparison evidence). Proxmox backup and
   disk-coverage confirmation remain required before later media adoption.

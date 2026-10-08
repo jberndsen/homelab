@@ -45,7 +45,8 @@
   Sealed Secrets key backups and an adjacent recovery `README.md`. On the dev
   laptop this is mounted at `/Volumes/backups/NUC/kubernetes`; SMB connectivity
   and directory access were verified on 2026-10-06. The backup passphrase will
-  be stored in the owner's password manager. The key backup is not yet created.
+  is stored in the owner's password manager as `Homelab Sealed Secrets key backup`
+  (owner confirmed on 2026-10-08). See the verified backup below.
 - On 2026-10-08, Argo CD `v3.5.4` was manually bootstrapped in namespace
   `argocd` using the standard non-HA upstream install and preserved upstream
   NetworkPolicies. Its six Deployments and application-controller StatefulSet
@@ -58,9 +59,36 @@
   The final authentication audit corroborated successful password change at
   `2026-10-08T18:23:58Z` and successful subsequent logins. The initial-password
   Secret was verified absent; credentials remain outside Git and tool output.
-- No Argo Applications or ApplicationSets have been created yet. Media remains
-  manually managed. Sealed Secrets and its independent encrypted key backup
-  remain pending; TODO 1–3 are not complete.
+- On 2026-10-08, Execution 3 created ApplicationSet `node-main` in `argocd`.
+  It generated exactly `media` → namespace `media` and `sealed-secrets` →
+  namespace `kube-system`, reading public GitHub `main` anonymously over HTTPS.
+  Both Applications have automatic sync, pruning and self-healing disabled,
+  with no resource-deletion finalizers. The set preserves resources on deletion.
+  Argo's own manifests and bootstrap namespaces remain manually managed.
+- Sealed Secrets `v0.40.0` was manually synced through Argo at commit `5f95703`
+  after release/advisory review. All 11 resources synced successfully; its CRD
+  is Established and protected by `Prune=confirm,Delete=confirm`. Its controller
+  is Ready, with Application status Synced/Healthy and sync Succeeded. It uses
+  upstream default 30-day key renewal. Laptop clients are `kubeseal v0.40.0`
+  and `age v1.3.2`.
+- Media remains manually managed and has never been synced by Argo. Its Argo
+  Application has the expected render error for the ignored Secret references;
+  production Secret sealing/adoption remains checkpoint 3. TODO 1–3 are not
+  complete.
+- On 2026-10-08 at 18:43:34 UTC, independent key recovery passed using NAS file
+  `sealed-secrets-keys-2026-10-08T184312Z.yaml.age` in the backup directory above.
+  Its ciphertext SHA-256 is
+  `45937195f88f225d60b7ede777779ca032bb6b096a6c1378e6e0a68f6b2f3bbd`.
+  Backup inventory contains key `sealed-secrets-keywg7lv`, with certificate
+  SHA-256 `b77a5acd6d48fc4bf2d7620d1da9a443cd4c205789efbf0de1726c3e14e6b1a4`.
+  All current controller keys and the active certificate match that inventory.
+  Decrypting the actual NAS file matched the full key export; live controller
+  validation and offline `kubeseal --recovery-unseal` recovered a harmless test.
+  No test objects were applied, production keys were not replaced, and protected
+  local plaintext was cleaned up. The adjacent NAS `README.md` contains exact
+  backup/verification/restore/cleanup commands and the public fingerprint inventory.
+  The owner confirmed password-manager storage; checkpoint 2 is complete and
+  paused before media adoption.
 - Immediately after bootstrap, the node used approximately 127m CPU and
   3069 MiB memory (19%); Argo Pods collectively used approximately 168 MiB.
   These are initial idle observations, not workload sizing guarantees.
@@ -77,3 +105,8 @@
   specifications/images and PVC/PV UIDs, bindings and PV specifications matched
   the private pre-install baseline. Final idle usage was approximately 93m CPU
   and 3012 MiB RAM (18%) for the node, with 144 MiB across Argo Pods.
+- After controller installation, all eight media Deployments were available
+  and all nine PVCs Bound. Their specs and UIDs, plus PV specs, UIDs and bindings,
+  matched the private pre-Argo baseline. No node pressure was present. Idle
+  observations were about 84m CPU / 3312 MiB RAM (20%) for the node and
+  1m CPU / 11 MiB RAM for the Sealed Secrets controller.
