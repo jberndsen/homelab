@@ -1,6 +1,7 @@
 # Current state
 
-- `node-main` runs Proxmox VE 9.2 on VLAN `30` at `192.168.30.5`.
+- `node-main` runs Proxmox VE 9.2.4 (owner screenshot, 2026-10-08) on VLAN
+  `30` at `192.168.30.5`.
 - `vmbr0` bridges `nic0` and uses gateway `192.168.30.1`. Its tagged VLAN `1`
   interface `vmbr0.1` has `192.168.1.39/24` and a direct route to the UPS at
   `192.168.1.34`; both interfaces are in `/etc/network/interfaces`.
@@ -44,7 +45,7 @@
   backups.
 - On 2026-10-08, the owner confirmed the pre-adoption backup gate: a fresh
   successful Proxmox backup of VM 103 with application PVC disk coverage.
-  This is owner-confirmed; no archive identifier or job timestamp was supplied.
+  This is owner-confirmed; Execution 6 later identified the listed archive below.
   Recheck freshness if resuming much later or after data/storage changes. The
   owner later authorized checkpoint 3 using this recorded confirmation.
 - The owner selected `smb://192.168.1.32/backups/NUC/kubernetes` for encrypted
@@ -79,8 +80,8 @@
   upstream default 30-day key renewal. Laptop clients are `kubeseal v0.40.0`
   and `age v1.3.2`.
 - Media adoption completed at checkpoint 3; checkpoint 4 subsequently enabled
-  automatic sync, pruning and self-healing. TODO 1–3 remain open pending the
-  final recovery-documentation audit in Execution 6.
+  automatic sync, pruning and self-healing. Execution 6 subsequently completed
+  the final operating/recovery documentation audit and closed TODO 1–3.
 - On 2026-10-08 at 18:43:34 UTC, independent key recovery passed using NAS file
   `sealed-secrets-keys-2026-10-08T184312Z.yaml.age` in the backup directory above.
   Its ciphertext SHA-256 is
@@ -175,3 +176,36 @@
   about 80m CPU / 3991 MiB RAM (24%), an idle observation only. The owner's
   widget/playback confirmation is from checkpoint 3. Paused after checkpoint 4;
   automation stays enabled and Execution 6 was not started.
+
+- Execution 6 reviewed the owner's Proxmox screenshot on 2026-10-08. VM 103's
+  Backup view lists `vzdump-qemu-103-2026_10_08-20_53_04.vma.zst` on storage
+  `local`, displayed date `2026-10-08 20:53:04` (timezone not verified).
+  This identifies the archive alongside the earlier owner-confirmed success
+  and application PVC disk coverage. The screenshot does not establish a
+  restore test, off-host copy or controllers stopped at backup time.
+- Execution 6's read-only audit on 2026-10-08 started from local/GitHub `main`
+  `a51b474`. Both Applications were Synced/Healthy with enabled/prune/selfHeal=true,
+  allowEmpty=false, resource preservation=true, no finalizers, operations,
+  pending pruning/deletions or deletion approvals. All nine PVCs, both
+  SealedSecrets and the controller CRD retained their confirmation annotations.
+  All 41 baseline media object identities, Deployment/PVC/Service/Ingress specs,
+  and all nine PV specs/UIDs/bindings matched the private baseline. The original
+  eight media Pods remained Ready with zero restarts. Node health, seven Ready
+  Argo Pods without restarts, four Established CRDs and seven NetworkPolicies passed.
+- The Execution 6 audit rechecked the actual encrypted NAS key-backup checksum,
+  complete live-key inventory and active certificate against the checkpoint-2
+  independent recovery receipt. No backup was decrypted/restored, no keys were
+  changed and no controllers were paused. VM restore, NAS-media recovery and
+  off-host copies of the VM/key backups remain unverified. The NAS recovery
+  README's old pre-checkpoint-4 status was corrected; Git documentation now
+  distinguishes fresh-cluster, ordinary VM and guarded VM recovery.
+
+- Execution 6's read-only smoke checks passed again: seven web endpoints,
+  Transmission anonymous rejection and authenticated `session-get`, all four
+  Homepage backend APIs, unchanged Secret values/types/UIDs, existing ConfigMaps
+  and ten selected settings files. Argo HTTP returned 200 and manual `cluster/`
+  diff was empty. Both reconciliation controllers still had one replica.
+  All four manifest roots rendered from a clean tracked checkout; the disabled
+  recovery copy passed server dry-run without persistence. Local links and
+  shell/embedded Python syntax passed. The owner's widget/playback confirmation
+  remains from checkpoint 3. Documentation changed; live configuration did not.

@@ -10,11 +10,11 @@ as instructed below.
 
 ## Implementation progress — 2026-10-08
 
-- **Checkpoints 1–4 are complete and verified. Paused after checkpoint 4.**
-  Automatic sync, pruning and self-healing are enabled through ApplicationSet
+- **Checkpoints 1–4 and Execution 6 are complete and verified.** TODO 1–3
+  are closed after the final operating/recovery documentation audit. Automatic
+  sync, pruning and self-healing remain enabled through ApplicationSet
   `node-main`; `allowEmpty: false`, deletion confirmations and resource
-  preservation remain intact. TODO 1–3 await Execution 6's final documentation
-  audit; no later work was started in the checkpoint-4 session.
+  preservation remain intact. Stop here; later TODOs are outside this session.
 - Checkpoint 1 installed Argo CD `v3.5.4` after release/advisory review.
   Admin password rotation/relogin, initial-password Secret removal, controller,
   HTTP and unchanged media/storage baseline checks passed.
@@ -30,9 +30,11 @@ as instructed below.
   The passphrase is in the owner's password manager as
   `Homelab Sealed Secrets key backup`; no production keys were replaced.
 - The owner confirmed a fresh successful VM 103 backup with application PVC
-  disk coverage on 2026-10-08. No archive identifier/job time was supplied.
-  This recorded gate was used for adoption on the same date, with unchanged
-  storage. Recheck freshness after substantial time or data/storage changes.
+  disk coverage on 2026-10-08. Execution 6 reviewed the owner's screenshot:
+  archive `vzdump-qemu-103-2026_10_08-20_53_04.vma.zst`, storage `local`,
+  displayed date `2026-10-08 20:53:04` (timezone not verified). The earlier
+  success/coverage confirmation was used for adoption with unchanged storage.
+  Recheck freshness after substantial time or data/storage changes.
 - **Checkpoint 3 adopted media at manifest commit `450da82`.** Strict-scope
   SealedSecrets adopted `homepage-widgets` and `transmission-rpc` in place:
   Secret names, keys, values, types and UIDs are unchanged. Historical plaintext
@@ -81,15 +83,40 @@ as instructed below.
   seven NetworkPolicies, node health and unchanged manual `cluster/` diff passed.
   The owner's widget/playback confirmation is from checkpoint 3.
 
-### Next session
+### Execution 6 — final documentation audit
 
-The next stage is **Execution 6 / final documentation audit**, only after the
-owner continues. Checkpoint 4 is complete; automation remains enabled while
-paused. Read this progress section, `AGENTS.md`, all system records and
-`ns-argo/SETUP.md`; start cluster work with `kubectl get nodes -o wide`.
-Recheck Git/live state, unchanged storage identities, enabled policies and no
-active operations. Do not repeat adoption, demonstrations or credential changes.
-Review the remaining documentation requirements before closing TODO 1–3.
+Started from clean local `main` and GitHub `main` at `a51b474`; the first cluster
+command was `kubectl get nodes -o wide`. All checks below passed on 2026-10-08.
+Only the six task documents changed in Git; the NAS recovery README received
+its reviewed status/disabled-copy correction separately.
+
+| Requirement | Completed review/check |
+| --- | --- |
+| Fresh cluster | Prerequisites → manual cluster/Argo bootstrap → disabled ApplicationSet copy → restored keys/controller → restored application data/storage → selective media sync → smoke checks → approved automation. The documented copy changes only enabled/prune/selfHeal to false, retains safeguards and passes server dry-run without persistence. |
+| Ordinary and guarded VM recovery | Ordinary restore may reconcile immediately. Guarded backup covers inherited disabled policies, operations/prune/deletion checks, recorded replica counts, both controllers stopped during backup, and ApplicationSet-first restart with automation disabled. Controller kinds, selectors and one-replica counts verified live; shutdown/restore/restart commands reviewed without running. |
+| Separate recovery sources | Git configuration, VM application data, external NAS media and encrypted sealing keys/passphrase documented separately. Actual NAS ciphertext checksum, all live key certificates and active certificate match the checkpoint-2 independent recovery evidence. VM archive identified from owner screenshot; no new decryption/restore test performed. |
+| Another owner's setup | Repository URL, hosts, NAS/storage/node assumptions, new keys/ciphertext and independently restored or empty data covered. |
+| Everyday operations | Polling/Refresh, direct pushes/reviewed PRs, manual bootstrap apply, pause/resume inheritance and active-operation limits, new-app immediate deployment and storage protection covered. Stateful image-update backup/review rule retained. |
+| Intentional removal | Service removal retains PVCs; whole-app removal requires inventory, absent deletion finalizers, preserved resources and explicit workload cleanup. Storage erasure requires an explicit owner decision. Confirmation limits and Application-wide approval explained. |
+| Commands and links | Local links/anchors and shell/embedded Python syntax passed. All four manifest roots render from a clean tracked checkout. Media has 37 resources, no plaintext Secret resource, nine protected PVCs and two protected SealedSecrets. Manual cluster diff is empty. NAS recovery README checked and corrected. |
+| Live safety and smoke checks | Both Applications Synced/Healthy; enabled policies, allowEmpty=false, preservation=true, absent finalizers and no pending operations/prunes/deletions/approvals. Nine PVCs, two SealedSecrets and CRD protected. Baseline storage/workload specs, identities and bindings unchanged; original eight Ready Pods, zero restarts. Seven web apps, Transmission authenticated read-only RPC, four Homepage backends, unchanged credentials/ConfigMaps and ten settings files passed. Node, Argo Pods, CRDs, NetworkPolicies and Argo HTTP passed. |
+
+Recovery procedures were reviewed and safely checked, not exercised as a
+restore drill. No storage, workload, image, mount, credential, key or controller
+policy was changed, and no reconciliation demonstration was repeated. The
+private baseline remains ignored under `plans/runtime/`. The owner's widget
+and Jellyfin playback confirmation remains the checkpoint-3 evidence.
+
+Remaining limits: no VM restore drill, file-level application-data recovery or
+NAS-media restore was tested. NAS-media backup evidence and independent copies
+of the local VM backup and NAS key backup are not confirmed. The VM screenshot
+identifies an archive, not a guarded recovery point or restore result. These
+limits do not imply that backups are absent. Recheck availability, freshness
+and coverage before recovery; never assume Git contains application data.
+
+Execution 6 completes the agreed rollout. Do not start later TODOs without a
+new request. Future cluster work starts with the system records and
+`kubectl get nodes -o wide`; stop on unexpected storage differences.
 
 ## Agreed outcome
 

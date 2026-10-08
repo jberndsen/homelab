@@ -3,7 +3,9 @@
 Run commands from the repository root using the laptop's configured `kubectl`.
 Read [node-main](../system.md) and [network](../../network/system.md) first.
 The complete staged rollout and recovery requirements are in
-[the agreed plan](../../../argocd-plan.md).
+[the agreed plan](../../../argocd-plan.md). Execution 6 finishes this guide;
+automatic reconciliation remains enabled on the current cluster. The checkpoint
+sections record earlier stages; use the recovery paths below for a rebuild.
 
 ## Checkpoint 1: manual bootstrap
 
@@ -141,7 +143,8 @@ explicitly mapped to `kube-system`. Go templates fail on missing keys; Argo's
 own installation is excluded and remains manually managed.
 
 An ApplicationSet creates Applications; an Application renders Git and applies
-resources only when synced. Both generated Applications have automatic sync,
+resources only when synced. A deletion finalizer is a marker that makes
+Kubernetes wait for a controller to clean up resources before deleting an object. Both generated Applications have automatic sync,
 pruning and self-healing disabled during adoption. Removing a discovered folder
 preserves deployed resources: the set uses `preserveResourcesOnDeletion: true`
 and generated Applications have no Argo deletion finalizer. The Sealed Secrets
@@ -162,8 +165,9 @@ kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,NAMESP
 ```
 
 Expect exactly `media` → `media` and `sealed-secrets` → `kube-system`, both
-with `AUTO=false` and no finalizers. Media's render error is expected until
-checkpoint 3 replaces its ignored Secret files. **Do not sync media yet.**
+with `AUTO=false` and no finalizers. The old media render error was resolved at
+checkpoint 3; a current checkout renders without ignored files. On recovery,
+**do not sync media yet**: first restore keys, application data and storage.
 
 In the Argo UI, open **sealed-secrets → Sync**, leave prune and force/replace
 off, review the resource list, and sync only this Application. The equivalent
@@ -282,7 +286,7 @@ Do not test by triggering downloads, imports, deletions or library cleanup.
 
 ## Checkpoint 4: automatic reconciliation enabled
 
-**Verified complete on 2026-10-08; paused after checkpoint 4.** Automatic sync
+**Verified complete on 2026-10-08.** Automatic sync
 deploys reviewed Git changes; self-healing corrects manual changes in the
 cluster; pruning removes ordinary resources removed from Git. Both Applications
 inherit these settings from the manually applied ApplicationSet, at policy
@@ -338,81 +342,203 @@ was at checkpoint 3; checkpoint 4 added the read-only checks above.
 
 ## Recovery and everyday operations
 
+### Choose the recovery path
+
+| What was lost | Recovery source and check |
+| --- | --- |
+| Kubernetes configuration | This Git repository and its history; review the chosen commit before applying it. Keep a separate repository copy for loss of GitHub access. |
+| Application databases, settings and local PVC data | Proxmox VM 103 backup with all application-data disks included; Git does not contain this data. |
+| NAS media | Separate NAS-media backup; a VM backup covers neither the external share nor its files. Confirm the backup source before claiming full disaster recovery. |
+| Sealing private keys | Verified encrypted NAS key backup plus the passphrase in the password manager; retain old keys for old ciphertext. |
+
+A PVC (PersistentVolumeClaim) is an application's request for storage. A PV
+(PersistentVolume) is the storage assigned to it. Their binding links the claim
+to its data. The eight local PVs use reclaim policy `Delete`, which allows disk
+cleanup after claim deletion; the shared NAS PV uses `Retain`.
+
+The key backup is at **smb://192.168.1.32/backups/NUC/kubernetes**, mounted on the
+laptop at **/Volumes/backups/NUC/kubernetes**. Its **README.md** has exact export,
+`age -p` encryption, `age -d` decryption, restore and temporary-file cleanup
+commands. The passphrase is in the password-manager entry **Homelab Sealed
+Secrets key backup**. Loss of the NAS can also lose this key backup; confirm
+an independent copy before relying on it for that failure.
+
+Evidence reviewed on 2026-10-08: independent key recovery passed at checkpoint
+2; this audit rechecked the actual encrypted file's checksum, all live key
+certificates and active-certificate coverage without decrypting or restoring.
+The owner confirmed a successful VM backup with PVC disk coverage. Their
+Proxmox screenshot lists `vzdump-qemu-103-2026_10_08-20_53_04.vma.zst` on storage
+`local`, with displayed date `2026-10-08 20:53:04` (display timezone not verified).
+It does not establish a restore test, off-host copy or guarded controller state.
+NAS-media backup/recovery evidence and an independent copy of the key backup
+have not been supplied. Recheck backup freshness before future recovery work.
+
 ### Fresh cluster
 
-Follow [setup.MD](../../../setup.MD) and the recorded network/node prerequisites.
-Manually apply `cluster/` and bootstrap Argo. **Do not apply the tracked
-ApplicationSet directly yet: it now enables automation.** Create a temporary
-disabled copy (this leaves Git unchanged):
+1. Follow [setup.MD](../../../setup.MD) and the recorded network/node
+   prerequisites. Verify NAS access and the chosen data backups. Run
+   `kubectl get nodes -o wide`, manually apply `cluster/`, and bootstrap Argo
+   using checkpoint 1 above. **Do not apply the tracked ApplicationSet yet:
+   it enables automation.** Separate Applications do not enforce startup order.
+2. Create and apply this disabled copy. The assertions stop if the tracked
+   template changes; Git is unchanged:
 
-```sh
-python3 - <<'PY'
-from pathlib import Path
-text = Path('infrastructure/node-main/ns-argo/application-set.yaml').read_text()
-for field in ('enabled', 'prune', 'selfHeal'):
-    old = f'          {field}: true'
-    assert text.count(old) == 1, f'Review changed template before recovery: {field}'
-    text = text.replace(old, f'          {field}: false')
-Path('/private/tmp/homelab-applicationset-disabled.yaml').write_text(text)
-PY
-kubectl apply --dry-run=server -f /private/tmp/homelab-applicationset-disabled.yaml
-kubectl apply -f /private/tmp/homelab-applicationset-disabled.yaml
-kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,FINALIZERS:.metadata.finalizers,OPERATION:.operation'
-```
+   ```sh
+   python3 - <<'PY_DISABLED'
+   from pathlib import Path
+   text = Path('infrastructure/node-main/ns-argo/application-set.yaml').read_text()
+   for field in ('enabled', 'prune', 'selfHeal'):
+       old = f'          {field}: true'
+       assert text.count(old) == 1, f'Review changed template before recovery: {field}'
+       text = text.replace(old, f'          {field}: false')
+   Path('/private/tmp/homelab-applicationset-disabled.yaml').write_text(text)
+   PY_DISABLED
+   kubectl apply --dry-run=server -f /private/tmp/homelab-applicationset-disabled.yaml
+   kubectl apply -f /private/tmp/homelab-applicationset-disabled.yaml
+   kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,FINALIZERS:.metadata.finalizers,OPERATION:.operation'
+   ```
 
-Expect exactly `media` and `sealed-secrets`, with false/false/false and no
-finalizers or operation. Restore the verified sealing keys from the NAS recovery
-README before syncing the controller; if it already started, restart it after
-importing keys so it reloads them. Do not delete existing keys to resolve conflicts.
-Restore application data before starting workloads. Sync the controller and wait
-for readiness, then sync the two media SealedSecrets and verify decryption.
-Review storage and manually sync the media groups. Enable automation through
-the reviewed tracked ApplicationSet only after all recovery and smoke checks
-pass and the owner authorizes resuming it. Recheck inherited policies/protections.
+   Wait for exactly `media` and `sealed-secrets`, with false/false/false and no
+   finalizers or operation. Do not continue if any generated policy is enabled.
+3. Restore verified sealing keys using the NAS README before syncing the
+   controller. If it already started, restart it after importing keys so it
+   reloads them. Never delete existing keys to resolve conflicts. Manually sync
+   only `sealed-secrets`, with prune/force/replace off; wait for its CRD and
+   controller using checkpoint 2's readiness commands.
+4. Restore application data before starting media workloads. A full VM restore
+   is the recorded recovery source; no file-level fresh-cluster data restore has
+   been tested here. Confirm restored directories, ownership and PV/PVC mapping
+   with the owner before binding claims. Do not silently provision empty volumes
+   over missing data. A new cluster has new resource UIDs (unique object IDs);
+   confirm its intended storage mapping rather than demanding old UIDs.
+5. In the Argo UI, sync only the two media SealedSecrets first; verify their
+   `Synced=True` conditions and generated Secret names/keys without displaying
+   values. Review the full storage diff, then manually sync storage metadata,
+   Homepage, Transmission, the four Arr apps, Seerr and Jellyfin in order.
+   Check availability and storage after each group; keep prune/force/replace off.
+   Stop on unexpected storage differences. Never delete/recreate storage.
+6. Run the [read-only checks](#recovery-checks). Enable automation only after
+   keys, application data, storage and smoke checks pass and the owner approves
+   resuming. Use checkpoint 4's reviewed tracked template and manual apply;
+   verify inherited policies and all deletion protections again. Remove the
+   temporary disabled copy when finished.
 
-Git restores configuration; Proxmox backups restore application data. NAS media,
-Git and sealing keys have separate recovery needs. The encrypted key backup is
-at `smb://192.168.1.32/backups/NUC/kubernetes`, mounted on the laptop at
-`/Volumes/backups/NUC/kubernetes`. Its README contains exact encryption,
-verification, restore and cleanup commands. The passphrase is in the owner's
-password manager under `Homelab Sealed Secrets key backup`.
+### Ordinary VM restore
+
+An ordinary full-VM restore may resume reconciliation immediately, including
+saved operations, possibly against newer Git. It brings back application data,
+Kubernetes state and any keys present at backup time. It does not restore NAS
+files or keys created after that backup. Compare the chosen Git revision and
+key inventory, then check storage, credentials and apps. Do not re-bootstrap
+Argo or apply the automated template blindly over restored state.
+
+Disconnecting Git or the NIC does not reliably pause saved operations or
+in-cluster reconciliation. If a pause before reconciliation is required, choose
+a backup prepared by the guarded procedure below. An unprepared backup does
+not provide that guarantee; plan recovery access before starting it.
 
 ### Guarded Proxmox backup and restore
 
-A normal full-VM restore starts Argo again, potentially against newer Git.
-Disconnecting Git or the NIC does not reliably pause saved operations or
-in-cluster reconciliation. A backup without the following preparation does not
-guarantee a pause before reconciliation.
+These are recovery instructions, **not a validation exercise on a healthy
+cluster**. They prepare a recovery point where Argo's two reconciliation
+controllers are stopped. Other workloads, including Sealed Secrets, may still
+start on VM restore. This procedure does not make application databases
+consistent by itself; retain the VM backup's application-data requirements.
 
 Before taking a guarded recovery backup:
 
-1. Set `automated.enabled`, `prune` and `selfHeal` to false in the ApplicationSet
-   file and manually reapply it. Verify both generated policies using the command
-   above. Changing a generated Application directly will be overwritten.
-2. Wait for existing operations to finish, or terminate them in the UI. Check
-   `.operation`, `.status.operationState`, all pending prune/delete lists and
-   resource deletion timestamps. Proceed only when no deletion is pending.
-3. Record the two controller replica counts privately, then stop the controllers:
+1. Follow [Pausing and resuming](#pausing-and-resuming): set the ApplicationSet
+   template's `enabled`, `prune` and `selfHeal` to false, apply it manually,
+   and verify both Applications inherited false/false/false. Keep
+   `allowEmpty: false`, resource preservation and all confirmation annotations.
+2. Finish or terminate active syncs in the Argo UI. Check the operation fields
+   below, each app's complete diff/resource list for pending prune, and deletion
+   timestamps. Historical `Succeeded`/`Failed` phases are not running operations.
+   Require no `.operation`, no `Running`/`Terminating` phase, no pending prune or
+   deletion, and no deletion approval. Terminating a sync does not undo completed
+   changes or cancel Kubernetes deletion. Resolve these before continuing.
+3. Record controller replica counts privately, then stop them:
 
    ```sh
    kubectl -n argocd get deployment argocd-applicationset-controller -o jsonpath='{.spec.replicas}{"\n"}'
    kubectl -n argocd get statefulset argocd-application-controller -o jsonpath='{.spec.replicas}{"\n"}'
    kubectl -n argocd scale deployment/argocd-applicationset-controller --replicas=0
    kubectl -n argocd scale statefulset/argocd-application-controller --replicas=0
-   kubectl -n argocd get pods
+   kubectl -n argocd get pods -l app.kubernetes.io/name=argocd-applicationset-controller
+   kubectl -n argocd get pods -l app.kubernetes.io/name=argocd-application-controller
    ```
 
-   Wait until both controllers' Pods have disappeared. Take and identify a
-   successful VM 103 backup with PVC disk coverage before restoring their
-   recorded replica counts. This uses the existing backup facility.
+   Both selections must be empty, including terminating Pods; verify desired
+   replica counts are zero. Recheck saved operations/deletions after shutdown.
+   Take and identify a successful VM 103 backup with PVC disk coverage **while
+   both controllers are stopped**. Record archive, time, disk coverage and Git
+   revision privately. If the backup fails, it is not a guarded recovery point.
+4. To resume the source VM after the backup, use the same restart order below.
+   Leave automation disabled until the review is complete.
 
-On restoring that guarded backup, verify both controllers are still stopped
-before reapplying installation manifests. Review storage identities/bindings,
-Git revision, saved operations and pending deletion. Restore missing sealing
-keys. Start the ApplicationSet controller with the template's automation still
-disabled, verify generated policies, then start the application-controller using
-recorded replica counts. Review diffs and smoke tests before any manual sync or
-future re-enabling of automation.
+On restoring that guarded backup:
+
+1. Start cluster checks with `kubectl get nodes -o wide`. Verify both controllers
+   still have zero replicas and no Pods **before** reapplying installation
+   manifests, which could start them. Review stored Application policies,
+   operations/deletions, chosen Git revision and storage identities/bindings.
+   For a restored VM, compare against its recorded inventory. Stop on unexpected
+   storage differences; restore missing sealing keys using the NAS README.
+2. Keep the live ApplicationSet template disabled. If necessary, apply the
+   disabled copy from [Fresh cluster](#fresh-cluster) while controllers remain
+   stopped. Do not apply the tracked automated template.
+3. Check the discovered folder list before starting the ApplicationSet
+   controller: it can create/delete Applications even with automatic sync
+   disabled. Restore its recorded count first. For the recorded one-replica
+   installation the commands are:
+
+   ```sh
+   kubectl -n argocd scale deployment/argocd-applicationset-controller --replicas=1
+   kubectl -n argocd rollout status deployment/argocd-applicationset-controller --timeout=300s
+   kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,FINALIZERS:.metadata.finalizers,OPERATION:.operation'
+   ```
+
+   Require false/false/false, no deletion finalizers, operations or deletion
+   timestamps; no operation phase may be `Running` or `Terminating`.
+4. Only then restore the application-controller's recorded count (one here):
+
+   ```sh
+   kubectl -n argocd scale statefulset/argocd-application-controller --replicas=1
+   kubectl -n argocd rollout status statefulset/argocd-application-controller --timeout=300s
+   ```
+
+   With automation still disabled, review complete diffs and pending resources
+   before any manual sync. Run recovery/smoke checks, then resume through the
+   reviewed ApplicationSet only when approved. Verify all inherited safeguards.
+
+### Recovery checks
+
+These commands read status without restoring data or changing controllers:
+
+```sh
+kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,FINALIZERS:.metadata.finalizers,OPERATION:.operation,PHASE:.status.operationState.phase,DELETING:.metadata.deletionTimestamp,APPROVAL:.metadata.annotations.argocd\.argoproj\.io/deletion-approved'
+kubectl -n media get deployments,pods,pvc
+kubectl -n media get pvc -o custom-columns='NAME:.metadata.name,UID:.metadata.uid,VOLUME:.spec.volumeName,DELETING:.metadata.deletionTimestamp,PROTECTION:.metadata.annotations.argocd\.argoproj\.io/sync-options'
+kubectl get pv -o custom-columns='NAME:.metadata.name,UID:.metadata.uid,CLAIM:.spec.claimRef.name,CLAIM_UID:.spec.claimRef.uid,RECLAIM:.spec.persistentVolumeReclaimPolicy,DELETING:.metadata.deletionTimestamp'
+kubectl -n media get sealedsecrets -o custom-columns='NAME:.metadata.name,SYNCED:.status.conditions[0].status,DELETING:.metadata.deletionTimestamp,PROTECTION:.metadata.annotations.argocd\.argoproj\.io/sync-options'
+kubectl get crd sealedsecrets.bitnami.com -o jsonpath='{.metadata.annotations.argocd\.argoproj\.io/sync-options}{"\n"}'
+curl --noproxy '*' --fail http://homepage.home.arpa/api/healthcheck
+```
+
+Before enabling automation, require two Synced/Healthy Applications, eight
+available Deployments, Ready Pods, nine Bound PVCs with verified data/bindings,
+two successfully decrypted SealedSecrets and confirmation options on all PVCs,
+both SealedSecrets and the CRD. No operation, deletion approval or deletion
+should be pending. In each Argo app's resource list, inspect **all** pending
+prunes, not just PVCs; also inspect deletion timestamps for every managed
+resource. Keep namespaces and the NAS PV outside Argo ownership.
+
+Open the seven web apps (Homepage, Jellyfin, Sonarr, Radarr, Prowlarr, Bazarr,
+Seerr); expect working pages. Verify Transmission rejects anonymous RPC and
+accepts existing credentials for read-only `session-get`. Check Homepage's four
+widgets and play existing NAS media in Jellyfin. Do not use downloads, imports,
+deletions or library cleanup as tests. The manifests under `tests/` include a
+NAS **write** test; do not apply them as a read-only recovery check.
 
 ### Normal changes and intentional removal
 
@@ -428,15 +554,35 @@ backup, one pinned digest update, rollout verification and the app's smoke test.
 For a new app, add `ns-<name>/overlays/prod`, declare its namespace under
 `cluster/namespace/` and register it in that Kustomization. Manually apply
 `cluster/` before its first sync. Seal credentials using a backed-up certificate,
-protect PVCs and review/push. Directory discovery creates its Application.
+protect PVCs with `Prune=confirm,Delete=confirm` and review/push. Protect any
+Argo-managed Namespace the same way; prefer manually owned bootstrap namespaces.
+Check its destination mapping, mounts and storage before pushing: new apps
+inherit the current enabled policy and may deploy immediately. For staged
+onboarding, pause the set first, verify every generated policy is disabled,
+then manually sync/review the app before resuming. Directory discovery creates
+its Application.
 Bootstrap namespaces and the NAS PV remain outside Argo ownership.
 
-Pause/resume policies through the manually applied ApplicationSet file. A Git
-commit alone does not apply that bootstrap file. Verify every generated policy
-and terminate active operations when pausing. Disabling automation stops new
-automatic syncs; it does not block manual sync or ApplicationSet creation/deletion.
-Resolve Git differences before resuming. Paused after checkpoint 4 means this
-implementation session has stopped; automatic reconciliation remains enabled.
+### Pausing and resuming
+
+Change `enabled`, `prune` and `selfHeal` together in the manually applied
+ApplicationSet template: false/false/false pauses; true/true/true resumes.
+Review/commit/push a lasting policy change, then run checkpoint 4's diff,
+dry-run and manual apply commands with that reviewed file. For a temporary
+pause, use the disabled copy under Fresh cluster, record that live bootstrap
+state differs from Git, and keep the source template unchanged. A Git commit
+alone does not apply this bootstrap file. Editing a generated Application's
+policy is overwritten by the ApplicationSet controller.
+
+Verify every generated policy after applying. Pausing stops new automatic
+syncs; finish or terminate active operations in the UI and verify the operation
+and deletion checks above. It still permits manual sync and ApplicationSet
+creation/deletion. Before resuming, resolve Git differences, review complete
+diffs/pending lists, verify keys/data/storage/smoke checks and preserve
+`allowEmpty: false`, preservation=true, absent deletion finalizers and all
+confirmation annotations. A stopped work session does not pause Argo.
+
+### Intentional removal
 
 For removal of one service inside media, remove its workload resources first and
 retain its PVCs. For a whole discovered Application, save its inventory, verify
@@ -475,3 +621,18 @@ changing cluster configuration. For image pulls or Git access from the VM,
 inspect UniFi Security logs for blocked registry, GitHub and API traffic.
 If changing the HTTP ConfigMap after initial install, reapply then restart only
 `deployment/argocd-server` and wait for its rollout.
+
+## Documentation audit — Execution 6
+
+Reviewed the recovery paths, everyday changes, pauses, onboarding and removal
+against the plan and live safeguards. Local links, shell/Python syntax, clean
+tracked-checkout renders and the disabled-copy transformation were checked.
+Mutation/restore commands were reviewed and checked with safe dry-runs where
+appropriate; no restore, key replacement, controller pause or demonstration
+was performed. See [the progress record](../../../argocd-plan.md#implementation-progress--2026-10-08)
+for completed checks and limits.
+
+Sources for the operating rules: [automatic sync](https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/),
+[Application deletion](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Application-Deletion/),
+[confirmation options](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-options/),
+and [Sealed Secrets key recovery](https://github.com/bitnami/sealed-secrets/blob/v0.40.0/README.md#how-can-i-do-a-backup-of-my-sealedsecrets).

@@ -1,13 +1,13 @@
 # Next steps
 
-TODO 1–3 are in progress under [the staged plan](argocd-plan.md). Checkpoints
-1–4 are verified and pushed; paused after checkpoint 4. Media adoption and
-reconciliation demonstrations passed. Leave TODO 1–3 open until Execution 6's
-final recovery-documentation audit passes; it has not started.
+TODO 1–3 are complete under [the staged plan](argocd-plan.md): checkpoints
+1–4 and Execution 6's documentation audit passed. This finishes the Argo rollout;
+automatic reconciliation remains enabled. Recovery limits are recorded in the
+[operations guide](infrastructure/node-main/ns-argo/SETUP.md#choose-the-recovery-path).
 
-1. Finish repository/recovery documentation. Public GitHub remote is established; document and validate all recovery paths, including NAS media outside the VM backup.
-2. Verify encrypted Secrets through the remaining rollout. Independent encrypted key recovery and both production Secret adoptions are complete; names, values and identities are unchanged.
-3. Finish Argo CD operating documentation. Automatic sync, self-healing and pruning are enabled and demonstrated; final documentation audit remains.
+1. [x] Repository/recovery documentation: public GitHub source, fresh-cluster and ordinary/guarded VM recovery, and separate NAS/repository/key recovery needs documented and safely checked.
+2. [x] Encrypted Secrets: independent encrypted key recovery and both production adoptions verified; final read-only checks confirmed unchanged credentials and key-backup coverage.
+3. [x] Argo CD: automatic sync, self-healing and pruning demonstrated; operating/recovery documentation audited, with storage safeguards preserved.
 4. Automate image updating using Renovate.
 5. Add cluster and workload observability. Decide separately whether to keep Homepage.
 6. Implement a safe image-upgrade workflow using Renovate PRs without automatic merging. Retain release review, application-native pre-upgrade backup, one pinned digest update at a time, rollout verification, and application smoke tests.
