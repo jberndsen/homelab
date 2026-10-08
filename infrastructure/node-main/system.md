@@ -44,7 +44,7 @@
 - The owner selected `smb://192.168.1.32/backups/NUC/kubernetes` for encrypted
   Sealed Secrets key backups and an adjacent recovery `README.md`. On the dev
   laptop this is mounted at `/Volumes/backups/NUC/kubernetes`; SMB connectivity
-  and directory access were verified on 2026-10-06. The backup passphrase will
+  and directory access were verified on 2026-10-06. The backup passphrase
   is stored in the owner's password manager as `Homelab Sealed Secrets key backup`
   (owner confirmed on 2026-10-08). See the verified backup below.
 - On 2026-10-08, Argo CD `v3.5.4` was manually bootstrapped in namespace
