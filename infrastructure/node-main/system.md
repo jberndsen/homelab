@@ -46,3 +46,24 @@
   laptop this is mounted at `/Volumes/backups/NUC/kubernetes`; SMB connectivity
   and directory access were verified on 2026-10-06. The backup passphrase will
   be stored in the owner's password manager. The key backup is not yet created.
+- On 2026-10-08, Argo CD `v3.5.4` was manually bootstrapped in namespace
+  `argocd` using the standard non-HA upstream install and preserved upstream
+  NetworkPolicies. Its six Deployments and application-controller StatefulSet
+  were ready, with seven Ready Pods and no restarts. Argo does not manage itself;
+  its manifests are in `ns-argo/` outside production directory discovery.
+- `http://argocd.home.arpa` returned HTTP 200 through Traefik at
+  `192.168.30.103`; the server runs with `server.insecure: "true"`. Access is
+  intended for the trusted LAN. Admin login/password rotation is awaiting owner
+  verification; the initial-password Secret has not yet been removed.
+- No Argo Applications or ApplicationSets have been created yet. Media remains
+  manually managed. Sealed Secrets and its independent encrypted key backup
+  remain pending; TODO 1–3 are not complete.
+- Immediately after bootstrap, the node used approximately 127m CPU and
+  3069 MiB memory (19%); Argo Pods collectively used approximately 168 MiB.
+  These are initial idle observations, not workload sizing guarantees.
+- On 2026-10-08, local and GitHub `main` matched `371650a` before implementation.
+  A pattern audit of all 27 reachable commits (189 distinct file blobs) found
+  placeholders, structural matches and documented fake node-secondary values;
+  no actual credentials were identified by that audit. A credential-free
+  pre-install image/storage baseline is held privately under ignored
+  `plans/runtime/` on the dev laptop.

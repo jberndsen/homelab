@@ -4,7 +4,7 @@
 4. Restore the Ubuntu Server VM from a Proxmox backup, or create a new Ubuntu Server VM with the recorded network settings and SSH access.
 5. On a new VM, install `nfs-common` and the recorded K3s version, using [the K3s configuration](infrastructure/node-main/secrets-encryption/k3s-server-config.yaml).
 6. Clone this repository onto the development laptop and configure local `kubectl` access to the VM.
-7. For a fresh cluster, apply [the cluster configuration](infrastructure/node-main/cluster), recreate the untracked Kubernetes Secrets from the password manager, then apply [the production media stack](infrastructure/node-main/ns-media/overlays/prod).
+7. For a fresh cluster, apply [the cluster configuration](infrastructure/node-main/cluster). Argo rollout is currently at checkpoint 1: follow [the Argo bootstrap guide](infrastructure/node-main/ns-argo/SETUP.md) to reinstall it. Media is still managed manually: recreate the untracked Kubernetes Secrets from the password manager and provide the ignored Secret files required by the current media Kustomizations before applying [the production media stack](infrastructure/node-main/ns-media/overlays/prod). This manual media step will be replaced after the Sealed Secrets and adoption checkpoints in [the plan](argocd-plan.md) pass.
 8. If rebuilding without a VM backup, restore application data from available backups or complete each application's initial setup and connections to the other services.
 9. Run [the infrastructure checks](infrastructure/node-main/tests) and verify application access, media access, and VPN routing.
 10. Configure Proxmox VM backups and separate backups for NAS media, this repository, and credentials needed for recovery.

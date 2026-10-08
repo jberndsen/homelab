@@ -21,3 +21,7 @@
   record `*.home.arpa` resolves to that address.
 - Public DNS for `notech.foo` is managed in Cloudflare. The UniFi Gateway
   manages DDNS for `vpn.no.tech.foo`.
+- On 2026-10-08, `argocd.home.arpa` resolved to `192.168.30.103` from the dev
+  laptop and served HTTP 200 through the existing Traefik entry point. During
+  setup, the owner's active laptop VPN prevented Kubernetes API access; access
+  succeeded after the owner disabled it.
