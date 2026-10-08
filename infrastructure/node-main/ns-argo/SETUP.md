@@ -15,9 +15,9 @@ and nine PVCs Bound, with Deployment specs/images and PVC/PV identities,
 bindings and PV specs matching the private baseline. At checkpoint 1, no
 Applications or ApplicationSets existed. Checkpoint 2's resulting state is below.
 
-This installs Argo CD only. No ApplicationSet or Applications are included, so
-media is still managed manually. Do not adopt media until the later backup and
-Sealed Secrets recovery gates in the plan have passed.
+The `ns-argo/kustomization.yaml` below installs Argo CD only. The ApplicationSet
+is applied separately in checkpoint 2. Media remains manually managed until
+the deliberate adoption in checkpoint 3.
 
 The pinned standard non-HA installation is **v3.5.4**, reviewed on 2026-10-08.
 [Its release](https://github.com/argoproj/argo-cd/releases/tag/v3.5.4) fixes
@@ -109,9 +109,9 @@ requests/limits; check actual usage after bootstrap.
 
 **Verified complete on 2026-10-08; paused before checkpoint 3.**
 The owner confirmed the passphrase is saved in their password manager as
-`Homelab Sealed Secrets key backup`. `sealed-secrets` is Synced/Healthy, its sync Succeeded, CRD
-Established and controller Ready. Exactly `media` and `sealed-secrets` exist,
-with automatic sync disabled and no deletion finalizers. Media has no sync
+`Homelab Sealed Secrets key backup`. `sealed-secrets` is Synced/Healthy, its
+sync Succeeded, CRD Established and controller Ready. Exactly `media` and
+`sealed-secrets` exist, with automatic sync disabled and no deletion finalizers. Media has no sync
 history; its ignored-Secret render error is expected until checkpoint 3.
 All eight media Deployments and nine PVCs remain healthy, with Deployment/PVC
 specs and UIDs and PV specs/UIDs/bindings matching the private pre-Argo baseline.
@@ -188,8 +188,8 @@ Install laptop tools with `brew install kubeseal age`. Key recovery uses
 **/Volumes/backups/NUC/kubernetes**, with exact backup/restore commands in the
 adjacent NAS **README.md**. The owner keeps its age passphrase in their password
 manager under **Homelab Sealed Secrets key backup**, outside Git and chat.
-Only encrypted `.yaml.age` backups, public
-certificates, fingerprint inventories and recovery documentation belong there.
+Only encrypted `.yaml.age` backups, public certificates, fingerprint inventories
+and recovery documentation belong there.
 Keep private keys in protected local temporary files and clean them after use.
 
 Before sealing, fetch the active certificate and compare its SHA-256 fingerprint
@@ -205,14 +205,24 @@ backup. No production key replacement is needed to test recovery.
 
 ## Continuing the rollout
 
-Pause after checkpoint 2's controller and independent encrypted key backup are
-verified. Media adoption and automatic reconciliation belong to checkpoints
-3–4; TODO 1–3 remain open until all their checks pass.
+Checkpoint 2 is complete. The owner confirmed the pre-adoption VM 103 backup
+and PVC disk-coverage gate on 2026-10-08; the archive identifier/job time was
+not supplied. Recheck freshness if resuming much later or after data/storage
+changes. The owner explicitly requested that checkpoint 3 stay unstarted here.
+Resume only on their next instruction, at **Execution 4 / checkpoint 3** in
+the plan; its progress section includes a clean-context prompt.
 
-Before media adoption, the owner must confirm a fresh successful Proxmox backup
-of VM 103 and that its included disks cover all application PVC data. The
-private pre-install baseline is in ignored `plans/runtime/`; it is comparison
-evidence, not a data backup. NAS media is external to the VM backup.
+The final read-only audit passed: node and controllers healthy, no pending Argo
+operations, media/storage unchanged, and verified key-backup coverage current.
+Media still has its expected ignored-Secret render error and no sync history.
+All nine media PVC confirmation annotations and production Secret adoption
+remain checkpoint-3 work; only the Sealed Secrets CRD protection is installed.
+Automatic reconciliation belongs to checkpoint 4. TODO 1–3 remain open until all
+their checks pass.
+
+The private pre-install baseline is
+`plans/runtime/argocd-baseline-2026-10-08.json`; it is ignored comparison evidence,
+not a data backup. NAS media is external to the VM backup.
 
 ## Troubleshooting this stage
 

@@ -37,13 +37,32 @@ as instructed below.
   match the private pre-Argo baseline. No node pressure. **Pause at checkpoint
   2; do not begin checkpoint 3 until the owner continues.**
 - Next session: **Execution 4 / checkpoint 3: Adopt media without replacing
-  data**. First confirm a fresh successful Proxmox backup of VM 103 and that
-  its included disks cover all application PVC data. Recheck active certificate
-  coverage against the verified key backup before sealing production Secrets.
+  data**. On 2026-10-08, the owner confirmed the pre-adoption Proxmox VM 103
+  backup gate (successful fresh backup with application PVC disk coverage).
+  This is owner-confirmed; the archive identifier/job time was not supplied.
+  Recheck freshness if resuming substantially later or after data/storage changes.
+  Recheck active certificate coverage against the verified key backup before
+  sealing production Secrets.
 - The private baseline is `plans/runtime/argocd-baseline-2026-10-08.json` on the
-  dev laptop (ignored, credential-free comparison evidence). Proxmox backup and
-  disk-coverage confirmation remain required before later media adoption.
+  dev laptop (ignored, credential-free comparison evidence).
+- Final read-only audit on 2026-10-08 passed: node Ready without pressure,
+  seven Argo Pods Ready with zero restarts, UI/health HTTP 200, seven upstream
+  NetworkPolicies retained, controller Healthy and key-backup coverage current.
+  Both Applications have automation disabled, no deletion finalizers and no
+  active operations. Media has never synced; Deployment/PVC/PV identities and
+  specs still match baseline. No production SealedSecrets or checkpoint-2 test
+  resources exist. **Checkpoint 3 has not started; owner requested a clean-context handoff.**
 - TODO 1–3 remain open until all rollout/recovery checks pass.
+
+### Next-session prompt
+
+```text
+Continue argocd-plan.md at Execution 4 / checkpoint 3: Adopt media without replacing data. Read AGENTS.md, all infrastructure/**/system.md records, the plan's progress section, and infrastructure/node-main/ns-argo/SETUP.md first. Teach me along the way and pause after checkpoint 3; do not enable automatic sync or begin checkpoint 4.
+
+Checkpoints 1–2 are verified and pushed. The owner confirmed the VM 103 backup/PVC disk-coverage gate on 2026-10-08; use that recorded confirmation, checking freshness if circumstances have changed. Start cluster work with kubectl get nodes -o wide, verify Git/live state, and compare against plans/runtime/argocd-baseline-2026-10-08.json.
+
+Recheck active certificate coverage against the verified NAS key backup before sealing. Adopt homepage-widgets and transmission-rpc in place using strict-scope SealedSecrets, preserving values and Secret names. Protect all nine PVCs, verify the existing CRD protection, and render media from a clean checkout. Review diffs and manually adopt media in the plan's groups. Preserve images, settings, storage UIDs/bindings and mounts; stop on unexpected storage changes and never delete/recreate storage or use force/replace. Finish the specified smoke tests, update documentation, and commit/push reviewed task files. Keep plaintext credentials/private keys out of Git and output.
+```
 
 ## Agreed outcome
 
@@ -118,10 +137,12 @@ All paths below are relative to `infrastructure/node-main/` unless stated otherw
 
 Prefer these few YAML files and plain commands over a new framework. Use Argo's
 `default` project for this single-owner cluster. Pin reviewed
-upstream release versions instead of `stable`/`latest`. Research on 2026-10-06
-identified Argo CD `v3.5.3` (the 3.5 line is tested with Kubernetes 1.36) and
-Sealed Secrets plus `kubeseal` `v0.40.0`; recheck release notes and advisories
-at implementation. Standard non-HA fits one node; upstream HA needs three.
+upstream release versions instead of `stable`/`latest`. The implemented pins,
+reviewed on 2026-10-08, are Argo CD `v3.5.4` (the 3.5 line is tested with
+Kubernetes 1.36), Sealed Secrets and `kubeseal v0.40.0`, and laptop `age v1.3.2`.
+Argo's pin superseded the original `v3.5.3` plan after security review. Recheck
+release notes/advisories before future version changes. Standard non-HA fits
+one node; upstream HA needs three.
 Use anonymous HTTPS for the public repository, platform-appropriate client
 downloads, exact ConfigMap patch targets and the HTTP settings specified above.
 
@@ -209,8 +230,9 @@ downloads, exact ConfigMap patch targets and the HTTP settings specified above.
    for plaintext before committing; deleting a managed SealedSecret also deletes
    its generated Secret.
 2. Replace ignored Secret references with tracked SealedSecret files. Add
-   `Prune=confirm,Delete=confirm` to every media PVC. Protect the Sealed Secrets
-   CRD likewise, since deleting it would remove its custom resources.
+   `Prune=confirm,Delete=confirm` to every media PVC. Verify the Sealed Secrets
+   CRD's existing checkpoint-2 protection remains in Git and live state, since
+   deleting it would remove its custom resources.
 3. From a clean checkout containing no ignored files, verify
    `kubectl kustomize infrastructure/node-main/ns-media/overlays/prod` succeeds.
    Push reviewed changes; inspect Argo's diff against the live cluster.
@@ -311,4 +333,4 @@ Commit/push only reviewed task files. Leave no plaintext secrets or test artifac
 - [Argo ingress](https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/) and [CLI login flags](https://argo-cd.readthedocs.io/en/stable/user-guide/commands/argocd_login/)
 - [Secret adoption](https://github.com/bitnami/sealed-secrets#managing-existing-secrets) and [plaintext annotation gotcha](https://github.com/bitnami/sealed-secrets/blob/main/RELEASE-NOTES.md)
 - [Terminating active syncs](https://argo-cd.readthedocs.io/en/stable/user-guide/commands/argocd_app_terminate-op/) and [StatefulSet scaling](https://kubernetes.io/docs/tasks/run-application/scale-stateful-set/)
-- [K3s stopping behavior](https://docs.k3s.io/upgrades/killall) and [Argo operation processing](https://github.com/argoproj/argo-cd/blob/v3.5.3/controller/appcontroller.go)
+- [K3s stopping behavior](https://docs.k3s.io/upgrades/killall) and [Argo operation processing](https://github.com/argoproj/argo-cd/blob/v3.5.4/controller/appcontroller.go)

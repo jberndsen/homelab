@@ -15,7 +15,9 @@ K3s media stack on `node-main`, with deployable configuration under
 Argo checkpoint 2 is complete: Sealed Secrets and independent encrypted NAS key
 recovery are verified, and the owner confirmed password-manager storage.
 Paused before checkpoint 3. Media remains manually managed, with automatic sync
-disabled; adoption requires the Proxmox backup gate in the plan.
+disabled. The owner confirmed the VM 103 backup/PVC disk-coverage gate on
+2026-10-08. Resume with the clean-context prompt in the plan's progress section;
+checkpoint 3 has not started.
 Git stores configuration; application data recovery depends
 on Proxmox backups, and NAS media needs its own backup. Credentials and private
 exports must stay out of this public repository.

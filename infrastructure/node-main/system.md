@@ -33,7 +33,8 @@
   were Bound. The eight local-path PVs use reclaim policy `Delete`; the shared
   NAS PV `media-nfs-pv` uses `Retain`. The owner chose to keep these policies.
 - Ubuntu Server VM has package nfs-common installed.
-- K3s secrets config in `node-main/secrets-encryption/k3s-server-config.yaml` is applied.
+- K3s secrets config in
+  `infrastructure/node-main/secrets-encryption/k3s-server-config.yaml` is applied.
 - The owner keeps the source YAML files on the dev laptop, outside the K3s VM.
 - As of 2026-10-06, the repository is also published at
   `https://github.com/jberndsen/homelab`, with default branch `main`.
@@ -41,6 +42,11 @@
   `https://github.com/jberndsen/homelab.git`.
 - The owner's intended baseline for application data recovery is Proxmox VM
   backups.
+- On 2026-10-08, the owner confirmed the pre-adoption backup gate: a fresh
+  successful Proxmox backup of VM 103 with application PVC disk coverage.
+  This is owner-confirmed; no archive identifier or job timestamp was supplied.
+  Recheck freshness if resuming much later or after data/storage changes. The
+  owner explicitly requested that checkpoint 3 remain unstarted in this session.
 - The owner selected `smb://192.168.1.32/backups/NUC/kubernetes` for encrypted
   Sealed Secrets key backups and an adjacent recovery `README.md`. On the dev
   laptop this is mounted at `/Volumes/backups/NUC/kubernetes`; SMB connectivity
@@ -110,3 +116,13 @@
   matched the private pre-Argo baseline. No node pressure was present. Idle
   observations were about 84m CPU / 3312 MiB RAM (20%) for the node and
   1m CPU / 11 MiB RAM for the Sealed Secrets controller.
+- Final read-only confirmation on 2026-10-08 passed: node Ready without pressure,
+  all seven Argo Pods Ready with zero restarts, UI/health HTTP 200 and seven
+  upstream NetworkPolicies retained. Sealed Secrets remained Synced/Healthy,
+  with its CRD protection intact. Both Applications had automatic sync disabled,
+  no deletion finalizers and no pending operation; media had no sync history.
+  All media Deployment/PVC/PV specs and UIDs still matched baseline, all eight
+  Deployments were available, and all nine PVCs Bound. The NAS ciphertext
+  checksum and coverage of every current key/active certificate were unchanged;
+  no production SealedSecrets, checkpoint-2 test objects or plaintext temporary directory
+  remained. Checkpoint 3 is unstarted.
