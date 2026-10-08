@@ -53,8 +53,11 @@
   its manifests are in `ns-argo/` outside production directory discovery.
 - `http://argocd.home.arpa` returned HTTP 200 through Traefik at
   `192.168.30.103`; the server runs with `server.insecure: "true"`. Access is
-  intended for the trusted LAN. Admin login/password rotation is awaiting owner
-  verification; the initial-password Secret has not yet been removed.
+  intended for the trusted LAN. After an admin-password reset, the owner
+  confirmed successful login, password rotation and replacement-password login.
+  The final authentication audit corroborated successful password change at
+  `2026-10-08T18:23:58Z` and successful subsequent logins. The initial-password
+  Secret was verified absent; credentials remain outside Git and tool output.
 - No Argo Applications or ApplicationSets have been created yet. Media remains
   manually managed. Sealed Secrets and its independent encrypted key backup
   remain pending; TODO 1–3 are not complete.
@@ -67,3 +70,10 @@
   no actual credentials were identified by that audit. A credential-free
   pre-install image/storage baseline is held privately under ignored
   `plans/runtime/` on the dev laptop.
+- Checkpoint 1 passed on 2026-10-08: all three Argo CRDs Established, seven
+  NetworkPolicies retained, UI/health/version endpoints returned HTTP 200,
+  `cluster/` had no remaining diff, and no node pressure was present. All eight
+  media Deployments remained available and all nine PVCs Bound. Media Deployment
+  specifications/images and PVC/PV UIDs, bindings and PV specifications matched
+  the private pre-install baseline. Final idle usage was approximately 93m CPU
+  and 3012 MiB RAM (18%) for the node, with 144 MiB across Argo Pods.

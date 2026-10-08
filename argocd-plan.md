@@ -8,6 +8,24 @@ needs this plan and the existing repository; no prior conversation, sample PDF,
 or screenshots are required. Read the repository records and verify live facts
 as instructed below.
 
+## Implementation progress — 2026-10-08
+
+- Execution 1–2 / checkpoint 1 is **complete and verified**. Installed Argo CD
+  `v3.5.4` after release review identified critical fixes since planned `v3.5.3`.
+  Admin password rotation/relogin and initial-password Secret removal passed;
+  workload, CRD, HTTP, node-pressure and media/storage baseline checks passed.
+- See [the bootstrap guide](infrastructure/node-main/ns-argo/SETUP.md) and
+  [node-main record](infrastructure/node-main/system.md) for the resulting state.
+  Argo has no Applications/ApplicationSets; media is still manually managed.
+- The owner requested a separate clean context for the next stage. Resume at
+  **Execution 3 / checkpoint 2: Install Sealed Secrets and secure recovery**.
+  No Sealed Secrets controller, ApplicationSet, sealing keys or key backup has
+  been created. Recheck release notes/advisories and live state before continuing.
+- The private baseline is `plans/runtime/argocd-baseline-2026-10-08.json` on the
+  dev laptop (ignored, credential-free comparison evidence). Proxmox backup and
+  disk-coverage confirmation remain required before later media adoption.
+- TODO 1–3 remain open until all rollout/recovery checks pass.
+
 ## Agreed outcome
 
 - Public source: `https://github.com/jberndsen/homelab.git`, branch `main`.

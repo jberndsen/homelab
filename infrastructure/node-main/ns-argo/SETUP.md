@@ -7,6 +7,15 @@ The complete staged rollout and recovery requirements are in
 
 ## Checkpoint 1: manual bootstrap
 
+**Verified complete on 2026-10-08.** Argo v3.5.4 is running with all seven Pods
+Ready and its three CRDs Established. HTTP UI, health and version checks passed.
+The owner completed admin password rotation and replacement-password login;
+the initial-password Secret is absent. Eight media Deployments remain available
+and nine PVCs Bound, with Deployment specs/images and PVC/PV identities,
+bindings and PV specs matching the private baseline. No Applications or
+ApplicationSets exist. Resume at **Execution 3: Install Sealed Secrets and secure
+recovery — checkpoint 2** in the plan, in a new session as requested by the owner.
+
 This installs Argo CD only. No ApplicationSet or Applications are included, so
 media is still managed manually. Do not adopt media until the later backup and
 Sealed Secrets recovery gates in the plan have passed.
@@ -99,7 +108,8 @@ requests/limits; check actual usage after bootstrap.
 
 ## Continuing the rollout
 
-Pause for owner inspection at checkpoint 1. The next stage installs Sealed
+Checkpoint 1 is complete; the owner requested a fresh session for the next stage.
+The next stage installs Sealed
 Secrets through an ApplicationSet with automatic sync disabled, and verifies an
 independent encrypted key backup at `/Volumes/backups/NUC/kubernetes` before
 sealing real credentials. Follow checkpoints 2–4 in the plan; TODO 1–3 remain

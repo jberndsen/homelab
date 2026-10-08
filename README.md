@@ -11,7 +11,9 @@ K3s media stack on `node-main`, with deployable configuration under
 - [Next steps](TODO.md)
 - [Argo bootstrap lesson](lessons/0001-argocd-bootstrap.html)
 
-Argo rollout is in progress. Media is still managed manually until the adoption
-checkpoint passes. Git stores configuration; application data recovery depends
+Argo checkpoint 1 is complete: the installation and admin access are verified.
+Resume at Execution 3 / checkpoint 2 in the plan for Sealed Secrets and its key
+backup. Media is still managed manually until the adoption checkpoint passes.
+Git stores configuration; application data recovery depends
 on Proxmox backups, and NAS media needs its own backup. Credentials and private
 exports must stay out of this public repository.
