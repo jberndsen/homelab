@@ -4,6 +4,17 @@ kind: Kustomization
 resources:
   - ../../base
 
+# Confirm Argo pruning/deletion of every claim, including the shared NAS claim.
+patches:
+  - target:
+      version: v1
+      kind: PersistentVolumeClaim
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+
 labels:
   - pairs:
       env: prod
