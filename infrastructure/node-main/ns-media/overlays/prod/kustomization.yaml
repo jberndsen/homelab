@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   - ../../base
-  - reconciliation-check.yaml
 
 # Confirm Argo pruning/deletion of every claim, including the shared NAS claim.
 patches:
