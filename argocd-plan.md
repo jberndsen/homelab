@@ -10,9 +10,11 @@ as instructed below.
 
 ## Implementation progress — 2026-10-08
 
-- **Checkpoints 1–3 are complete and verified. Paused before checkpoint 4.**
-  Automatic sync, pruning and self-healing remain disabled. No checkpoint-4
-  reconciliation demonstrations have been started; TODO 1–3 remain open.
+- **Checkpoints 1–4 are complete and verified. Paused after checkpoint 4.**
+  Automatic sync, pruning and self-healing are enabled through ApplicationSet
+  `node-main`; `allowEmpty: false`, deletion confirmations and resource
+  preservation remain intact. TODO 1–3 await Execution 6's final documentation
+  audit; no later work was started in the checkpoint-4 session.
 - Checkpoint 1 installed Argo CD `v3.5.4` after release/advisory review.
   Admin password rotation/relogin, initial-password Secret removal, controller,
   HTTP and unchanged media/storage baseline checks passed.
@@ -57,16 +59,37 @@ as instructed below.
   dev laptop. It is ignored comparison evidence, not an application-data backup.
   See [the operations guide](infrastructure/node-main/ns-argo/SETUP.md) and
   [node-main record](infrastructure/node-main/system.md) for resulting facts.
+- **Checkpoint 4 enabled reconciliation at commit `529fc09`.** Git and live
+  state were first checked at `9238f7b`: no Argo differences, unhealthy apps,
+  active operations or pending deletion, and storage matched the private baseline.
+  Both generated Applications inherited enabled/prune/selfHeal=true and
+  allowEmpty=false, without deletion finalizers. All nine PVCs, both
+  SealedSecrets and the controller CRD retain their deletion confirmations.
+- The unused `argocd-reconciliation-check` ConfigMap proved all three behaviors:
+  Git addition `e51d741` deployed automatically (19:35:29 UTC); a manual change
+  from `from-git` to `manual-test` was corrected automatically (19:38:02 UTC),
+  retaining the same ConfigMap UID; Git removal `c58fa7f` pruned exactly that
+  ConfigMap (19:39:20 UTC). Comparison refreshes were used; no manual Sync,
+  force/replace, storage or credential demonstration was used. No test object
+  or manifest remains.
+- Final checkpoint-4 checks passed: both Applications Synced/Healthy with no
+  pending operations/differences/deletions; baseline storage/workload specs,
+  UIDs and bindings unchanged; original eight media Pods Ready with zero
+  restarts; credentials, existing ConfigMaps and ten selected settings files
+  unchanged. Seven web endpoints, Transmission authenticated read-only RPC and
+  Homepage's four backend APIs passed. Argo HTTP, controller readiness, CRDs,
+  seven NetworkPolicies, node health and unchanged manual `cluster/` diff passed.
+  The owner's widget/playback confirmation is from checkpoint 3.
 
 ### Next session
 
-The next stage is **Execution 5 / checkpoint 4**, only after the owner explicitly
-continues. Read this progress section, `AGENTS.md`, all system records and
-`ns-argo/SETUP.md`; start with `kubectl get nodes -o wide`. Recheck Git/live
-state, unchanged storage identities, manual policies and no active operations.
-Explain changes in simple language. Do not repeat adoption or rotate credentials.
-Checkpoint 4 enables reconciliation and demonstrates it with a disposable
-ConfigMap; storage and real credentials must never be demonstration targets.
+The next stage is **Execution 6 / final documentation audit**, only after the
+owner continues. Checkpoint 4 is complete; automation remains enabled while
+paused. Read this progress section, `AGENTS.md`, all system records and
+`ns-argo/SETUP.md`; start cluster work with `kubectl get nodes -o wide`.
+Recheck Git/live state, unchanged storage identities, enabled policies and no
+active operations. Do not repeat adoption, demonstrations or credential changes.
+Review the remaining documentation requirements before closing TODO 1–3.
 
 ## Agreed outcome
 

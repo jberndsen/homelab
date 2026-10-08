@@ -150,11 +150,13 @@ resources. No `CreateNamespace=true` is used: declare future app namespaces in
 `cluster/namespace/`, register them in its Kustomization, and manually apply
 `cluster/` before their first sync.
 
-After reviewing, committing and pushing these files:
+These were the checkpoint-2 manual bootstrap commands. The current tracked
+template enables automation: on a fresh/recovered cluster, first create the
+disabled copy under [Fresh cluster](#fresh-cluster), then use that copy here.
 
 ```sh
-kubectl apply --dry-run=server -f infrastructure/node-main/ns-argo/application-set.yaml
-kubectl apply -f infrastructure/node-main/ns-argo/application-set.yaml
+kubectl apply --dry-run=server -f /private/tmp/homelab-applicationset-disabled.yaml
+kubectl apply -f /private/tmp/homelab-applicationset-disabled.yaml
 kubectl -n argocd get applications,applicationsets
 kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,NAMESPACE:.spec.destination.namespace,AUTO:.spec.syncPolicy.automated.enabled,FINALIZERS:.metadata.finalizers'
 ```
@@ -206,12 +208,13 @@ backup. No production key replacement is needed to test recovery.
 
 ## Checkpoint 3: existing media adopted
 
-**Verified complete on 2026-10-08; paused before checkpoint 4.** Both Applications
-are Synced/Healthy. Automatic sync, pruning and self-healing remain disabled.
+**Verified complete on 2026-10-08.** Both Applications were Synced/Healthy at
+the checkpoint-3 pause, with automatic sync, pruning and self-healing disabled.
+Checkpoint 4 has since enabled them; its current policy and checks are below.
 The owner confirmed Homepage's four widgets and Jellyfin playback of existing
 NAS media work. No application restart was needed.
 
-Argo now owns the existing media resources through manual sync. Ownership adds
+Argo adopted the existing media resources through manual sync. Ownership adds
 tracking metadata; it does not move data. The original PVC/PV identities,
 bindings, workload specifications, image digests, settings and mounts are
 unchanged. Secrets `homepage-widgets` and `transmission-rpc` have the same names,
@@ -264,7 +267,8 @@ curl --noproxy '*' --fail http://homepage.home.arpa/api/healthcheck
 
 Expect two Synced/Healthy Applications, eight available Deployments and original
 Ready Pods, nine Bound/protected PVCs and two successfully synced SealedSecrets.
-Both policies should show false/false/false, with no finalizers or operation.
+At checkpoint 3, both policies showed false/false/false. After checkpoint 4,
+expect true/true/true, with no finalizers or operation.
 The render contains ciphertext only. The private baseline is
 `plans/runtime/argocd-baseline-2026-10-08.json`; it is comparison evidence, not a
 backup. Compare identities and bindings against it before making storage changes.
@@ -276,19 +280,95 @@ keys. Ten selected application settings files and both ConfigMaps were unchanged
 Verify widgets and play existing NAS media in Jellyfin after future changes.
 Do not test by triggering downloads, imports, deletions or library cleanup.
 
+## Checkpoint 4: automatic reconciliation enabled
+
+**Verified complete on 2026-10-08; paused after checkpoint 4.** Automatic sync
+deploys reviewed Git changes; self-healing corrects manual changes in the
+cluster; pruning removes ordinary resources removed from Git. Both Applications
+inherit these settings from the manually applied ApplicationSet, at policy
+commit `529fc09`:
+
+```yaml
+automated:
+  enabled: true
+  prune: true
+  selfHeal: true
+  allowEmpty: false
+```
+
+Before enabling/resuming, review the complete Argo diff and pending resource
+list. Require both Applications Healthy, no operations or deletions pending,
+and storage identities/specs/bindings matching the private baseline. Stop on
+unexpected storage changes. Review/commit/push the template, then apply it
+manually because Argo does not manage its own bootstrap files:
+
+```sh
+kubectl diff -f infrastructure/node-main/ns-argo/application-set.yaml
+kubectl apply --dry-run=server -f infrastructure/node-main/ns-argo/application-set.yaml
+kubectl apply -f infrastructure/node-main/ns-argo/application-set.yaml
+kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,EMPTY:.spec.syncPolicy.automated.allowEmpty,FINALIZERS:.metadata.finalizers,OPERATION:.operation'
+kubectl -n argocd get applicationset node-main -o jsonpath='{.spec.syncPolicy.preserveResourcesOnDeletion}{"\n"}'
+kubectl -n media get pvc -o custom-columns='NAME:.metadata.name,PHASE:.status.phase,PROTECTION:.metadata.annotations.argocd\.argoproj\.io/sync-options'
+```
+
+Expect exactly two Synced/Healthy Applications, true/true/true/false policies,
+no finalizers or operation, preservation=true, and nine Bound PVCs with
+`Prune=confirm,Delete=confirm`. Both SealedSecrets and the controller CRD retain
+the same confirmation options. Neither Argo deletion-finalizer variant is
+present. `allowEmpty: false` blocks an entirely empty desired application; it
+does not protect against partial removal. Confirmation annotations still apply
+when pruning is enabled. Never add force/replace or a deletion approval to Git.
+
+The unused `argocd-reconciliation-check` ConfigMap held only `message: from-git`:
+
+| Behavior | Verified evidence (UTC, 2026-10-08) |
+| --- | --- |
+| Automatic Git deployment | Addition `e51d741`, automatic sync Succeeded at 19:35:29 |
+| Self-healing | Live `manual-test` reverted to `from-git` at 19:38:02, same ConfigMap UID |
+| Pruning | Removal `c58fa7f`, automatic sync pruned exactly that ConfigMap at 19:39:20 |
+
+Comparison refreshes were used, without requesting any manual Sync. No storage
+or credentials were test targets. The test manifest and object are gone; media
+manifests are identical to their checkpoint-3 state. Storage/workload specs,
+UIDs and bindings, credentials, existing ConfigMaps and ten settings files
+remain unchanged. The same eight media Pods are Ready with zero restarts.
+Seven web endpoints, Transmission authenticated read-only RPC and Homepage's
+four backend APIs passed again. The owner's widget and playback confirmation
+was at checkpoint 3; checkpoint 4 added the read-only checks above.
+
 ## Recovery and everyday operations
 
 ### Fresh cluster
 
 Follow [setup.MD](../../../setup.MD) and the recorded network/node prerequisites.
-Manually apply `cluster/` and bootstrap Argo, then apply the ApplicationSet with
-automation disabled. Restore the verified sealing keys from the NAS recovery
+Manually apply `cluster/` and bootstrap Argo. **Do not apply the tracked
+ApplicationSet directly yet: it now enables automation.** Create a temporary
+disabled copy (this leaves Git unchanged):
+
+```sh
+python3 - <<'PY'
+from pathlib import Path
+text = Path('infrastructure/node-main/ns-argo/application-set.yaml').read_text()
+for field in ('enabled', 'prune', 'selfHeal'):
+    old = f'          {field}: true'
+    assert text.count(old) == 1, f'Review changed template before recovery: {field}'
+    text = text.replace(old, f'          {field}: false')
+Path('/private/tmp/homelab-applicationset-disabled.yaml').write_text(text)
+PY
+kubectl apply --dry-run=server -f /private/tmp/homelab-applicationset-disabled.yaml
+kubectl apply -f /private/tmp/homelab-applicationset-disabled.yaml
+kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,FINALIZERS:.metadata.finalizers,OPERATION:.operation'
+```
+
+Expect exactly `media` and `sealed-secrets`, with false/false/false and no
+finalizers or operation. Restore the verified sealing keys from the NAS recovery
 README before syncing the controller; if it already started, restart it after
 importing keys so it reloads them. Do not delete existing keys to resolve conflicts.
 Restore application data before starting workloads. Sync the controller and wait
 for readiness, then sync the two media SealedSecrets and verify decryption.
-Review storage and manually sync the media groups. Enable automation only after
-all recovery and smoke checks and explicit continuation to checkpoint 4.
+Review storage and manually sync the media groups. Enable automation through
+the reviewed tracked ApplicationSet only after all recovery and smoke checks
+pass and the owner authorizes resuming it. Recheck inherited policies/protections.
 
 Git restores configuration; Proxmox backups restore application data. NAS media,
 Git and sealing keys have separate recovery needs. The encrypted key backup is
@@ -336,9 +416,11 @@ future re-enabling of automation.
 
 ### Normal changes and intentional removal
 
-Argo polls Git; use the UI Refresh button to request comparison sooner. While
-paused at checkpoint 3, pushes update desired configuration but deployment still
-requires manual Sync. Review the complete diff and pending resource list first.
+Argo polls Git; use the UI Refresh button to request comparison sooner. Automatic
+sync is now enabled: reviewed changes under discovered app paths deploy after
+push, manual drift is corrected, and ordinary Git removals are pruned. Review
+the complete change before pushing; while automation is paused, review the
+complete Argo diff and pending resource list before any manual Sync or resume.
 Routine changes use direct pushes; future Renovate changes use reviewed PRs.
 Stateful image updates still require release review, an application-native
 backup, one pinned digest update, rollout verification and the app's smoke test.
@@ -353,7 +435,8 @@ Pause/resume policies through the manually applied ApplicationSet file. A Git
 commit alone does not apply that bootstrap file. Verify every generated policy
 and terminate active operations when pausing. Disabling automation stops new
 automatic syncs; it does not block manual sync or ApplicationSet creation/deletion.
-Resolve Git differences before resuming. Checkpoint 4 has not been authorized here.
+Resolve Git differences before resuming. Paused after checkpoint 4 means this
+implementation session has stopped; automatic reconciliation remains enabled.
 
 For removal of one service inside media, remove its workload resources first and
 retain its PVCs. For a whole discovered Application, save its inventory, verify

@@ -68,7 +68,8 @@
 - On 2026-10-08, Execution 3 created ApplicationSet `node-main` in `argocd`.
   It generated exactly `media` → namespace `media` and `sealed-secrets` →
   namespace `kube-system`, reading public GitHub `main` anonymously over HTTPS.
-  Both Applications have automatic sync, pruning and self-healing disabled,
+  At checkpoint 2 both Applications had automatic sync, pruning and self-healing
+  disabled,
   with no resource-deletion finalizers. The set preserves resources on deletion.
   Argo's own manifests and bootstrap namespaces remain manually managed.
 - Sealed Secrets `v0.40.0` was manually synced through Argo at commit `5f95703`
@@ -77,9 +78,9 @@
   is Ready, with Application status Synced/Healthy and sync Succeeded. It uses
   upstream default 30-day key renewal. Laptop clients are `kubeseal v0.40.0`
   and `age v1.3.2`.
-- Media is now managed by Argo through manual sync. Checkpoint 3 is complete;
-  automatic sync, pruning and self-healing remain disabled. TODO 1–3 remain
-  open pending the remaining reconciliation and recovery checks.
+- Media adoption completed at checkpoint 3; checkpoint 4 subsequently enabled
+  automatic sync, pruning and self-healing. TODO 1–3 remain open pending the
+  final recovery-documentation audit in Execution 6.
 - On 2026-10-08 at 18:43:34 UTC, independent key recovery passed using NAS file
   `sealed-secrets-keys-2026-10-08T184312Z.yaml.age` in the backup directory above.
   Its ciphertext SHA-256 is
@@ -148,5 +149,29 @@
   Homepage reached all four widget backends through Kubernetes service DNS with
   its existing API keys. The owner confirmed all four widgets show data and
   Jellyfin plays existing NAS media. Both Applications are Synced/Healthy,
-  without active operations or deletion finalizers. Paused before checkpoint 4;
-  no automatic sync, pruning or self-healing was enabled.
+  without active operations or deletion finalizers. At that checkpoint-3 pause,
+  automatic sync, pruning and self-healing were still disabled.
+- Checkpoint 4 completed on 2026-10-08. Initial local/GitHub main was `9238f7b`;
+  both Argo diffs were empty and storage matched the private pre-Argo baseline.
+  ApplicationSet policy commit `529fc09` enables automatic sync, pruning and
+  self-healing for exactly `media` and `sealed-secrets`, retaining allowEmpty=false,
+  preserveResourcesOnDeletion=true and no Application deletion finalizers.
+  All nine PVCs, both SealedSecrets and the controller CRD retain
+  `Prune=confirm,Delete=confirm`; no deletion approval was added.
+- Disposable ConfigMap `argocd-reconciliation-check` demonstrated Git deployment
+  from `e51d741` (19:35:29 UTC), correction of a live `manual-test` value back to
+  `from-git` with the same UID (19:38:02 UTC), and pruning after Git removal
+  `c58fa7f` (19:39:20 UTC). All operations were automatic; comparison refreshes
+  were used, without manual sync. Exactly that ConfigMap was pruned. It had no
+  workload references and held no credentials; no test resource/manifest remains.
+- Final checkpoint-4 checks: both Applications Synced/Healthy, no pending
+  operation/diff/deletion, unchanged baseline Deployment/PVC/PV specs, UIDs and
+  bindings, eight original Ready media Pods with zero restarts, unchanged Secret
+  values/types/UIDs, existing ConfigMaps and ten selected settings files.
+  Seven web endpoints, Transmission authenticated read-only RPC and Homepage's
+  four backend APIs passed. Argo HTTP 200, seven Ready Argo Pods with zero
+  restarts, four Established CRDs, seven retained NetworkPolicies, ready sealing
+  controller, node health and empty manual cluster diff passed. Node use was
+  about 80m CPU / 3991 MiB RAM (24%), an idle observation only. The owner's
+  widget/playback confirmation is from checkpoint 3. Paused after checkpoint 4;
+  automation stays enabled and Execution 6 was not started.

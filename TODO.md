@@ -1,13 +1,13 @@
 # Next steps
 
 TODO 1–3 are in progress under [the staged plan](argocd-plan.md). Checkpoints
-1–3 are verified and pushed; paused before checkpoint 4. Leave these open until
-media adoption, reconciliation demonstrations and final recovery documentation
-have passed all planned checks.
+1–4 are verified and pushed; paused after checkpoint 4. Media adoption and
+reconciliation demonstrations passed. Leave TODO 1–3 open until Execution 6's
+final recovery-documentation audit passes; it has not started.
 
 1. Finish repository/recovery documentation. Public GitHub remote is established; document and validate all recovery paths, including NAS media outside the VM backup.
 2. Verify encrypted Secrets through the remaining rollout. Independent encrypted key recovery and both production Secret adoptions are complete; names, values and identities are unchanged.
-3. Finish Argo CD reconciliation. Media adoption is verified; automatic reconciliation and its demonstrations remain checkpoint 4.
+3. Finish Argo CD operating documentation. Automatic sync, self-healing and pruning are enabled and demonstrated; final documentation audit remains.
 4. Automate image updating using Renovate.
 5. Add cluster and workload observability. Decide separately whether to keep Homepage.
 6. Implement a safe image-upgrade workflow using Renovate PRs without automatic merging. Retain release review, application-native pre-upgrade backup, one pinned digest update at a time, rollout verification, and application smoke tests.

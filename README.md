@@ -12,10 +12,13 @@ K3s media stack on `node-main`, with deployable configuration under
 - [Argo bootstrap lesson](lessons/0001-argocd-bootstrap.html)
 - [Sealed Secrets recovery lesson](lessons/0002-sealed-secrets-recovery.html)
 
-Argo checkpoints 1–3 are complete. Media is adopted, both Applications are
+Argo checkpoints 1–4 are complete. Media is adopted, both Applications are
 Synced/Healthy, and storage identities, settings and credentials are unchanged.
 The owner confirmed Homepage widgets and Jellyfin playback work. Automatic
-sync, pruning and self-healing remain disabled; paused before checkpoint 4.
+sync, pruning and self-healing are enabled. An unused disposable ConfigMap
+proved automatic Git deployment, correction of a manual change and deletion
+after Git removal; the test is now gone. All deletion protections remain intact.
+Paused after checkpoint 4, before the final documentation audit.
 Encrypted NAS key recovery and the owner-confirmed VM 103 backup/PVC coverage
 gate were verified on 2026-10-08. See the plan's progress section before continuing.
 Git stores configuration; application data recovery depends
