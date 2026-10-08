@@ -106,14 +106,90 @@ requests/limits; check actual usage after bootstrap.
    [getting-started guide](https://argo-cd.readthedocs.io/en/stable/getting_started/)
    and [Ingress configuration](https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/).
 
+## Checkpoint 2: controller and independent key recovery
+
+Sealed Secrets is pinned to **v0.40.0**, reviewed on 2026-10-08 with its
+[release notes](https://github.com/bitnami/sealed-secrets/releases/tag/v0.40.0)
+and published advisories. This version includes fixes for
+[the decryption oracle](https://github.com/bitnami/sealed-secrets/security/advisories/GHSA-qj4p-m373-p2wg)
+and [scope widening](https://github.com/bitnami/sealed-secrets/security/advisories/GHSA-465p-v42x-3fmj).
+The laptop uses matching `kubeseal v0.40.0` and `age v1.3.2`.
+
+The manually applied `application-set.yaml` discovers
+`infrastructure/node-main/ns-*/overlays/prod`. For example, segment 2 of
+`infrastructure/node-main/ns-media/overlays/prod` is `ns-media`; trimming
+`ns-` produces the Application name and namespace `media`. Sealed Secrets is
+explicitly mapped to `kube-system`. Go templates fail on missing keys; Argo's
+own installation is excluded and remains manually managed.
+
+An ApplicationSet creates Applications; an Application renders Git and applies
+resources only when synced. Both generated Applications have automatic sync,
+pruning and self-healing disabled during adoption. Removing a discovered folder
+preserves deployed resources: the set uses `preserveResourcesOnDeletion: true`
+and generated Applications have no Argo deletion finalizer. The Sealed Secrets
+CRD has `Prune=confirm,Delete=confirm`; deleting it would delete its custom
+resources. No `CreateNamespace=true` is used: declare future app namespaces in
+`cluster/namespace/`, register them in its Kustomization, and manually apply
+`cluster/` before their first sync.
+
+After reviewing, committing and pushing these files:
+
+```sh
+kubectl apply --dry-run=server -f infrastructure/node-main/ns-argo/application-set.yaml
+kubectl apply -f infrastructure/node-main/ns-argo/application-set.yaml
+kubectl -n argocd get applications,applicationsets
+kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,NAMESPACE:.spec.destination.namespace,AUTO:.spec.syncPolicy.automated.enabled,FINALIZERS:.metadata.finalizers'
+```
+
+Expect exactly `media` → `media` and `sealed-secrets` → `kube-system`, both
+with `AUTO=false` and no finalizers. Media's render error is expected until
+checkpoint 3 replaces its ignored Secret files. **Do not sync media yet.**
+
+In the Argo UI, open **sealed-secrets → Sync**, leave prune and force/replace
+off, review the resource list, and sync only this Application. The equivalent
+Kubernetes operation below requires the reviewed commit to be on GitHub; first
+verify the Application has no active operation. `apply` selects ordinary apply,
+and is not the destructive `replace` strategy.
+
+```sh
+git rev-parse HEAD
+kubectl -n argocd get application sealed-secrets -o jsonpath='{.operation}{"\n"}'
+# Replace REVIEWED_COMMIT with that pushed commit SHA.
+kubectl -n argocd patch application sealed-secrets --type=merge -p \
+  '{"operation":{"initiatedBy":{"username":"checkpoint-2"},"sync":{"revision":"REVIEWED_COMMIT","prune":false,"syncStrategy":{"apply":{}}}}}'
+kubectl wait --for=condition=Established --timeout=60s crd/sealedsecrets.bitnami.com
+kubectl -n kube-system rollout status deployment/sealed-secrets-controller --timeout=300s
+kubectl -n argocd get application sealed-secrets
+```
+
+Separate Applications do not guarantee startup order. Wait for the controller
+before creating any SealedSecrets. The upstream default renews sealing keys
+every 30 days; old keys remain necessary for old ciphertext.
+
+Install laptop tools with `brew install kubeseal age`. Key recovery uses
+**smb://192.168.1.32/backups/NUC/kubernetes**, mounted at
+**/Volumes/backups/NUC/kubernetes**, with exact backup/restore commands in the
+adjacent NAS **README.md**. The owner keeps its age passphrase in their password
+manager, outside Git and chat. Only encrypted `.yaml.age` backups, public
+certificates, fingerprint inventories and recovery documentation belong there.
+Keep private keys in protected local temporary files and clean them after use.
+
+Before sealing, fetch the active certificate and compare its SHA-256 fingerprint
+with the verified backup inventory. If missing, export and back up **all** key
+Secrets using label `sealedsecrets.bitnami.com/sealed-secrets-key`, including
+older keys. Encrypt locally with `age -p`, copy only ciphertext to NAS, decrypt
+the NAS copy locally with `age -d`, and verify offline recovery of a harmless
+test using `kubeseal --recovery-unseal --recovery-private-key`. Keep the previous
+backup until the replacement is verified. Seal using that exact backed-up
+public certificate with `kubeseal --cert`; this avoids renewal between checking
+coverage and sealing. Adding a credential alone does not require another key
+backup. No production key replacement is needed to test recovery.
+
 ## Continuing the rollout
 
-Checkpoint 1 is complete; the owner requested a fresh session for the next stage.
-The next stage installs Sealed
-Secrets through an ApplicationSet with automatic sync disabled, and verifies an
-independent encrypted key backup at `/Volumes/backups/NUC/kubernetes` before
-sealing real credentials. Follow checkpoints 2–4 in the plan; TODO 1–3 remain
-open until all their checks pass.
+Pause after checkpoint 2's controller and independent encrypted key backup are
+verified. Media adoption and automatic reconciliation belong to checkpoints
+3–4; TODO 1–3 remain open until all their checks pass.
 
 Before media adoption, the owner must confirm a fresh successful Proxmox backup
 of VM 103 and that its included disks cover all application PVC data. The

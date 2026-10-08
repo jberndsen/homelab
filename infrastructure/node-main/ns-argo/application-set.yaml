@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: node-main
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+  generators:
+    - git:
+        repoURL: https://github.com/jberndsen/homelab.git
+        revision: main
+        directories:
+          - path: infrastructure/node-main/ns-*/overlays/prod
+          - path: infrastructure/node-main/ns-argo/overlays/prod
+            exclude: true
+  template:
+    metadata:
+      name: '{{ index .path.segments 2 | trimPrefix "ns-" }}'
+      namespace: argocd
+      # No cascading-deletion finalizer: removing a folder preserves resources.
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/jberndsen/homelab.git
+        targetRevision: main
+        path: '{{ .path.path }}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ if eq (index .path.segments 2) "ns-sealed-secrets" }}kube-system{{ else }}{{ index .path.segments 2 | trimPrefix "ns-" }}{{ end }}'
+      syncPolicy:
+        automated:
+          enabled: false
+          prune: false
+          selfHeal: false
+          allowEmpty: false
