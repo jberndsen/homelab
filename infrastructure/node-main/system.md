@@ -46,7 +46,7 @@
   successful Proxmox backup of VM 103 with application PVC disk coverage.
   This is owner-confirmed; no archive identifier or job timestamp was supplied.
   Recheck freshness if resuming much later or after data/storage changes. The
-  owner explicitly requested that checkpoint 3 remain unstarted in this session.
+  owner later authorized checkpoint 3 using this recorded confirmation.
 - The owner selected `smb://192.168.1.32/backups/NUC/kubernetes` for encrypted
   Sealed Secrets key backups and an adjacent recovery `README.md`. On the dev
   laptop this is mounted at `/Volumes/backups/NUC/kubernetes`; SMB connectivity
@@ -77,10 +77,9 @@
   is Ready, with Application status Synced/Healthy and sync Succeeded. It uses
   upstream default 30-day key renewal. Laptop clients are `kubeseal v0.40.0`
   and `age v1.3.2`.
-- Media remains manually managed and has never been synced by Argo. Its Argo
-  Application has the expected render error for the ignored Secret references;
-  production Secret sealing/adoption remains checkpoint 3. TODO 1–3 are not
-  complete.
+- Media is now managed by Argo through manual sync. Checkpoint 3 is complete;
+  automatic sync, pruning and self-healing remain disabled. TODO 1–3 remain
+  open pending the remaining reconciliation and recovery checks.
 - On 2026-10-08 at 18:43:34 UTC, independent key recovery passed using NAS file
   `sealed-secrets-keys-2026-10-08T184312Z.yaml.age` in the backup directory above.
   Its ciphertext SHA-256 is
@@ -93,8 +92,7 @@
   No test objects were applied, production keys were not replaced, and protected
   local plaintext was cleaned up. The adjacent NAS `README.md` contains exact
   backup/verification/restore/cleanup commands and the public fingerprint inventory.
-  The owner confirmed password-manager storage; checkpoint 2 is complete and
-  paused before media adoption.
+  The owner confirmed password-manager storage; checkpoint 2 is complete.
 - Immediately after bootstrap, the node used approximately 127m CPU and
   3069 MiB memory (19%); Argo Pods collectively used approximately 168 MiB.
   These are initial idle observations, not workload sizing guarantees.
@@ -116,7 +114,7 @@
   matched the private pre-Argo baseline. No node pressure was present. Idle
   observations were about 84m CPU / 3312 MiB RAM (20%) for the node and
   1m CPU / 11 MiB RAM for the Sealed Secrets controller.
-- Final read-only confirmation on 2026-10-08 passed: node Ready without pressure,
+- The final checkpoint-2 read-only confirmation on 2026-10-08 passed: node Ready without pressure,
   all seven Argo Pods Ready with zero restarts, UI/health HTTP 200 and seven
   upstream NetworkPolicies retained. Sealed Secrets remained Synced/Healthy,
   with its CRD protection intact. Both Applications had automatic sync disabled,
@@ -125,4 +123,30 @@
   Deployments were available, and all nine PVCs Bound. The NAS ciphertext
   checksum and coverage of every current key/active certificate were unchanged;
   no production SealedSecrets, checkpoint-2 test objects or plaintext temporary directory
-  remained. Checkpoint 3 is unstarted.
+  remained. Checkpoint 3 was unstarted at that audit.
+- Checkpoint 3 completed on 2026-10-08 using media manifest commit `450da82`.
+  Before sealing, the actual NAS backup checksum and coverage of every current
+  key and active certificate matched the verified checkpoint-2 inventory.
+  Strict-scope `homepage-widgets` and `transmission-rpc` SealedSecrets adopted
+  the existing Secrets after managed annotations were added and historical
+  last-applied annotations removed. Both generated Secrets retained their
+  original names, types, data and UIDs; no plaintext was written to Git/output.
+- Media's 37 desired resources were manually synced in seven groups: two
+  SealedSecrets, nine PVCs, Homepage, Transmission, the four Arr apps, Seerr,
+  then Jellyfin. Every group succeeded after diff review. All nine live PVCs
+  now carry `Prune=confirm,Delete=confirm`; the controller CRD retains the same
+  protection. Both SealedSecrets also have deletion confirmations because their
+  generated Secrets are controller-owned. Reclaim policies are unchanged.
+- Clean committed-checkout rendering passed without ignored Secret files.
+  All existing media resource UIDs/specs and ConfigMap contents matched their
+  pre-adoption state. Deployment/PVC/PV specs, UIDs and bindings matched the
+  private pre-Argo baseline. Ten selected application settings files were
+  byte-for-byte unchanged; the same eight media Pods remained Ready with zero
+  restarts. No application restart was necessary.
+- Seven application web endpoints returned HTTP 200. Transmission rejected
+  anonymous RPC and accepted its original credentials for read-only session-get.
+  Homepage reached all four widget backends through Kubernetes service DNS with
+  its existing API keys. The owner confirmed all four widgets show data and
+  Jellyfin plays existing NAS media. Both Applications are Synced/Healthy,
+  without active operations or deletion finalizers. Paused before checkpoint 4;
+  no automatic sync, pruning or self-healing was enabled.

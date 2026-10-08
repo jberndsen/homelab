@@ -10,59 +10,63 @@ as instructed below.
 
 ## Implementation progress — 2026-10-08
 
-- Execution 1–2 / checkpoint 1 is **complete and verified**. Installed Argo CD
-  `v3.5.4` after release review identified critical fixes since planned `v3.5.3`.
-  Admin password rotation/relogin and initial-password Secret removal passed;
-  workload, CRD, HTTP, node-pressure and media/storage baseline checks passed.
-- See [the bootstrap guide](infrastructure/node-main/ns-argo/SETUP.md) and
-  [node-main record](infrastructure/node-main/system.md) for the resulting state.
-  At checkpoint 1, Argo had no Applications/ApplicationSets; media remains
-  manually managed.
-- **Execution 3 / checkpoint 2 is complete and verified.** Reviewed Sealed Secrets
-  `v0.40.0` release/advisories; installed matching `kubeseal` and `age v1.3.2`.
-  Pushed bootstrap files in `5f95703`, then manually applied ApplicationSet
-  `node-main`. Exactly `media` and `sealed-secrets` were generated, with automatic
-  sync disabled and no deletion finalizers. Synced only Sealed Secrets: its
-  Application is Synced/Healthy, sync Succeeded, CRD Established and controller
-  Ready. Media has its expected ignored-Secret render error and has not synced.
-- Encrypted NAS backup `sealed-secrets-keys-2026-10-08T184312Z.yaml.age` covers
-  every current sealing key and the active certificate. NAS decryption matched
-  the full export, live controller validation passed, and offline recovery
-  recovered a harmless test value. No test objects were applied or production
-  keys replaced; temporary plaintext was removed. Recovery commands and public
-  certificate fingerprints are in the adjacent NAS `README.md`. The owner
-  confirmed the passphrase is saved as `Homelab Sealed Secrets key backup` in
-  their password manager.
-- Media Deployment/PVC specs and UIDs, PV specs/UIDs/bindings and availability
-  match the private pre-Argo baseline. No node pressure. **Pause at checkpoint
-  2; do not begin checkpoint 3 until the owner continues.**
-- Next session: **Execution 4 / checkpoint 3: Adopt media without replacing
-  data**. On 2026-10-08, the owner confirmed the pre-adoption Proxmox VM 103
-  backup gate (successful fresh backup with application PVC disk coverage).
-  This is owner-confirmed; the archive identifier/job time was not supplied.
-  Recheck freshness if resuming substantially later or after data/storage changes.
-  Recheck active certificate coverage against the verified key backup before
-  sealing production Secrets.
+- **Checkpoints 1–3 are complete and verified. Paused before checkpoint 4.**
+  Automatic sync, pruning and self-healing remain disabled. No checkpoint-4
+  reconciliation demonstrations have been started; TODO 1–3 remain open.
+- Checkpoint 1 installed Argo CD `v3.5.4` after release/advisory review.
+  Admin password rotation/relogin, initial-password Secret removal, controller,
+  HTTP and unchanged media/storage baseline checks passed.
+- Checkpoint 2 installed Sealed Secrets `v0.40.0` and manual-sync ApplicationSet
+  `node-main` (`5f95703`). Exactly `media` and `sealed-secrets` are generated,
+  without deletion finalizers; the set preserves resources on deletion.
+  The controller CRD is protected by `Prune=confirm,Delete=confirm`.
+- Independent key recovery passed from NAS backup
+  `sealed-secrets-keys-2026-10-08T184312Z.yaml.age`: NAS decryption matched the
+  full export, live validation and harmless offline recovery passed. Its
+  checksum and coverage of every current key/active certificate were rechecked
+  before production sealing. The exact backed-up public certificate was used.
+  The passphrase is in the owner's password manager as
+  `Homelab Sealed Secrets key backup`; no production keys were replaced.
+- The owner confirmed a fresh successful VM 103 backup with application PVC
+  disk coverage on 2026-10-08. No archive identifier/job time was supplied.
+  This recorded gate was used for adoption on the same date, with unchanged
+  storage. Recheck freshness after substantial time or data/storage changes.
+- **Checkpoint 3 adopted media at manifest commit `450da82`.** Strict-scope
+  SealedSecrets adopted `homepage-widgets` and `transmission-rpc` in place:
+  Secret names, keys, values, types and UIDs are unchanged. Historical plaintext
+  last-applied annotations were removed. Minimal inputs stayed in memory;
+  only reviewed ciphertext entered Git. Both SealedSecrets also have deletion
+  confirmations because deleting them would delete their generated Secrets.
+- All nine PVCs have `Prune=confirm,Delete=confirm`; CRD protection remains
+  intact. A clean committed checkout renders without ignored plaintext files.
+  Kubernetes and Argo diff reviews found only the new SealedSecrets, deletion
+  protections and Argo ownership metadata. Seven selective manual sync groups
+  succeeded: Secrets → storage metadata → Homepage → Transmission → Arr apps
+  → Seerr → Jellyfin. Prune/force/replace were never used.
+- Both Applications are Synced/Healthy with no active operation or deletion
+  finalizer. All eight Deployments are available and nine PVCs Bound.
+  Deployment/PVC/PV specs, UIDs and bindings match the original baseline.
+  Existing Services, Ingresses and ConfigMaps retain their identities and
+  specs/data. Ten selected settings files are unchanged; the original eight
+  Pods remain Ready with zero restarts.
+- Smoke tests passed: seven web endpoints, Transmission authentication and
+  read-only RPC, and Homepage access to all four backend APIs through service
+  DNS. The owner confirmed all four widgets work and Jellyfin plays existing
+  NAS media. No download/import/delete/cleanup jobs were used as tests.
 - The private baseline is `plans/runtime/argocd-baseline-2026-10-08.json` on the
-  dev laptop (ignored, credential-free comparison evidence).
-- Final read-only audit on 2026-10-08 passed: node Ready without pressure,
-  seven Argo Pods Ready with zero restarts, UI/health HTTP 200, seven upstream
-  NetworkPolicies retained, controller Healthy and key-backup coverage current.
-  Both Applications have automation disabled, no deletion finalizers and no
-  active operations. Media has never synced; Deployment/PVC/PV identities and
-  specs still match baseline. No production SealedSecrets or checkpoint-2 test
-  resources exist. **Checkpoint 3 has not started; owner requested a clean-context handoff.**
-- TODO 1–3 remain open until all rollout/recovery checks pass.
+  dev laptop. It is ignored comparison evidence, not an application-data backup.
+  See [the operations guide](infrastructure/node-main/ns-argo/SETUP.md) and
+  [node-main record](infrastructure/node-main/system.md) for resulting facts.
 
-### Next-session prompt
+### Next session
 
-```text
-Continue argocd-plan.md at Execution 4 / checkpoint 3: Adopt media without replacing data. Read AGENTS.md, all infrastructure/**/system.md records, the plan's progress section, and infrastructure/node-main/ns-argo/SETUP.md first. Teach me along the way and pause after checkpoint 3; do not enable automatic sync or begin checkpoint 4.
-
-Checkpoints 1–2 are verified and pushed. The owner confirmed the VM 103 backup/PVC disk-coverage gate on 2026-10-08; use that recorded confirmation, checking freshness if circumstances have changed. Start cluster work with kubectl get nodes -o wide, verify Git/live state, and compare against plans/runtime/argocd-baseline-2026-10-08.json.
-
-Recheck active certificate coverage against the verified NAS key backup before sealing. Adopt homepage-widgets and transmission-rpc in place using strict-scope SealedSecrets, preserving values and Secret names. Protect all nine PVCs, verify the existing CRD protection, and render media from a clean checkout. Review diffs and manually adopt media in the plan's groups. Preserve images, settings, storage UIDs/bindings and mounts; stop on unexpected storage changes and never delete/recreate storage or use force/replace. Finish the specified smoke tests, update documentation, and commit/push reviewed task files. Keep plaintext credentials/private keys out of Git and output.
-```
+The next stage is **Execution 5 / checkpoint 4**, only after the owner explicitly
+continues. Read this progress section, `AGENTS.md`, all system records and
+`ns-argo/SETUP.md`; start with `kubectl get nodes -o wide`. Recheck Git/live
+state, unchanged storage identities, manual policies and no active operations.
+Explain changes in simple language. Do not repeat adoption or rotate credentials.
+Checkpoint 4 enables reconciliation and demonstrates it with a disposable
+ConfigMap; storage and real credentials must never be demonstration targets.
 
 ## Agreed outcome
 
