@@ -21,7 +21,7 @@ spec:
       terminationGracePeriodSeconds: 60
       initContainers:
         - name: prepare-config
-          # Seerr v3.2.0, reviewed 2026-08-11.
+          # Seerr v3.2.0.
           image: ghcr.io/seerr-team/seerr@sha256:c4cbd5121236ac2f70a843a0b920b68a27976be57917555f1c45b08a1e6b2aad
           imagePullPolicy: IfNotPresent
           command:
@@ -43,7 +43,7 @@ spec:
               mountPath: /app/config
       containers:
         - name: seerr
-          # Seerr v3.2.0, reviewed 2026-08-11.
+          # Seerr v3.2.0.
           image: ghcr.io/seerr-team/seerr@sha256:c4cbd5121236ac2f70a843a0b920b68a27976be57917555f1c45b08a1e6b2aad
           imagePullPolicy: IfNotPresent
           env:

@@ -1,32 +1,37 @@
 # Argo CD operations
 
-Run commands from the repository root using the laptop's configured `kubectl`.
-Read [node-main](../system.md) and [network](../../network/system.md) first.
-The complete staged rollout and recovery requirements are in
-[the agreed plan](../../../argocd-plan.md). Execution 6 finishes this guide;
-automatic reconciliation remains enabled on the current cluster. The checkpoint
-sections record earlier stages; use the recovery paths below for a rebuild.
+Run commands from the repository root using the laptop's configured `kubectl`;
+start cluster work with `kubectl get nodes -o wide`. Read
+[node-main](../system.md) and [network](../../network/system.md) first.
+Choose a [recovery path](#choose-the-recovery-path) before rebuilding or restoring.
 
-## Checkpoint 1: manual bootstrap
+## Ownership and reconciliation
 
-**Verified complete on 2026-10-08.** Argo v3.5.4 is running with all seven Pods
-Ready and its three CRDs Established. HTTP UI, health and version checks passed.
-The owner completed admin password rotation and replacement-password login;
-the initial-password Secret is absent. Eight media Deployments remain available
-and nine PVCs Bound, with Deployment specs/images and PVC/PV identities,
-bindings and PV specs matching the private baseline. At checkpoint 1, no
-Applications or ApplicationSets existed. Checkpoint 2's resulting state is below.
+`cluster/` manually owns namespaces and the NAS PV. `ns-argo/` manually owns
+Argo CD and its separately applied ApplicationSet. Argo never manages itself.
+The pinned standard non-HA install retains upstream NetworkPolicies; upstream
+workloads have no resource requests/limits, so check usage after bootstrap.
 
-The `ns-argo/kustomization.yaml` below installs Argo CD only. The ApplicationSet
-is applied separately in checkpoint 2. Media remains manually managed until
-the deliberate adoption in checkpoint 3.
+ApplicationSet `node-main` discovers `ns-*/overlays/prod` on public GitHub
+`main` over anonymous HTTPS. It strips `ns-` from folder names for Application
+names and destination namespaces, explicitly maps `sealed-secrets` to
+`kube-system`, and excludes `ns-argo`. Go templates fail on missing keys.
+An ApplicationSet creates Applications; each Application renders and syncs
+its Git resources. Separate Applications do not impose startup order.
 
-The pinned standard non-HA installation is **v3.5.4**, reviewed on 2026-10-08.
-[Its release](https://github.com/argoproj/argo-cd/releases/tag/v3.5.4) fixes
-critical vulnerabilities affecting the originally planned v3.5.3. The 3.5 line
-is [tested with Kubernetes 1.36](https://argo-cd.readthedocs.io/en/stable/operator-manual/tested-kubernetes-versions/).
-Upstream NetworkPolicies are retained. Upstream workloads have no resource
-requests/limits; check actual usage after bootstrap.
+Automatic sync, pruning and self-healing are enabled. `allowEmpty: false`
+blocks an entirely empty desired application, but not partial resource removal.
+`preserveResourcesOnDeletion: true` and absent Argo deletion finalizers preserve
+resources when a discovered Application disappears. All media PVCs, both
+SealedSecrets and the Sealed Secrets CRD require `Prune=confirm,Delete=confirm`.
+See [Intentional removal](#intentional-removal) before deleting resources.
+
+## Manual bootstrap
+
+Use this procedure for a fresh cluster. For a restored VM, follow its recovery
+path first: applying installation manifests can start stopped controllers.
+The Kustomization installs Argo only; apply a disabled ApplicationSet separately
+as described under [Fresh cluster](#fresh-cluster).
 
 1. Verify the node and review the cluster diff. Exit code 1 from `kubectl diff`
    means differences were found; an error has exit code greater than 1.
@@ -107,88 +112,27 @@ requests/limits; check actual usage after bootstrap.
    [getting-started guide](https://argo-cd.readthedocs.io/en/stable/getting_started/)
    and [Ingress configuration](https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/).
 
-## Checkpoint 2: controller and independent key recovery
+## Sealed Secrets
 
-**Verified complete on 2026-10-08. The following describes checkpoint 2;
-checkpoint 3 has since resolved the media render error and adopted media.**
-The owner confirmed the passphrase is saved in their password manager as
-`Homelab Sealed Secrets key backup`. `sealed-secrets` is Synced/Healthy, its
-sync Succeeded, CRD Established and controller Ready. Exactly `media` and
-`sealed-secrets` exist, with automatic sync disabled and no deletion finalizers. Media has no sync
-history; its ignored-Secret render error is expected until checkpoint 3.
-All eight media Deployments and nine PVCs remain healthy, with Deployment/PVC
-specs and UIDs and PV specs/UIDs/bindings matching the private pre-Argo baseline.
+A SealedSecret holds encrypted configuration; its controller creates the Secret
+applications read. Strict scope binds ciphertext to the exact name and namespace.
+Do not rename it to move credentials. Media uses `homepage-widgets` and
+`transmission-rpc`; their plaintext values and sealing private keys stay out of
+Git, logs, annotations and ConfigMaps.
 
-The actual NAS backup `sealed-secrets-keys-2026-10-08T184312Z.yaml.age` was
-decrypted and matched the full key export. Controller validation and offline
-recovery of a harmless strict-scope test passed. The active certificate and
-every current key are covered; SHA-256 certificate fingerprint:
-`b77a5acd6d48fc4bf2d7620d1da9a443cd4c205789efbf0de1726c3e14e6b1a4`.
-No test objects were applied or production keys replaced. Protected temporary
-plaintext files were removed. The adjacent NAS `README.md` contains the dated
-inventory and exact backup, verification, restoration and cleanup commands.
-
-Sealed Secrets is pinned to **v0.40.0**, reviewed on 2026-10-08 with its
-[release notes](https://github.com/bitnami/sealed-secrets/releases/tag/v0.40.0)
-and published advisories. This version includes fixes for
-[the decryption oracle](https://github.com/bitnami/sealed-secrets/security/advisories/GHSA-qj4p-m373-p2wg)
-and [scope widening](https://github.com/bitnami/sealed-secrets/security/advisories/GHSA-465p-v42x-3fmj).
-The laptop uses matching `kubeseal v0.40.0` and `age v1.3.2`.
-
-The manually applied `application-set.yaml` discovers
-`infrastructure/node-main/ns-*/overlays/prod`. For example, segment 2 of
-`infrastructure/node-main/ns-media/overlays/prod` is `ns-media`; trimming
-`ns-` produces the Application name and namespace `media`. Sealed Secrets is
-explicitly mapped to `kube-system`. Go templates fail on missing keys; Argo's
-own installation is excluded and remains manually managed.
-
-An ApplicationSet creates Applications; an Application renders Git and applies
-resources only when synced. A deletion finalizer is a marker that makes
-Kubernetes wait for a controller to clean up resources before deleting an object. Both generated Applications have automatic sync,
-pruning and self-healing disabled during adoption. Removing a discovered folder
-preserves deployed resources: the set uses `preserveResourcesOnDeletion: true`
-and generated Applications have no Argo deletion finalizer. The Sealed Secrets
-CRD has `Prune=confirm,Delete=confirm`; deleting it would delete its custom
-resources. No `CreateNamespace=true` is used: declare future app namespaces in
-`cluster/namespace/`, register them in its Kustomization, and manually apply
-`cluster/` before their first sync.
-
-These were the checkpoint-2 manual bootstrap commands. The current tracked
-template enables automation: on a fresh/recovered cluster, first create the
-disabled copy under [Fresh cluster](#fresh-cluster), then use that copy here.
+During bootstrap/recovery, restore verified keys before starting the controller.
+In the Argo UI, review and sync only `sealed-secrets`, with prune/force/replace
+off. If keys are imported after startup, restart the controller to reload them.
+Wait for readiness before syncing media SealedSecrets:
 
 ```sh
-kubectl apply --dry-run=server -f /private/tmp/homelab-applicationset-disabled.yaml
-kubectl apply -f /private/tmp/homelab-applicationset-disabled.yaml
-kubectl -n argocd get applications,applicationsets
-kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,NAMESPACE:.spec.destination.namespace,AUTO:.spec.syncPolicy.automated.enabled,FINALIZERS:.metadata.finalizers'
-```
-
-Expect exactly `media` → `media` and `sealed-secrets` → `kube-system`, both
-with `AUTO=false` and no finalizers. The old media render error was resolved at
-checkpoint 3; a current checkout renders without ignored files. On recovery,
-**do not sync media yet**: first restore keys, application data and storage.
-
-In the Argo UI, open **sealed-secrets → Sync**, leave prune and force/replace
-off, review the resource list, and sync only this Application. The equivalent
-Kubernetes operation below requires the reviewed commit to be on GitHub; first
-verify the Application has no active operation. `apply` selects ordinary apply,
-and is not the destructive `replace` strategy.
-
-```sh
-git rev-parse HEAD
-kubectl -n argocd get application sealed-secrets -o jsonpath='{.operation}{"\n"}'
-# Replace REVIEWED_COMMIT with that pushed commit SHA.
-kubectl -n argocd patch application sealed-secrets --type=merge -p \
-  '{"operation":{"initiatedBy":{"username":"checkpoint-2"},"sync":{"revision":"REVIEWED_COMMIT","prune":false,"syncStrategy":{"apply":{}}}}}'
 kubectl wait --for=condition=Established --timeout=60s crd/sealedsecrets.bitnami.com
 kubectl -n kube-system rollout status deployment/sealed-secrets-controller --timeout=300s
 kubectl -n argocd get application sealed-secrets
 ```
 
-Separate Applications do not guarantee startup order. Wait for the controller
-before creating any SealedSecrets. The upstream default renews sealing keys
-every 30 days; old keys remain necessary for old ciphertext.
+The upstream default renews sealing keys every 30 days; retain old keys for
+existing ciphertext.
 
 Install laptop tools with `brew install kubeseal age`. Key recovery uses
 **smb://192.168.1.32/backups/NUC/kubernetes**, mounted at
@@ -210,135 +154,20 @@ public certificate with `kubeseal --cert`; this avoids renewal between checking
 coverage and sealing. Adding a credential alone does not require another key
 backup. No production key replacement is needed to test recovery.
 
-## Checkpoint 3: existing media adopted
+When adopting an existing Secret, preserve its name, namespace, keys, values,
+type and UID. Add `sealedsecrets.bitnami.com/managed=true` to the live Secret
+before syncing its SealedSecret, and remove any
+`kubectl.kubernetes.io/last-applied-configuration` annotation containing plaintext.
+Construct minimal sealing inputs without runtime metadata or owner references;
+verify successful decryption and unchanged credentials without displaying values.
+Never delete an existing Secret to resolve an ownership conflict.
 
-**Verified complete on 2026-10-08.** Both Applications were Synced/Healthy at
-the checkpoint-3 pause, with automatic sync, pruning and self-healing disabled.
-Checkpoint 4 has since enabled them; its current policy and checks are below.
-The owner confirmed Homepage's four widgets and Jellyfin playback of existing
-NAS media work. No application restart was needed.
-
-Argo adopted the existing media resources through manual sync. Ownership adds
-tracking metadata; it does not move data. The original PVC/PV identities,
-bindings, workload specifications, image digests, settings and mounts are
-unchanged. Secrets `homepage-widgets` and `transmission-rpc` have the same names,
-values, types and UIDs, now managed by their strict-scope SealedSecrets.
-
-Adoption used commit `450da82` and these gates:
-
-1. Compare live resources with the private pre-Argo baseline. Use the owner's
-   same-day VM 103 backup/PVC disk-coverage confirmation. Recheck freshness after
-   substantial time or storage changes; NAS media is external to that backup.
-2. Check the actual NAS ciphertext checksum and public key inventory against
-   every current key and the active certificate. Seal with that exact checked
-   certificate. Construct minimal Secret inputs in memory, without runtime
-   metadata, tracking or historical last-applied annotations.
-3. Replace the two ignored plaintext references with tracked encrypted manifests.
-   Protect every PVC with `Prune=confirm,Delete=confirm`. Verify CRD protection;
-   protect the SealedSecrets too, since their deletion deletes generated Secrets.
-4. Render from a clean committed checkout; review Kubernetes and Argo diffs.
-   Only ciphertext additions, protection and tracking metadata were expected.
-   Stop on unexpected storage differences. Never delete/recreate storage or
-   use force/replace to resolve them.
-5. Annotate the existing Secrets `sealedsecrets.bitnami.com/managed=true` and
-   remove their historical last-applied annotations before syncing SealedSecrets.
-   Sync only the two SealedSecrets and verify controller ownership, unchanged
-   values/type/UID and successful decryption without printing credential data.
-6. Selectively sync storage metadata, Homepage, Transmission, the four Arr apps,
-   Seerr, then Jellyfin. Review the diff before every group and leave prune,
-   force and replace off. Compare baseline identities/specs after every group.
-
-A SealedSecret is encrypted configuration; the controller creates or adopts the
-ordinary Secret that applications read. Strict scope binds encryption to the
-exact name and namespace. Do not rename one to move credentials. The old ignored
-Secret files are no longer needed to render from Git; local reference files must
-remain untracked. Application credentials and sealing private keys never belong
-in tool output, Git, annotations or ConfigMaps.
-
-Useful checks from the repository root:
-
-```sh
-kubectl get nodes -o wide
-kubectl kustomize infrastructure/node-main/ns-media/overlays/prod > /private/tmp/media-rendered.yaml
-kubectl -n argocd get applications
-kubectl -n media get deployments,pods,pvc
-kubectl -n media get sealedsecrets
-kubectl -n media get pvc -o custom-columns='NAME:.metadata.name,UID:.metadata.uid,VOLUME:.spec.volumeName,PROTECTION:.metadata.annotations.argocd\.argoproj\.io/sync-options'
-kubectl get crd sealedsecrets.bitnami.com -o jsonpath='{.metadata.annotations.argocd\.argoproj\.io/sync-options}{"\n"}'
-kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,FINALIZERS:.metadata.finalizers,OPERATION:.operation'
-curl --noproxy '*' --fail http://homepage.home.arpa/api/healthcheck
-```
-
-Expect two Synced/Healthy Applications, eight available Deployments and original
-Ready Pods, nine Bound/protected PVCs and two successfully synced SealedSecrets.
-At checkpoint 3, both policies showed false/false/false. After checkpoint 4,
-expect true/true/true, with no finalizers or operation.
-The render contains ciphertext only. The private baseline is
-`plans/runtime/argocd-baseline-2026-10-08.json`; it is comparison evidence, not a
-backup. Compare identities and bindings against it before making storage changes.
-
-Smoke checks passed: seven HTTP web endpoints, Transmission rejects anonymous
-RPC and accepts original credentials for read-only `session-get`, and Homepage
-reaches Jellyfin/Sonarr/Radarr/Prowlarr APIs through service DNS using existing
-keys. Ten selected application settings files and both ConfigMaps were unchanged.
-Verify widgets and play existing NAS media in Jellyfin after future changes.
-Do not test by triggering downloads, imports, deletions or library cleanup.
-
-## Checkpoint 4: automatic reconciliation enabled
-
-**Verified complete on 2026-10-08.** Automatic sync
-deploys reviewed Git changes; self-healing corrects manual changes in the
-cluster; pruning removes ordinary resources removed from Git. Both Applications
-inherit these settings from the manually applied ApplicationSet, at policy
-commit `529fc09`:
-
-```yaml
-automated:
-  enabled: true
-  prune: true
-  selfHeal: true
-  allowEmpty: false
-```
-
-Before enabling/resuming, review the complete Argo diff and pending resource
-list. Require both Applications Healthy, no operations or deletions pending,
-and storage identities/specs/bindings matching the private baseline. Stop on
-unexpected storage changes. Review/commit/push the template, then apply it
-manually because Argo does not manage its own bootstrap files:
-
-```sh
-kubectl diff -f infrastructure/node-main/ns-argo/application-set.yaml
-kubectl apply --dry-run=server -f infrastructure/node-main/ns-argo/application-set.yaml
-kubectl apply -f infrastructure/node-main/ns-argo/application-set.yaml
-kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,EMPTY:.spec.syncPolicy.automated.allowEmpty,FINALIZERS:.metadata.finalizers,OPERATION:.operation'
-kubectl -n argocd get applicationset node-main -o jsonpath='{.spec.syncPolicy.preserveResourcesOnDeletion}{"\n"}'
-kubectl -n media get pvc -o custom-columns='NAME:.metadata.name,PHASE:.status.phase,PROTECTION:.metadata.annotations.argocd\.argoproj\.io/sync-options'
-```
-
-Expect exactly two Synced/Healthy Applications, true/true/true/false policies,
-no finalizers or operation, preservation=true, and nine Bound PVCs with
-`Prune=confirm,Delete=confirm`. Both SealedSecrets and the controller CRD retain
-the same confirmation options. Neither Argo deletion-finalizer variant is
-present. `allowEmpty: false` blocks an entirely empty desired application; it
-does not protect against partial removal. Confirmation annotations still apply
-when pruning is enabled. Never add force/replace or a deletion approval to Git.
-
-The unused `argocd-reconciliation-check` ConfigMap held only `message: from-git`:
-
-| Behavior | Verified evidence (UTC, 2026-10-08) |
-| --- | --- |
-| Automatic Git deployment | Addition `e51d741`, automatic sync Succeeded at 19:35:29 |
-| Self-healing | Live `manual-test` reverted to `from-git` at 19:38:02, same ConfigMap UID |
-| Pruning | Removal `c58fa7f`, automatic sync pruned exactly that ConfigMap at 19:39:20 |
-
-Comparison refreshes were used, without requesting any manual Sync. No storage
-or credentials were test targets. The test manifest and object are gone; media
-manifests are identical to their checkpoint-3 state. Storage/workload specs,
-UIDs and bindings, credentials, existing ConfigMaps and ten settings files
-remain unchanged. The same eight media Pods are Ready with zero restarts.
-Seven web endpoints, Transmission authenticated read-only RPC and Homepage's
-four backend APIs passed again. The owner's widget and playback confirmation
-was at checkpoint 3; checkpoint 4 added the read-only checks above.
+For existing workload adoption, first confirm a fresh successful VM backup with
+PVC disk coverage and privately capture resource identities/specifications and
+storage bindings. Pause automation, review the complete diff, and selectively
+sync Secrets, storage metadata and workload groups with prune/force/replace off.
+Compare storage and application settings after each group; stop on unexpected
+differences. Preserve existing images, selectors, mounts and credentials.
 
 ## Recovery and everyday operations
 
@@ -356,30 +185,20 @@ A PVC (PersistentVolumeClaim) is an application's request for storage. A PV
 to its data. The eight local PVs use reclaim policy `Delete`, which allows disk
 cleanup after claim deletion; the shared NAS PV uses `Retain`.
 
-The key backup is at **smb://192.168.1.32/backups/NUC/kubernetes**, mounted on the
-laptop at **/Volumes/backups/NUC/kubernetes**. Its **README.md** has exact export,
-`age -p` encryption, `age -d` decryption, restore and temporary-file cleanup
-commands. The passphrase is in the password-manager entry **Homelab Sealed
-Secrets key backup**. Loss of the NAS can also lose this key backup; confirm
-an independent copy before relying on it for that failure.
+Use the NAS key-backup directory and password-manager entry in
+[Sealed Secrets](#sealed-secrets). Keep an independent copy for NAS loss.
 
-Evidence reviewed on 2026-10-08: independent key recovery passed at checkpoint
-2; this audit rechecked the actual encrypted file's checksum, all live key
-certificates and active-certificate coverage without decrypting or restoring.
-The owner confirmed a successful VM backup with PVC disk coverage. Their
-Proxmox screenshot lists `vzdump-qemu-103-2026_10_08-20_53_04.vma.zst` on storage
-`local`, with displayed date `2026-10-08 20:53:04` (display timezone not verified).
-It does not establish a restore test, off-host copy or guarded controller state.
-NAS-media backup/recovery evidence and an independent copy of the key backup
-have not been supplied. Recheck backup freshness before future recovery work.
+Before recovery, verify backup availability, freshness, application-disk coverage
+and key coverage. Confirm independent copies for loss of the host or NAS, and
+validate the intended restore method before relying on it.
 
 ### Fresh cluster
 
 1. Follow [setup.MD](../../../setup.MD) and the recorded network/node
    prerequisites. Verify NAS access and the chosen data backups. Run
    `kubectl get nodes -o wide`, manually apply `cluster/`, and bootstrap Argo
-   using checkpoint 1 above. **Do not apply the tracked ApplicationSet yet:
-   it enables automation.** Separate Applications do not enforce startup order.
+   using [Manual bootstrap](#manual-bootstrap). **Do not apply the tracked
+   ApplicationSet yet: it enables automation.**
 2. Create and apply this disabled copy. The assertions stop if the tracked
    template changes; Git is unchanged:
 
@@ -404,11 +223,11 @@ have not been supplied. Recheck backup freshness before future recovery work.
    controller. If it already started, restart it after importing keys so it
    reloads them. Never delete existing keys to resolve conflicts. Manually sync
    only `sealed-secrets`, with prune/force/replace off; wait for its CRD and
-   controller using checkpoint 2's readiness commands.
-4. Restore application data before starting media workloads. A full VM restore
-   is the recorded recovery source; no file-level fresh-cluster data restore has
-   been tested here. Confirm restored directories, ownership and PV/PVC mapping
-   with the owner before binding claims. Do not silently provision empty volumes
+   controller using [Sealed Secrets](#sealed-secrets).
+4. Restore application data before starting media workloads. Data recovery uses
+   Proxmox VM backups. For a fresh cluster, establish and validate a data
+   extraction/restore procedure with the owner. Confirm restored directories,
+   ownership and PV/PVC mapping before binding claims. Do not silently provision empty volumes
    over missing data. A new cluster has new resource UIDs (unique object IDs);
    confirm its intended storage mapping rather than demanding old UIDs.
 5. In the Argo UI, sync only the two media SealedSecrets first; verify their
@@ -419,7 +238,7 @@ have not been supplied. Recheck backup freshness before future recovery work.
    Stop on unexpected storage differences. Never delete/recreate storage.
 6. Run the [read-only checks](#recovery-checks). Enable automation only after
    keys, application data, storage and smoke checks pass and the owner approves
-   resuming. Use checkpoint 4's reviewed tracked template and manual apply;
+   resuming. Use [Pausing and resuming](#pausing-and-resuming);
    verify inherited policies and all deletion protections again. Remove the
    temporary disabled copy when finished.
 
@@ -453,7 +272,7 @@ Before taking a guarded recovery backup:
    `allowEmpty: false`, resource preservation and all confirmation annotations.
 2. Finish or terminate active syncs in the Argo UI. Check the operation fields
    below, each app's complete diff/resource list for pending prune, and deletion
-   timestamps. Historical `Succeeded`/`Failed` phases are not running operations.
+   timestamps. Completed `Succeeded`/`Failed` phases are not running operations.
    Require no `.operation`, no `Running`/`Terminating` phase, no pending prune or
    deletion, and no deletion approval. Terminating a sync does not undo completed
    changes or cancel Kubernetes deletion. Resolve these before continuing.
@@ -540,16 +359,17 @@ widgets and play existing NAS media in Jellyfin. Do not use downloads, imports,
 deletions or library cleanup as tests. The manifests under `tests/` include a
 NAS **write** test; do not apply them as a read-only recovery check.
 
-### Normal changes and intentional removal
+### Normal changes
 
 Argo polls Git; use the UI Refresh button to request comparison sooner. Automatic
-sync is now enabled: reviewed changes under discovered app paths deploy after
+sync is enabled: reviewed changes under discovered app paths deploy after
 push, manual drift is corrected, and ordinary Git removals are pruned. Review
 the complete change before pushing; while automation is paused, review the
 complete Argo diff and pending resource list before any manual Sync or resume.
 Routine changes use direct pushes; future Renovate changes use reviewed PRs.
 Stateful image updates still require release review, an application-native
 backup, one pinned digest update, rollout verification and the app's smoke test.
+Complete release review and backup before pushing or merging a deploying change.
 
 For a new app, add `ns-<name>/overlays/prod`, declare its namespace under
 `cluster/namespace/` and register it in that Kustomization. Manually apply
@@ -567,9 +387,19 @@ Bootstrap namespaces and the NAS PV remain outside Argo ownership.
 
 Change `enabled`, `prune` and `selfHeal` together in the manually applied
 ApplicationSet template: false/false/false pauses; true/true/true resumes.
-Review/commit/push a lasting policy change, then run checkpoint 4's diff,
-dry-run and manual apply commands with that reviewed file. For a temporary
-pause, use the disabled copy under Fresh cluster, record that live bootstrap
+Review/commit/push a lasting policy change, then diff, validate and manually
+apply that reviewed file:
+
+```sh
+kubectl diff -f infrastructure/node-main/ns-argo/application-set.yaml
+kubectl apply --dry-run=server -f infrastructure/node-main/ns-argo/application-set.yaml
+kubectl apply -f infrastructure/node-main/ns-argo/application-set.yaml
+kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,EMPTY:.spec.syncPolicy.automated.allowEmpty,FINALIZERS:.metadata.finalizers'
+kubectl -n argocd get applicationset node-main -o jsonpath='{.spec.syncPolicy.preserveResourcesOnDeletion}{"\n"}'
+```
+
+For a temporary pause, use the disabled copy under [Fresh cluster](#fresh-cluster),
+record that live bootstrap
 state differs from Git, and keep the source template unchanged. A Git commit
 alone does not apply this bootstrap file. Editing a generated Application's
 policy is overwritten by the ApplicationSet controller.
@@ -606,7 +436,7 @@ credentials. This repository's ciphertext cannot initialize another cluster's
 credentials. Start with empty data or independently restored data belonging to
 that installation.
 
-## Troubleshooting this stage
+## Troubleshooting
 
 ```sh
 kubectl -n argocd get pods
@@ -622,17 +452,7 @@ inspect UniFi Security logs for blocked registry, GitHub and API traffic.
 If changing the HTTP ConfigMap after initial install, reapply then restart only
 `deployment/argocd-server` and wait for its rollout.
 
-## Documentation audit — Execution 6
-
-Reviewed the recovery paths, everyday changes, pauses, onboarding and removal
-against the plan and live safeguards. Local links, shell/Python syntax, clean
-tracked-checkout renders and the disabled-copy transformation were checked.
-Mutation/restore commands were reviewed and checked with safe dry-runs where
-appropriate; no restore, key replacement, controller pause or demonstration
-was performed. See [the progress record](../../../argocd-plan.md#implementation-progress--2026-10-08)
-for completed checks and limits.
-
-Sources for the operating rules: [automatic sync](https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/),
+Sources: [automatic sync](https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/),
 [Application deletion](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Application-Deletion/),
 [confirmation options](https://argo-cd.readthedocs.io/en/stable/user-guide/sync-options/),
 and [Sealed Secrets key recovery](https://github.com/bitnami/sealed-secrets/blob/v0.40.0/README.md#how-can-i-do-a-backup-of-my-sealedsecrets).
