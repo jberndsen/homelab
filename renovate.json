@@ -12,6 +12,8 @@
     ]
   },
   "automerge": false,
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 10,
   "packageRules": [
     {
       "description": "Review each container image independently before deployment",
