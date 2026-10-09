@@ -38,6 +38,11 @@
   `https://github.com/jberndsen/homelab.git` anonymously over HTTPS.
 - Source files and the configured `kubectl` client live on the dev laptop,
   outside the K3s VM. Plaintext credentials and private keys stay outside Git.
+- The hosted Renovate GitHub app is enabled. Repository configuration in
+  `../../renovate.json` scans node-main Kubernetes manifests, excludes the
+  inactive node-secondary stack, and keeps container image PRs ungrouped with
+  automerge disabled. Digest-only images track the registry's `latest` digest;
+  review releases and take application-native backups before merging updates.
 - `cluster/` manually manages bootstrap namespaces and the NAS PV.
   `ns-argo/` manually manages Argo CD and its separately applied ApplicationSet;
   Argo does not manage itself.

@@ -2,5 +2,26 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "ignorePaths": [
+    "infrastructure/node-secondary/**"
+  ],
+  "kubernetes": {
+    "managerFilePatterns": [
+      "/^infrastructure/node-main/.*\\.ya?ml$/"
+    ]
+  },
+  "automerge": false,
+  "packageRules": [
+    {
+      "description": "Review each container image independently before deployment",
+      "matchDatasources": ["docker"],
+      "groupName": null
+    },
+    {
+      "description": "Keep Kubernetes API migrations outside dependency image updates",
+      "matchDatasources": ["kubernetes-api"],
+      "enabled": false
+    }
   ]
 }

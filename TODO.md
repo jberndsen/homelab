@@ -1,8 +1,10 @@
 # Next steps
 
-1. Add Renovate for reviewed image-update PRs without automatic merging. Retain
-   release review, an application-native backup before upgrade, one pinned digest
-   update at a time, rollout verification and application smoke tests.
+1. Review and publish the prepared Renovate configuration, then confirm the hosted
+   app detects all node-main application and init-container images and opens
+   separate image-update PRs without automatic merging. Retain release review,
+   an application-native backup before upgrade, one pinned digest update at a
+   time, rollout verification and application smoke tests.
 2. Add cluster and workload observability. Decide separately whether to keep Homepage.
 3. Add a finance namespace with [Budgero](https://budgero.app/docs/self-hosting-guide)
    to try replacing YNAB.
