@@ -43,6 +43,9 @@
   inactive node-secondary stack, and keeps container image PRs ungrouped with
   automerge disabled. Digest-only images track the registry's `latest` digest;
   review releases and take application-native backups before merging updates.
+- Renovate has no hourly PR creation limit and allows up to 10 concurrent PRs.
+  The owner confirmed PR creation, a manual merge and the subsequent Argo
+  rollout on 2026-10-09.
 - `cluster/` manually manages bootstrap namespaces and the NAS PV.
   `ns-argo/` manually manages Argo CD and its separately applied ApplicationSet;
   Argo does not manage itself.
