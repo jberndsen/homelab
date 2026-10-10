@@ -40,7 +40,7 @@ spec:
               readOnly: true
       containers:
         - name: transmission
-          image: lscr.io/linuxserver/transmission@sha256:8ae5bb0b1be8289bc4d89f246639f50def76c5bc265eba7223bc56e6aa9e9182
+          image: lscr.io/linuxserver/transmission@sha256:4813745e2c721997d8849f5718786fd4406b3c656fbef479f87a161e51383cbd
           imagePullPolicy: IfNotPresent
           env:
             - name: PUID
