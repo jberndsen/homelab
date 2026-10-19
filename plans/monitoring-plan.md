@@ -1,7 +1,27 @@
 # Monitoring deployment and teaching plan
 
-Status: Lesson 1 deployed and verified on 2026-10-19; owner checkpoint pending.
+Status: Lesson 1 deployed, verified and taught on 2026-10-19. Resume at Lesson 2.
 Continue one lesson at a time, pausing at each owner checkpoint.
+
+## Resume instructions
+
+- Read `AGENTS.md`, the relevant system records and this plan. Start cluster
+  work with `kubectl get nodes -o wide`, then verify current Argo/Pod health.
+- Continue with Lesson 2 (Node Exporter and first useful PromQL); do not
+  redeploy Lesson 1 or implement Lessons 2–5 together.
+- Teach exclusively in conversation. Do not create lesson files or teaching
+  workspace scaffolding. Explain each small change before deploying via Git/Argo.
+- The owner correctly identified the PVC as what preserves samples across Pod
+  replacement. We explained Prometheus's independent collection/query role,
+  GitOps ownership, generated ConfigMaps and their hash-driven rollout.
+  Grafana's role was explained but not separately tested by owner recall;
+  briefly recap it when introducing the next queries.
+- The config filename is now `prometheus.yaml` everywhere. Commit `86e18d9`
+  renamed it and updated the generator and container argument. Argo completed
+  the rollout Synced/Healthy, loaded the new path, and `up{job="prometheus"}`
+  remained 1. No image or PVC changes were made.
+- Re-establish port-forwarding if needed; do not assume a previous session's
+  local process remains available. Full persistence validation remains Lesson 5.
 
 ## Implementation and teaching record
 
@@ -39,8 +59,11 @@ Continue one lesson at a time, pausing at each owner checkpoint.
   shared lesson stylesheet and teaching workspace scaffolding. Keep
   [operations notes](../infrastructure/node-main/ns-monitoring/README.md)
   for running the stack; do not create lesson or teaching reference files.
-- Owner understanding/readiness checkpoint remains pending. Lessons 2–5 have
-  not started; no whole-stack completion or persistence validation is claimed.
+- Owner correctly answered the storage checkpoint with "the PVC" and received
+  explanations of GitOps ownership and ConfigMap generation. The owner then
+  requested a filename consistency fix, which was deployed and verified, and
+  requested this continuation record. Lessons 2–5 have not started; no
+  whole-stack completion or full persistence validation is claimed.
 
 ## Confirmed decisions
 

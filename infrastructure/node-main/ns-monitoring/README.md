@@ -4,8 +4,9 @@ Implementation follows [the approved plan](../../../plans/monitoring-plan.md),
 one lesson at a time. Teaching takes place exclusively in conversation;
 this file contains operations notes only.
 
-Lesson 1 is deployed and verified; the owner checkpoint is pending. Evidence
-and initial measurements are recorded in the plan. Lessons 2–5 remain pending.
+Lesson 1 is deployed, verified and taught. Resume at Lesson 2 using the plan's
+continuation instructions. Evidence and initial measurements are recorded in
+the plan. Lessons 2–5 remain pending.
 
 ## Ownership and updates
 
