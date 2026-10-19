@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+storage:
+  tsdb:
+    retention:
+      time: 7d
+      # Prometheus size units are powers of two: 7GB = 7 GiB.
+      size: 7GB
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']

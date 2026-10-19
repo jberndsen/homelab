@@ -13,4 +13,5 @@ separate recovery sources. Keep credentials and private keys outside Git.
 - [Secondary node](infrastructure/node-secondary/system.md)
 - [Infrastructure recovery](setup.MD)
 - [Argo CD bootstrap, operations and recovery](infrastructure/node-main/ns-argo/SETUP.md)
+- [Monitoring lessons and operations](infrastructure/node-main/ns-monitoring/README.md)
 - [Next steps](TODO.md)

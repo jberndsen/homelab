@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - media-namespace.yaml
   - argocd-namespace.yaml
+  - monitoring-namespace.yaml

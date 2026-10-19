@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lesson 1 · The collection loop</title>
+<link rel="stylesheet" href="../assets/lessons.css">
+<main>
+<p>HOMELAB MONITORING · LESSON 1</p>
+<h1>Follow one sample</h1>
+<p>Your first goal: query a measurement collected inside your own cluster.</p>
+<aside>Prometheus → HTTP GET /metrics → timestamped samples → local database → PromQL query</aside>
+<h2>Who deploys what?</h2>
+<p>The repository manually manages bootstrap objects: namespaces, the NAS PV, Argo itself and its ApplicationSet. Argo discovers the monitoring production overlay and deploys the workloads from Git. Its self-healing corrects manual drift in resources it manages. It does not own the bootstrap namespace.</p>
+<p>A namespace groups objects; it grants no cross-namespace API access. This first Prometheus has no Kubernetes API token or RBAC grants because self-scraping needs neither.</p>
+<h2>The collection loop</h2>
+<p>The scrape configuration is deliberately small:</p>
+<pre>global:
+  scrape_interval: 30s
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']</pre>
+<p>This excerpt shows collection only; the committed file also sets timeout and retention. A <strong>target</strong> is an HTTP endpoint. A <strong>scrape</strong> is one retrieval. A <strong>sample</strong> is a value with a timestamp. A <strong>time series</strong> is identified by a metric name and its complete set of <strong>labels</strong>.</p>
+<h2>Try it</h2>
+<p>In a terminal, keep this command running:</p>
+<pre>kubectl -n monitoring port-forward svc/prometheus 9090:9090</pre>
+<ol>
+<li>Open <a href="http://localhost:9090/metrics">/metrics</a>. Find <code>prometheus_build_info</code>: these are raw exposed metrics.</li>
+<li>Open <a href="http://localhost:9090/targets">Targets</a>. Find the prometheus job and its last scrape.</li>
+<li>Open <a href="http://localhost:9090/query">Query</a> and evaluate <code>up{job="prometheus"}</code>. Expect 1 after a successful scrape.</li>
+<li>Query <code>prometheus_build_info</code>. Inspect its version label. Switch to a graph to see samples over time.</li>
+</ol>
+<p>Prometheus creates <code>up</code> to record scrape success. A value of 1 means the endpoint was scraped successfully. It does not prove media playback or downloads work.</p>
+<h2>Where does history live?</h2>
+<p>Prometheus writes to /prometheus on the 10 GiB local-path PVC. Pod replacement preserves the claim. Storage loss can destroy history. Retention removes old blocks at seven days or about 7 GiB, whichever comes first; WAL and head data need extra room. Local-path does not impose a per-claim disk quota.</p>
+<p>The Deployment uses Recreate to stop the previous writer before starting another. A generated ConfigMap hash changes the Pod template when configuration changes, making Argo roll out the new configuration. PVC annotations require confirmation for Argo prune or deletion; direct Kubernetes deletion bypasses those gates.</p>
+<h2>Explain it back</h2>
+<p>Where are the samples stored, and could you collect and query them if Grafana were absent?</p>
+<details><summary>Check your explanation</summary><p>Samples live in Prometheus’s database on its PVC. Prometheus performs collection, storage and queries itself. Grafana will provide another way to query and display those samples.</p></details>
+<p>Ask the agent any follow-up questions before moving to VM metrics. Read the primary source: <a href="https://prometheus.io/docs/prometheus/latest/getting_started/">Prometheus getting started</a>. For storage details, see <a href="https://prometheus.io/docs/prometheus/latest/storage/">Prometheus storage</a>.</p>
+<p><a href="../infrastructure/node-main/ns-monitoring/README.md">Operations notes</a> · <a href="../plans/monitoring-plan.md">Full plan</a></p>
+</main>
+</html>
