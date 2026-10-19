@@ -4,12 +4,20 @@ Implementation follows [the approved plan](../../../plans/monitoring-plan.md),
 one lesson at a time. Begin with [Lesson 1: the collection loop](../../../lessons/0001-prometheus-collection-loop.html).
 Owner checkpoints record readiness to continue; deployment alone does not establish learning.
 
+Lesson 1 is deployed and verified; the owner checkpoint is pending. Evidence
+and initial measurements are recorded in the plan. Lessons 2–5 remain pending.
+
 ## Ownership and updates
 
 `cluster/` manually owns the monitoring namespace. The existing ApplicationSet
 discovers this production overlay and Argo deploys its contents after push to
 `main`. Do not manually apply monitoring workloads: self-healing would correct
 drift. Review rendered output and the diff before pushing.
+
+After Argo takes ownership, `kubectl diff` can show removal of Argo-injected
+tracking annotations because the local render lacks them. This read-only check
+does not remove annotations. Inspect Argo's comparison for its normalized diff;
+do not manually apply the local render to make that metadata difference vanish.
 
 ```sh
 kubectl kustomize infrastructure/node-main/ns-monitoring/overlays/prod

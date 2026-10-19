@@ -1,19 +1,37 @@
 # Monitoring deployment and teaching plan
 
-Status: implementation started on 2026-10-19; Lesson 1 in progress.
+Status: Lesson 1 deployed and verified on 2026-10-19; owner checkpoint pending.
 Continue one lesson at a time, pausing at each owner checkpoint.
 
 ## Implementation and teaching record
 
-- Lesson 1: manifests and teaching materials prepared; bootstrap namespace
+- Lesson 1: manifests and teaching materials committed and pushed; bootstrap namespace
   created through the manually managed `cluster/` workflow. Monitoring workloads
-  are to be deployed exclusively by the existing ApplicationSet/Argo workflow.
+  were deployed exclusively by the existing ApplicationSet/Argo workflow.
 - Selected Prometheus v3.15.0 after reviewing the official release notes.
   Resolved the pinned multi-platform image digest from the official registry.
   Downloaded matching release tools and verified the archive against its
   published SHA-256 checksum. `promtool check config`, Kustomize rendering,
   server dry-run and live diff passed; the diff adds only the four intended
-  monitoring objects. Runtime validation is pending deployment.
+  monitoring objects.
+- Runtime validation around 20:55 CEST: Argo automatically deployed revision
+  `884e512`; all four resources report Synced and Application health is Healthy.
+  Inspected Argo's resource comparison: no OutOfSync resources or pending prune.
+  Automatic sync began on discovery; this Argo comparison was after sync, while
+  the pre-push diff was the Kubernetes server diff. The post-sync Kubernetes
+  diff showed only Argo-injected tracking annotations and a dry-run generation
+  change; no workload configuration difference. Rollout completed with one
+  Ready Pod and zero restarts. Readiness and the Targets page returned HTTP 200;
+  target API reports exactly one healthy self-target, no scrape error and a
+  30-second interval. Raw `prometheus_build_info` confirms v3.15.0, and
+  `up{job="prometheus"}` returns 1. Startup logs confirm 1-week/7-GiB retention.
+  Initial `kubectl top pods` snapshot was 22m CPU and 34 MiB memory, less than
+  a minute after creation; it is not a steady-state or peak measurement.
+  Seven-day retention and Pod-replacement persistence have not been empirically
+  tested. All eight media Deployments remained 1/1 available; existing Argo
+  Applications remained Synced/Healthy.
+- Review: no Lesson 1 manifest defects found. Corrected the existing recovery
+  procedure to include the third Application and disposable metrics history.
 - Owner asked whether Argo should deploy everything and undo manual changes.
   Explained the existing boundary: bootstrap resources are manually managed;
   Argo manages discovered workload overlays and self-heals their drift.
