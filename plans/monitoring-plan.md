@@ -1,10 +1,28 @@
 # Monitoring deployment and teaching plan
 
 Status: Lessons 1–3 completed, deployed and verified. Owner passed the Lesson 3
-checkpoint. Wait for owner readiness before Lesson 4; do not implement Lesson 5.
+checkpoint and requested Lesson 4. Lesson 4 is in progress; do not implement Lesson 5.
 
 ## Resume instructions
 
+- Lesson 4 started after checkpoint commit `5535041`. Grafana PVC stage
+  `624ddec`, sealed bootstrap credential `52b9a24`, workload/internal data source
+  `d754aff`, automatic plugin install/update disablement `426aa18`, ingress
+  `251024e`. Runtime login/data source/ingress are verified. Resume with owner
+  login and Explore `up` (last 15 minutes, Instant), then build the editable
+  learning dashboard together in small steps. No dashboard created yet; do not
+  auto-create the whole dashboard or begin Lesson 5. Checkpoint remains pending.
+- Sealing coverage verified against mounted NAS inventory/recovery README:
+  active certificate SHA-256
+  `b77a5acd6d48fc4bf2d7620d1da9a443cd4c205789efbf0de1726c3e14e6b1a4`;
+  encrypted backup checksum matches the verified 2026-10-08 record. Used that
+  exact fetched public certificate; random password generated/sealed in memory.
+  No plaintext credential saved or printed.
+- Existing localhost:9090 port-forward responds Ready. Exporter network
+  investigation confirms /host/proc/1/net/dev includes VM ens18, whereas
+  /host/proc/net/dev shows Pod eth0. v1.12.1 netdev defaults to namespace-local
+  netlink. Network collector is still disabled; settle/validate design before
+  any VM traffic panel. Do not substitute container traffic.
 - Read AGENTS.md, relevant infrastructure system records and this plan. Start
   cluster work with kubectl get nodes -o wide, then check Argo/Pod health.
 - Lesson 3 is deployed: kube-state-metrics (`e5eb568`), node-scoped Prometheus
@@ -12,7 +30,7 @@ checkpoint. Wait for owner readiness before Lesson 4; do not implement Lesson 5.
   redeploy or repeat its checkpoint. Owner correctly identified kubelet metrics
   for growing memory usage after clarification, and independently explained
   Prometheus history versus recent kubectl top measurements. Lesson 3 checkpoint
-  passed; wait for explicit readiness before Lesson 4.
+  passed; owner subsequently requested Lesson 4 (in progress above).
 - Owner passed object-state recall: desired=1/available=0 means the requested
   replica cannot become available; would inspect logs. Explained checking Pod
   status/events first, since scheduling/image-pull failures may have no logs.
@@ -41,12 +59,48 @@ checkpoint. Wait for owner readiness before Lesson 4; do not implement Lesson 5.
 
 ## Implementation and teaching record
 
+- Lesson 4 initial stages: node Ready, all three Argo Applications initially
+  Synced/Healthy, all workload Pods Ready. Clean starting tree at `5535041`.
+  PVC render/server dry-run passed; live diff adds only PVC plus existing Argo
+  tracking/defaulted metadata differences. Both Standards/Spec reviews passed.
+  After Git/Argo deployment claim was Pending with WaitForFirstConsumer as
+  expected; Grafana scheduling subsequently bound it at 1 GiB.
+- Strict-scope grafana-admin SealedSecret validated with controller; deployed
+  condition Synced=True and generated Opaque Secret verified without values.
+  Reviewed official Grafana 13.2.2 release changelog including security fixes,
+  resolved multi-platform image digest from Docker Hub. Workload/data-source
+  render, server dry-run, live diff and both review axes passed. No existing
+  workload template, kubelet TLS/RBAC, image or PVC changed. Runtime Grafana
+  validation subsequently passed as recorded below; no checkpoint claimed.
+- Grafana startup revealed default optional-plugin downloads and attempted
+  bundled-plugin updates against read-only image storage. Corrected via Git/Argo
+  `426aa18` using tagged defaults.ini settings: preinstall_disabled=true and
+  preinstall_auto_update=false. Corrected rollout has no background installer
+  activity or update errors. Initial optional plugins remain on the data PVC;
+  automatic installation/updates are disabled. No stateful image change.
+- Lesson 4 runtime validation around 22:13–22:16 CEST: all three Applications
+  Synced/Healthy at ingress stage `251024e`; all four monitoring Pods Ready,
+  zero restarts. Grafana PVC Bound, 1 GiB. grafana.home.arpa resolves to
+  192.168.30.103; Traefik redirects anonymous browser to /login, anonymous
+  /api/user returns 401. Real session login, database health, provisioned
+  Prometheus health and query `up` all pass through ingress and localhost;
+  four scrape targets return 1. Credentials used only in process memory.
+  All eight media Deployments remain 1/1 available; no media changes.
+- Both review axes passed for Grafana workload/credential/ingress stages.
+  Server dry-runs and reviewed live diffs passed; expected diff exit 1 for
+  additions/Argo metadata. Port-forwards: existing localhost:9090 verified;
+  localhost:3000 reconnected after the configuration rollout. Owner login and
+  dashboard interaction are next; network collector remains disabled pending
+  a validated collection design. Lesson 4 checkpoint and all Lesson 5 work
+  remain pending. Preserve narrow kubelet RBAC and verified TLS.
+
 - Lesson 3 checkpoint passed: owner correctly explained that Prometheus stores
   historical time series while kubectl top only supplies recent measurements.
   Initially associated kube-state-metrics with memory usage; clarified object
   state versus consumption. On retry, owner correctly chose kubelet metrics
   for investigating growing Radarr memory usage. Earlier desired/available
-  replica recall also passed. Lessons 4–5 remain unstarted; wait for readiness.
+  replica recall also passed. Lesson 4 later started as recorded above;
+  Lesson 5 remains unstarted.
 
 - Lesson 3 consumption stage deployed through Git/Argo `fbe421b`. Matching
   promtool syntax check, Kustomize render, server dry-run, live diff and separate

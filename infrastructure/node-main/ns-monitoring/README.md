@@ -5,8 +5,51 @@ one lesson at a time. Teaching takes place exclusively in conversation;
 this file contains operations notes only.
 
 Lessons 1–3 are deployed, verified and complete; the owner passed Lesson 3's
-checkpoint. Wait for readiness before Lesson 4. See the plan for validation
-evidence and resume instructions. Lessons 4–5 remain pending.
+checkpoint. Lesson 4 is in progress. See the plan for validation evidence and
+resume instructions. Lesson 5 remains pending.
+
+## Grafana (Lesson 4 in progress)
+
+Open http://grafana.home.arpa on the trusted LAN. Login is required (username
+admin). Copy the initial password privately in the owner's Mac terminal and
+save it in the password manager; this pipeline prints no credential:
+
+```sh
+kubectl -n monitoring get secret grafana-admin -o jsonpath='{.data.admin-password}' | base64 -d | pbcopy
+```
+
+Do not paste it into chat. After a password change, use the password manager;
+the Secret retains the original bootstrap value. For troubleshooting only:
+
+```sh
+kubectl -n monitoring port-forward svc/grafana 3000:3000
+kubectl -n monitoring rollout status deployment/grafana
+```
+
+The localhost forward must be reconnected after Pod replacement. Ingress,
+real session login, anonymous API denial, data-source health and the query
+`up` through Grafana were verified. Owner dashboard interaction is pending.
+
+Grafana uses the protected 1 GiB local-path grafana-data PVC and Recreate
+strategy. Its provisioned Prometheus data source (UID prometheus) connects
+server-side to http://prometheus:9090, with a 30-second scrape interval setting.
+The configuration hash triggers rollout after data-source configuration edits.
+Editable dashboards live in Grafana's database; UI edits do not update Git.
+Dashboard provisioning and Pod-replacement testing remain Lesson 5.
+
+Strict-scope grafana-admin supplies the initial admin-user/admin-password.
+Anonymous access and self-signup are disabled. The bootstrap password only
+initializes a new database: later password changes are database state, and a
+Secret edit alone does not reset an existing account. Never print credentials
+in tool output. Keep the password in the owner's password manager.
+
+Plugin preinstallation and automatic plugin updates are explicitly disabled.
+The initial startup downloaded optional plugins into the data PVC before this
+default was corrected; no plugin auto-update mechanism is left enabled.
+
+Sealing-key coverage was checked against the verified NAS inventory before
+sealing; see the plan and ns-argo/SETUP.md for the recovery workflow. No new
+Grafana application-data backup coverage or persistence test is claimed.
 
 ## Ownership and updates
 
