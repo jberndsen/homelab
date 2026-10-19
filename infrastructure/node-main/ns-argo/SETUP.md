@@ -217,7 +217,7 @@ validate the intended restore method before relying on it.
    kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,FINALIZERS:.metadata.finalizers,OPERATION:.operation'
    ```
 
-   Wait for exactly `media` and `sealed-secrets`, with false/false/false and no
+   Wait for exactly `media`, `monitoring` and `sealed-secrets`, with false/false/false and no
    finalizers or operation. Do not continue if any generated policy is enabled.
 3. Restore verified sealing keys using the NAS README before syncing the
    controller. If it already started, restart it after importing keys so it
@@ -236,7 +236,12 @@ validate the intended restore method before relying on it.
    Homepage, Transmission, the four Arr apps, Seerr and Jellyfin in order.
    Check availability and storage after each group; keep prune/force/replace off.
    Stop on unexpected storage differences. Never delete/recreate storage.
-6. Run the [read-only checks](#recovery-checks). Enable automation only after
+6. Review and sync `monitoring` separately, keeping prune/force/replace off.
+   Historical Prometheus samples are disposable after storage loss and may
+   start empty on a fresh monitoring volume. Preserve any existing claim;
+   never delete one to resolve a sync failure. This does not authorize empty
+   replacement volumes for media application data.
+7. Run the [read-only checks](#recovery-checks). Enable automation only after
    keys, application data, storage and smoke checks pass and the owner approves
    resuming. Use [Pausing and resuming](#pausing-and-resuming);
    verify inherited policies and all deletion protections again. Remove the
@@ -268,7 +273,8 @@ Before taking a guarded recovery backup:
 
 1. Follow [Pausing and resuming](#pausing-and-resuming): set the ApplicationSet
    template's `enabled`, `prune` and `selfHeal` to false, apply it manually,
-   and verify both Applications inherited false/false/false. Keep
+   and verify all three Applications (`media`, `monitoring`, `sealed-secrets`)
+   inherited false/false/false. Keep
    `allowEmpty: false`, resource preservation and all confirmation annotations.
 2. Finish or terminate active syncs in the Argo UI. Check the operation fields
    below, each app's complete diff/resource list for pending prune, and deletion

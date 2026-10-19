@@ -1,7 +1,27 @@
 # Monitoring deployment and teaching plan
 
-Status: approved by the owner on 2026-10-19 for implementation handoff.
-This session produces the plan only. Implementation is a separate guided session.
+Status: implementation started on 2026-10-19; Lesson 1 in progress.
+Continue one lesson at a time, pausing at each owner checkpoint.
+
+## Implementation and teaching record
+
+- Lesson 1: manifests and teaching materials prepared; bootstrap namespace
+  created through the manually managed `cluster/` workflow. Monitoring workloads
+  are to be deployed exclusively by the existing ApplicationSet/Argo workflow.
+- Selected Prometheus v3.15.0 after reviewing the official release notes.
+  Resolved the pinned multi-platform image digest from the official registry.
+  Downloaded matching release tools and verified the archive against its
+  published SHA-256 checksum. `promtool check config`, Kustomize rendering,
+  server dry-run and live diff passed; the diff adds only the four intended
+  monitoring objects. Runtime validation is pending deployment.
+- Owner asked whether Argo should deploy everything and undo manual changes.
+  Explained the existing boundary: bootstrap resources are manually managed;
+  Argo manages discovered workload overlays and self-heals their drift.
+- [Lesson 1](../lessons/0001-prometheus-collection-loop.html) and
+  [operations notes](../infrastructure/node-main/ns-monitoring/README.md) explain
+  the collection loop and provide the first query exercise.
+- Owner understanding/readiness checkpoint remains pending. Lessons 2–5 have
+  not started; no whole-stack completion or persistence validation is claimed.
 
 ## Confirmed decisions
 
