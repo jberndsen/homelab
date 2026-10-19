@@ -4,9 +4,11 @@ Maintain the K3s media stack on `node-main`. Deployable Kubernetes
 configuration belongs under `infrastructure/node-main`.
 
 Consult the `infrastructure/**/system.md` records before making changes. They
-hold current facts that are not represented in manifests. When node, workload,
-or network information is unknown, do not guess: ask the owner and add the
-confirmed fact to the appropriate system record.
+hold durable facts that agents cannot discover from repository code or normal
+read-only inspection. Discover facts from those sources first; when necessary
+information remains unknown, do not guess: ask the owner and record the confirmed
+fact in the appropriate system record. Do not duplicate manifest configuration,
+discoverable runtime state, or transient capacity snapshots in system records.
 
 Use the locally installed `kubectl` and its preconfigured kubeconfig for
 cluster work. Start with `kubectl get nodes -o wide`.
@@ -21,4 +23,10 @@ The public repository is `https://github.com/jberndsen/homelab`, with default
 branch `main`. Local `origin` uses `git@github.com:jberndsen/homelab.git`.
 The owner authorizes pushing task-related changes to this repository. Keep
 plaintext credentials, private keys, and local reference files out of commits.
-Update the relevant system records whenever confirmed infrastructure facts change.
+Update the relevant system records whenever facts within that scope change.
+
+# Plans
+
+Always keep implementation plans, investigation plans, and handoff plans in the
+repository-root `plans/` directory. Deployable configuration still belongs under
+`infrastructure/node-main`.

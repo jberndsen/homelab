@@ -3,6 +3,8 @@
 ## Host and network
 
 - `node-main` runs Proxmox VE 9.2.4 on VLAN `30` at `192.168.30.5`.
+- The owner confirmed on 2026-10-12 that the physical host has 32 GB RAM,
+  with 16 GB allocated to Ubuntu/K3s VM `103` and 4 GB to HAOS VM `102`.
 - `vmbr0` bridges `nic0` and uses gateway `192.168.30.1`. Its tagged VLAN `1`
   interface `vmbr0.1` has `192.168.1.39/24` and a direct route to the UPS at
   `192.168.1.34`; both interfaces are in `/etc/network/interfaces`.
@@ -30,6 +32,13 @@
 - `nut-monitor.service` is enabled; the UPS certificate is not verified.
   See [infrastructure recovery](../../setup.MD#ups-shutdown-on-proxmox) for setup
   and connection checks.
+
+- Known unresolved risk: the distribution NUT client can shut down early after
+  communication loss with stale calibration state. Shutdown protection remains
+  enabled. The owner wants an official compatible Debian fix, not a locally
+  maintained package or unstable dependencies. Communication-loss cause and
+  automatic physical restart after power restoration remain unverified.
+  See [the NUT investigation and future update plan](../../plans/nut-update.md).
 
 ## Git and ownership
 
