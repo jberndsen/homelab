@@ -1,17 +1,17 @@
 # Monitoring deployment and teaching plan
 
-Status: Lessons 1–2 deployed, verified and taught on 2026-10-19. The owner
-passed Lesson 2's checkpoint. Lesson 3 object-state stage is validated and ready
-for Git/Argo deployment. Owner authorized continuing with kube-state-metrics
-only, followed by a conversational pause before kubelet work.
-Continue one lesson at a time, pausing at each owner checkpoint.
+Status: Lessons 1–2 completed. Lesson 3 object-state stage deployed and verified
+on 2026-10-19; pause to inspect these results with the owner. Kubelet consumption
+metrics remain pending. Lesson 3 checkpoint has not yet been reached.
+Continue one small stage at a time. Lessons 4–5 have not started.
 
 ## Resume instructions
 
 - Latest steering: the owner wants minimal configuration that is easy to read
   for the first time. Use one resource per file and explain each addition.
   Owner authorized continuing with kube-state-metrics only, then pausing to
-  read the results together. Do not add kubelet scraping in this sitting.
+  read the results together. That stage is now deployed; wait for readiness
+  before kubelet work. Do not repeat Lessons 1–2 or deploy Lessons 4–5.
 - Lesson 3 object-state manifests use separate ServiceAccount, ClusterRole,
   ClusterRoleBinding, Deployment and Service files, plus one scrape job.
   No additional telemetry scrape or Service port. Telemetry container port
@@ -60,6 +60,38 @@ Continue one lesson at a time, pausing at each owner checkpoint.
 
 ## Implementation and teaching record
 
+- Lesson 3 object-state stage deployed via Git/Argo commit `e5eb568`.
+  Selected kube-state-metrics v2.20.0 after reviewing its official release and
+  tagged CLI/deployment documentation; Kubernetes client-go v0.36.3 matches the
+  running 1.36 API family. Resolved official registry image index SHA-256.
+  Five separate resource files, six selected collectors and matching list/watch
+  RBAC; no Secrets permission, annotation/label allowlists or extra telemetry
+  scrape. Matching promtool, render, server dry-run, pre-push live diff and
+  separate Standards/Spec reviews passed. No stateful image update.
+- Runtime validation around 21:42–21:47 CEST: Argo revision `e5eb568`
+  Synced/Healthy; all 11 desired resources Synced, none pending prune.
+  Both changed Deployments rolled out; all three monitoring Pods Ready with
+  zero restarts. All three scrape targets up with empty scrape errors.
+  Exporter logs confirm exactly the six intended stores and empty label and
+  annotation allowlists. Its telemetry reports successful watches for all six
+  resource types; no failed watch series. Secret listing and Pod creation denied
+  for its ServiceAccount. 41 comparisons matched kubectl: desired/available
+  replicas for all eight media Deployments, readiness/restarts for all eight
+  containers and Bound phase for all nine media PVCs. Jellyfin and Seerr each
+  retain their pre-existing single restart; other media containers report zero.
+  All media Deployments remain 1/1 available. No media restarts/scales performed.
+  Brief CPU/memory snapshot: exporter 1m/12Mi, Node Exporter 1m/7Mi,
+  Prometheus 2m/38Mi; not steady-state or peak measurements.
+- Conversation distinguished metrics-server from kube-state-metrics and
+  Prometheus history; explained identity/RBAC/binding, desired versus available,
+  labels and cardinality, readiness/restarts and missing versus zero samples.
+  Pause to inspect queries with owner; no Lesson 3 recall checkpoint passed yet.
+  Kubelet authenticated access remains unimplemented. Do not claim all Lesson 3
+  or the whole stack complete.
+- Owner requires all created files to stay inside this repository. Added rule
+  to AGENTS.md and ignored root tmp/; use it for artifacts and TMPDIR henceforth.
+  Earlier session artifacts under /private/tmp were not moved or deleted.
+
 - Lesson 2: deployed through Git/Argo in commits `055c25d` and `2da684f`.
   Reviewed official Node Exporter v1.12.1 release notes (perf/edac fixes) and
   tagged collector documentation/source, and resolved the multi-platform digest
@@ -95,7 +127,7 @@ Continue one lesson at a time, pausing at each owner checkpoint.
   correctly answered both follow-up checks: shared disk availability decreases
   while the PVC request stays unchanged, and 15 idle seconds in 30 seconds
   means 50% busy. Lesson 2 checkpoint passed; wait for readiness before Lesson 3.
-  Lessons 3–5 have not started. No lesson files were created.
+  Lesson 3 subsequently began as recorded above. No lesson files were created.
 - Lesson 1: manifests committed and pushed; bootstrap namespace
   created through the manually managed `cluster/` workflow. Monitoring workloads
   were deployed exclusively by the existing ApplicationSet/Argo workflow.

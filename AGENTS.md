@@ -30,3 +30,11 @@ Update the relevant system records whenever facts within that scope change.
 Always keep implementation plans, investigation plans, and handoff plans in the
 repository-root `plans/` directory. Deployable configuration still belongs under
 `infrastructure/node-main`.
+
+# Temporary files
+
+Never create or write files outside this homelab repository. Put temporary
+files, downloaded tools, validation output and local reference files in the
+repository-root `tmp/` directory, which must remain gitignored. Configure tools
+that create temporary files to use this directory (for example, set `TMPDIR`
+to its absolute path). Keep temporary files out of commits.

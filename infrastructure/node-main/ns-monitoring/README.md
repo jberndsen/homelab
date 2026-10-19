@@ -4,10 +4,10 @@ Implementation follows [the approved plan](../../../plans/monitoring-plan.md),
 one lesson at a time. Teaching takes place exclusively in conversation;
 this file contains operations notes only.
 
-Lessons 1–2 are deployed, verified and taught; the owner passed Lesson 2's
-checkpoint. Wait for readiness before Lesson 3 using the plan's continuation
-instructions. Evidence and initial measurements are recorded in the plan.
-Lessons 3–5 remain pending.
+Lessons 1–2 are complete. Lesson 3's kube-state-metrics stage is deployed and
+verified; pause to inspect results before adding kubelet consumption metrics.
+The full Lesson 3 checkpoint and Lessons 4–5 remain pending. See the plan for
+validation evidence and resume instructions.
 
 ## Ownership and updates
 
@@ -64,3 +64,32 @@ an application-native backup, one digest update, rollout and smoke test.
 History is disposable after storage loss. Reinstall configuration from Git;
 do not assume verified backup coverage for a new PVC. Persistence testing and
 the broader recovery lesson are scheduled for Lesson 5.
+
+## Kubernetes object state
+
+kube-state-metrics exposes only nodes, Pods, Deployments, PVs, PVCs and
+StorageClasses. Its dedicated ServiceAccount has matching list/watch access;
+no Secret access or arbitrary Kubernetes label/annotation export is configured.
+Prometheus scrapes the internal Service on port 8080 every 30 seconds.
+The exporter has no persistent data; Prometheus stores scraped history.
+
+Useful queries:
+
+```promql
+kube_deployment_spec_replicas{namespace="media"}
+kube_deployment_status_replicas_available{namespace="media"}
+kube_pod_container_status_ready{namespace="media"}
+kube_pod_container_status_restarts_total{namespace="media"}
+```
+
+Compare with `kubectl -n media get deployments,pods`. Restart values belong to
+current Pod/container identities; Pod replacement changes that identity. Missing
+series must not be interpreted as zero. These metrics describe Kubernetes state,
+not media playback or search success. CPU/memory consumption is a later stage;
+metrics-server remains the source for current `kubectl top` measurements.
+
+For collector troubleshooting, temporarily forward Deployment port 8081 and
+inspect `/metrics` for `kube_state_metrics_watch_total` success/error results.
+This port is used for readiness but is not an additional persistent scrape job.
+Keep saved output and tools in repository-root `tmp/`; set TMPDIR there for
+commands that create temporary files. Never commit temporary artifacts.
