@@ -8,6 +8,7 @@ resources:
   - prometheus-deployment.yaml
   - prometheus-service.yaml
   - grafana-pvc.yaml
+  - grafana-admin-sealedsecret.yaml
   - node-exporter-daemonset.yaml
   - node-exporter-service.yaml
   - kube-state-metrics-serviceaccount.yaml
