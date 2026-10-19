@@ -5,7 +5,7 @@ Continue one lesson at a time, pausing at each owner checkpoint.
 
 ## Implementation and teaching record
 
-- Lesson 1: manifests and teaching materials committed and pushed; bootstrap namespace
+- Lesson 1: manifests committed and pushed; bootstrap namespace
   created through the manually managed `cluster/` workflow. Monitoring workloads
   were deployed exclusively by the existing ApplicationSet/Argo workflow.
 - Selected Prometheus v3.15.0 after reviewing the official release notes.
@@ -35,9 +35,10 @@ Continue one lesson at a time, pausing at each owner checkpoint.
 - Owner asked whether Argo should deploy everything and undo manual changes.
   Explained the existing boundary: bootstrap resources are manually managed;
   Argo manages discovered workload overlays and self-heals their drift.
-- [Lesson 1](../lessons/0001-prometheus-collection-loop.html) and
-  [operations notes](../infrastructure/node-main/ns-monitoring/README.md) explain
-  the collection loop and provide the first query exercise.
+- Owner requested conversation-only teaching. Removed the generated lesson,
+  shared lesson stylesheet and teaching workspace scaffolding. Keep
+  [operations notes](../infrastructure/node-main/ns-monitoring/README.md)
+  for running the stack; do not create lesson or teaching reference files.
 - Owner understanding/readiness checkpoint remains pending. Lessons 2–5 have
   not started; no whole-stack completion or persistence validation is claimed.
 
@@ -137,6 +138,11 @@ the concept, show the small manifest/configuration change, deploy through the
 existing Git/Argo workflow, inspect evidence with the owner, and pause for
 questions and readiness before the next lesson. Do not deploy the whole stack
 in one action. This pedagogical pacing is requested by the owner.
+
+Teach exclusively through the conversation. Do not create lesson files,
+teaching stylesheets, reference materials or teaching workspace scaffolding.
+Keep implementation progress in this plan and operational documentation under
+`ns-monitoring`; these are not substitutes for conversational teaching.
 
 Use ordinary manifests and Kustomize; no Helm, Prometheus Operator, monitoring
 CRDs, remote-write backend, logs or tracing are needed for this scope.
@@ -269,8 +275,8 @@ explain the displayed units and time range.
   owner-confirmed recovery arrangements outside the cluster. No system-record
   change is required merely because monitoring was deployed. Keep versions,
   storage, access and RBAC configuration in manifests; record validation and
-  measured resource usage in this plan or operations/lesson notes. Add concise
-  operations/lesson notes under `ns-monitoring` and link them from existing docs.
+  measured resource usage in this plan or operations notes. Add concise
+  operations notes under `ns-monitoring` and link them from existing docs.
 
 Completion: Argo is Synced/Healthy; all intended scrape targets are up; Grafana
 login and data source work; each promised dashboard panel has real data;
