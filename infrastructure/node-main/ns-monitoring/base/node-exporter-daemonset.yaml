@@ -67,11 +67,13 @@ spec:
             - name: proc
               mountPath: /host/proc
               readOnly: true
+              recursiveReadOnly: Enabled
             - name: root
               mountPath: /host/root
               readOnly: true
-              # Receive new host mounts without propagating Pod mounts back.
-              mountPropagation: HostToContainer
+              # Includes nested mounts. Replace the Pod after host mount changes;
+              # recursive read-only access cannot use mount propagation.
+              recursiveReadOnly: Enabled
       volumes:
         - name: proc
           hostPath:
