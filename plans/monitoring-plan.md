@@ -1,10 +1,30 @@
 # Monitoring deployment and teaching plan
 
 Status: Lessons 1–2 deployed, verified and taught on 2026-10-19. The owner
-passed Lesson 2's checkpoint. Wait for owner readiness before Lesson 3.
+passed Lesson 2's checkpoint. Lesson 3 object-state stage is validated and ready
+for Git/Argo deployment. Owner authorized continuing with kube-state-metrics
+only, followed by a conversational pause before kubelet work.
 Continue one lesson at a time, pausing at each owner checkpoint.
 
 ## Resume instructions
+
+- Latest steering: the owner wants minimal configuration that is easy to read
+  for the first time. Use one resource per file and explain each addition.
+  Owner authorized continuing with kube-state-metrics only, then pausing to
+  read the results together. Do not add kubelet scraping in this sitting.
+- Lesson 3 object-state manifests use separate ServiceAccount, ClusterRole,
+  ClusterRoleBinding, Deployment and Service files, plus one scrape job.
+  No additional telemetry scrape or Service port. Telemetry container port
+  remains for readiness. Matching promtool, Kustomize render, server dry-run,
+  live diff and Standards/Spec reviews passed for this revised stage.
+- Preflight: node Ready, all three Argo Applications Synced/Healthy, running
+  Pods Ready. Kubelet certificate includes 192.168.30.103 and verifies with the
+  namespace CA; unauthenticated /metrics/cadvisor returned 401. Authenticated
+  narrow-RBAC access has not yet been implemented or tested. Local forwarding
+  was established on 9090; check it again on resume.
+- Explained metrics-server supplies recent resource measurements for kubectl
+  top/autoscaling; kube-state-metrics exposes object state, while Prometheus
+  stores scraped history. Owner asked for this distinction before deployment.
 
 - Read `AGENTS.md`, the relevant system records and this plan. Start cluster
   work with `kubectl get nodes -o wide`, then verify current Argo/Pod health.
@@ -12,7 +32,7 @@ Continue one lesson at a time, pausing at each owner checkpoint.
   correctly answered that another application's writes decrease shared disk
   availability without changing the PVC request, and that 15 idle CPU seconds
   over 30 seconds means 50% busy. Allow questions and wait for owner readiness
-  before Lesson 3. Do not implement Lessons 3–5 together.
+  before further stages. Do not implement Lessons 3–5 together.
 - Teach exclusively in conversation. Do not create lesson files or teaching
   workspace scaffolding. Explain each small change before deploying via Git/Argo.
 - The owner correctly identified the PVC as what preserves samples across Pod
