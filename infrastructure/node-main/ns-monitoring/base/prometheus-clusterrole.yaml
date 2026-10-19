@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: monitoring-prometheus
+rules:
+  # Discovery must use the matching metadata.name field selector.
+  - apiGroups: ['']
+    resources: [nodes]
+    resourceNames: [vm-ubuntu-k3s]
+    verbs: [list, watch]
+  - apiGroups: ['']
+    resources: [nodes/metrics]
+    resourceNames: [vm-ubuntu-k3s]
+    verbs: [get]

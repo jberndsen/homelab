@@ -1,8 +1,8 @@
 # Monitoring deployment and teaching plan
 
 Status: Lessons 1–2 completed. Lesson 3 object-state stage deployed and verified
-on 2026-10-19; pause to inspect these results with the owner. Kubelet consumption
-metrics remain pending. Lesson 3 checkpoint has not yet been reached.
+on 2026-10-19. Owner passed the object-state recall check and authorized
+continuing with kubelet consumption metrics; access-stage validation is underway. Lesson 3 checkpoint has not yet been reached.
 Continue one small stage at a time. Lessons 4–5 have not started.
 
 ## Resume instructions
@@ -10,8 +10,10 @@ Continue one small stage at a time. Lessons 4–5 have not started.
 - Latest steering: the owner wants minimal configuration that is easy to read
   for the first time. Use one resource per file and explain each addition.
   Owner authorized continuing with kube-state-metrics only, then pausing to
-  read the results together. That stage is now deployed; wait for readiness
-  before kubelet work. Do not repeat Lessons 1–2 or deploy Lessons 4–5.
+  read the results together. Owner correctly explained desired=1/available=0
+  and would inspect logs; clarified Pod events/readiness before logs. Owner
+  subsequently authorized kubelet work after explanation of HTTPS, identity and
+  permissions. Do not repeat Lessons 1–2 or deploy Lessons 4–5.
 - Lesson 3 object-state manifests use separate ServiceAccount, ClusterRole,
   ClusterRoleBinding, Deployment and Service files, plus one scrape job.
   No additional telemetry scrape or Service port. Telemetry container port
@@ -59,6 +61,14 @@ Continue one small stage at a time. Lessons 4–5 have not started.
   at the initial measurement. Lesson 2 owner recall is recorded below.
 
 ## Implementation and teaching record
+
+- Lesson 3 kubelet access stage: rechecked node/Argo/Pod health and serving
+  certificate. IP SAN 192.168.30.103, issuer k3s-server-ca, expiry 2027-10-15;
+  verification against namespace CA passed, anonymous cadvisor request 401.
+  Prepared dedicated Prometheus ServiceAccount and node-name-scoped list/watch
+  nodes plus get nodes/metrics permissions. No nodes/proxy or write permissions.
+  Server dry-run and live diff passed; no workload-template change at this stage.
+  Direct authenticated access will be tested before scrape configuration changes.
 
 - Lesson 3 object-state stage deployed via Git/Argo commit `e5eb568`.
   Selected kube-state-metrics v2.20.0 after reviewing its official release and
