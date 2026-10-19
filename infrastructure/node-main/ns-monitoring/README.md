@@ -4,9 +4,9 @@ Implementation follows [the approved plan](../../../plans/monitoring-plan.md),
 one lesson at a time. Teaching takes place exclusively in conversation;
 this file contains operations notes only.
 
-Lessons 1–2 are complete. Both Lesson 3 sources are deployed and verified.
-Pause at the Lesson 3 owner checkpoint; Lessons 4–5 remain pending. See the plan for
-validation evidence and resume instructions.
+Lessons 1–3 are deployed, verified and complete; the owner passed Lesson 3's
+checkpoint. Wait for readiness before Lesson 4. See the plan for validation
+evidence and resume instructions. Lessons 4–5 remain pending.
 
 ## Ownership and updates
 

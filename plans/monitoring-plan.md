@@ -1,7 +1,7 @@
 # Monitoring deployment and teaching plan
 
-Status: Lessons 1–2 completed. Both Lesson 3 stages are deployed and verified.
-Pause at the Lesson 3 owner checkpoint; do not implement Lessons 4–5.
+Status: Lessons 1–3 completed, deployed and verified. Owner passed the Lesson 3
+checkpoint. Wait for owner readiness before Lesson 4; do not implement Lesson 5.
 
 ## Resume instructions
 
@@ -9,9 +9,10 @@ Pause at the Lesson 3 owner checkpoint; do not implement Lessons 4–5.
   cluster work with kubectl get nodes -o wide, then check Argo/Pod health.
 - Lesson 3 is deployed: kube-state-metrics (`e5eb568`), node-scoped Prometheus
   access (`27863ce`) and authenticated kubelet scraping (`fbe421b`). Do not
-  redeploy or add components. Pause for the two Lesson 3 checkpoint answers:
-  choose object-state versus consumption metrics, and explain why kubectl top
-  is not stored history. Owner has not answered the full checkpoint yet.
+  redeploy or repeat its checkpoint. Owner correctly identified kubelet metrics
+  for growing memory usage after clarification, and independently explained
+  Prometheus history versus recent kubectl top measurements. Lesson 3 checkpoint
+  passed; wait for explicit readiness before Lesson 4.
 - Owner passed object-state recall: desired=1/available=0 means the requested
   replica cannot become available; would inspect logs. Explained checking Pod
   status/events first, since scheduling/image-pull failures may have no logs.
@@ -40,6 +41,13 @@ Pause at the Lesson 3 owner checkpoint; do not implement Lessons 4–5.
 
 ## Implementation and teaching record
 
+- Lesson 3 checkpoint passed: owner correctly explained that Prometheus stores
+  historical time series while kubectl top only supplies recent measurements.
+  Initially associated kube-state-metrics with memory usage; clarified object
+  state versus consumption. On retry, owner correctly chose kubelet metrics
+  for investigating growing Radarr memory usage. Earlier desired/available
+  replica recall also passed. Lessons 4–5 remain unstarted; wait for readiness.
+
 - Lesson 3 consumption stage deployed through Git/Argo `fbe421b`. Matching
   promtool syntax check, Kustomize render, server dry-run, live diff and separate
   Standards/Spec reviews passed; no findings. Full promtool check in the running
@@ -64,7 +72,8 @@ Pause at the Lesson 3 owner checkpoint; do not implement Lessons 4–5.
   rate in cores (1 core = 1000m), memory working set bytes/MiB and cache caveat,
   differing sampling windows versus kubectl top, and stored Prometheus history.
   Object-state availability is distinct from consumption and media-flow health.
-  Lesson 3 checkpoint pending; stop here before Grafana or Lessons 4–5.
+  Lesson 3 checkpoint subsequently passed as recorded above; stop here before
+  Grafana or Lessons 4–5.
 
 - Lesson 3 kubelet access stage: rechecked node/Argo/Pod health and serving
   certificate. IP SAN 192.168.30.103, issuer k3s-server-ca, expiry 2027-10-15;
