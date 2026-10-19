@@ -1,16 +1,21 @@
 # Monitoring deployment and teaching plan
 
 Status: Lessons 1–3 completed, deployed and verified. Owner passed the Lesson 3
-checkpoint and requested Lesson 4. Lesson 4 is in progress; do not implement Lesson 5.
+checkpoint and requested Lesson 4. Lesson 4 is incomplete and stopped for the
+evening at the owner's request. Do not implement Lesson 5 without readiness.
 
 ## Resume instructions
 
 - Lesson 4 started after checkpoint commit `5535041`. Grafana PVC stage
   `624ddec`, sealed bootstrap credential `52b9a24`, workload/internal data source
   `d754aff`, automatic plugin install/update disablement `426aa18`, ingress
-  `251024e`. Runtime login/data source/ingress are verified. Resume with owner
-  login and Explore `up` (last 15 minutes, Instant), then build the editable
-  learning dashboard together in small steps. No dashboard created yet; do not
+  `251024e`. Runtime login/data source/ingress are verified. Owner has logged
+  in and run Explore `up` in Instant and Range modes, setting legend `{{job}}`.
+  Screenshots show four instant series at 1 and overlapping range traces at 1.
+  Resume by creating the first editable panel (Scrape health) in a new
+  Monitoring — Learning dashboard; last instruction was to inspect Explore's
+  Add dropdown, whose contents have not yet been confirmed. Do not repeat login
+  or Explore setup unless needed. No dashboard created yet; do not
   auto-create the whole dashboard or begin Lesson 5. Checkpoint remains pending.
 - Sealing coverage verified against mounted NAS inventory/recovery README:
   active certificate SHA-256
@@ -58,6 +63,16 @@ checkpoint and requested Lesson 4. Lesson 4 is in progress; do not implement Les
   do not present container network series as VM traffic.
 
 ## Implementation and teaching record
+
+- Owner stopped Grafana configuration for the evening after successfully
+  running Explore `up` in Instant and Range modes with legend `{{job}}`.
+  Conversation covered series labels, unitless scrape success, time range and
+  step/resolution, overlapping traces, and missing data versus failed scrapes.
+  This records the exercise, not a passed Lesson 4 checkpoint. First saved
+  dashboard panel remains pending. Owner asked for remaining original scope
+  beyond Grafana: VM network collection, Lesson 5 persistence/resource/retention
+  checks and recovery operations; optional device phases and notifications
+  remain separate. No further deployment or Lesson 5 work performed at wrap-up.
 
 - Lesson 4 initial stages: node Ready, all three Argo Applications initially
   Synced/Healthy, all workload Pods Ready. Clean starting tree at `5535041`.
