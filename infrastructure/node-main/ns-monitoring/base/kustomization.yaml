@@ -7,5 +7,5 @@ resources:
 configMapGenerator:
   - name: prometheus-config
     files:
-      - prometheus.yml
+      - prometheus.yaml
 # Keep the content hash: a config change updates the Pod template and rolls it.
