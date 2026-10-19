@@ -4,6 +4,12 @@ Run commands from the repository root using the laptop's configured `kubectl`;
 start cluster work with `kubectl get nodes -o wide`. Read
 [node-main](../system.md) and [network](../../network/system.md) first.
 Choose a [recovery path](#choose-the-recovery-path) before rebuilding or restoring.
+Keep temporary files inside ignored repository-root `tmp/`:
+
+```sh
+mkdir -p tmp
+export TMPDIR="$PWD/tmp"
+```
 
 ## Ownership and reconciliation
 
@@ -22,7 +28,7 @@ its Git resources. Separate Applications do not impose startup order.
 Automatic sync, pruning and self-healing are enabled. `allowEmpty: false`
 blocks an entirely empty desired application, but not partial resource removal.
 `preserveResourcesOnDeletion: true` and absent Argo deletion finalizers preserve
-resources when a discovered Application disappears. All media PVCs, both
+resources when a discovered Application disappears. Media and monitoring PVCs,
 SealedSecrets and the Sealed Secrets CRD require `Prune=confirm,Delete=confirm`.
 See [Intentional removal](#intentional-removal) before deleting resources.
 
@@ -210,10 +216,10 @@ validate the intended restore method before relying on it.
        old = f'          {field}: true'
        assert text.count(old) == 1, f'Review changed template before recovery: {field}'
        text = text.replace(old, f'          {field}: false')
-   Path('/private/tmp/homelab-applicationset-disabled.yaml').write_text(text)
+   Path('tmp/homelab-applicationset-disabled.yaml').write_text(text)
    PY_DISABLED
-   kubectl apply --dry-run=server -f /private/tmp/homelab-applicationset-disabled.yaml
-   kubectl apply -f /private/tmp/homelab-applicationset-disabled.yaml
+   kubectl apply --dry-run=server -f tmp/homelab-applicationset-disabled.yaml
+   kubectl apply -f tmp/homelab-applicationset-disabled.yaml
    kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,FINALIZERS:.metadata.finalizers,OPERATION:.operation'
    ```
 
@@ -237,6 +243,11 @@ validate the intended restore method before relying on it.
    Check availability and storage after each group; keep prune/force/replace off.
    Stop on unexpected storage differences. Never delete/recreate storage.
 6. Review and sync `monitoring` separately, keeping prune/force/replace off.
+   Verify its Grafana SealedSecret decrypts before starting Grafana. Preserve
+   Grafana's database and dashboards when restoring existing application data;
+   Git currently contains its data source but no saved dashboard definitions.
+   Grafana database backup/restore coverage has not yet been verified; consult
+   [monitoring operations](../ns-monitoring/README.md) before choosing a recovery source.
    Historical Prometheus samples are disposable after storage loss and may
    start empty on a fresh monitoring volume. Preserve any existing claim;
    never delete one to resolve a sync failure. This does not authorize empty
@@ -343,17 +354,21 @@ These commands read status without restoring data or changing controllers:
 ```sh
 kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,AUTO:.spec.syncPolicy.automated.enabled,PRUNE:.spec.syncPolicy.automated.prune,SELFHEAL:.spec.syncPolicy.automated.selfHeal,FINALIZERS:.metadata.finalizers,OPERATION:.operation,PHASE:.status.operationState.phase,DELETING:.metadata.deletionTimestamp,APPROVAL:.metadata.annotations.argocd\.argoproj\.io/deletion-approved'
 kubectl -n media get deployments,pods,pvc
+kubectl -n monitoring get deployments,daemonsets,pods,pvc,ingress
 kubectl -n media get pvc -o custom-columns='NAME:.metadata.name,UID:.metadata.uid,VOLUME:.spec.volumeName,DELETING:.metadata.deletionTimestamp,PROTECTION:.metadata.annotations.argocd\.argoproj\.io/sync-options'
 kubectl get pv -o custom-columns='NAME:.metadata.name,UID:.metadata.uid,CLAIM:.spec.claimRef.name,CLAIM_UID:.spec.claimRef.uid,RECLAIM:.spec.persistentVolumeReclaimPolicy,DELETING:.metadata.deletionTimestamp'
 kubectl -n media get sealedsecrets -o custom-columns='NAME:.metadata.name,SYNCED:.status.conditions[0].status,DELETING:.metadata.deletionTimestamp,PROTECTION:.metadata.annotations.argocd\.argoproj\.io/sync-options'
+kubectl -n monitoring get pvc,sealedsecrets -o custom-columns='KIND:.kind,NAME:.metadata.name,DELETING:.metadata.deletionTimestamp,PROTECTION:.metadata.annotations.argocd\.argoproj\.io/sync-options'
+kubectl -n monitoring get sealedsecret grafana-admin -o jsonpath='{.status.conditions}{"\n"}'
 kubectl get crd sealedsecrets.bitnami.com -o jsonpath='{.metadata.annotations.argocd\.argoproj\.io/sync-options}{"\n"}'
 curl --noproxy '*' --fail http://homepage.home.arpa/api/healthcheck
 ```
 
-Before enabling automation, require two Synced/Healthy Applications, eight
-available Deployments, Ready Pods, nine Bound PVCs with verified data/bindings,
-two successfully decrypted SealedSecrets and confirmation options on all PVCs,
-both SealedSecrets and the CRD. No operation, deletion approval or deletion
+Before enabling automation, require all three Applications Synced/Healthy,
+eight available media Deployments and Ready monitoring workloads. Require nine
+media and both monitoring PVCs Bound with the intended data/bindings, all three
+SealedSecrets successfully decrypted, and confirmation options on all managed
+PVCs, SealedSecrets and the CRD. No operation, deletion approval or deletion
 should be pending. In each Argo app's resource list, inspect **all** pending
 prunes, not just PVCs; also inspect deletion timestamps for every managed
 resource. Keep namespaces and the NAS PV outside Argo ownership.
@@ -364,6 +379,11 @@ accepts existing credentials for read-only `session-get`. Check Homepage's four
 widgets and play existing NAS media in Jellyfin. Do not use downloads, imports,
 deletions or library cleanup as tests. The manifests under `tests/` include a
 NAS **write** test; do not apply them as a read-only recovery check.
+For monitoring, verify Grafana login and its Prometheus data source, and check
+all four Prometheus scrape targets using a temporary localhost port-forward.
+Close it afterward. The dashboard checkpoint remains pending Lesson 4 and
+persistence acceptance remains Lesson 5; these health checks do not prove
+backup coverage.
 
 ### Normal changes
 

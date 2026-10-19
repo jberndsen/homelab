@@ -66,19 +66,14 @@
   password is in the owner's password manager; the initial-password Secret is
   absent.
 - ApplicationSet `node-main` discovers `ns-*/overlays/prod`, excluding Argo.
-  Applications are `media` → `media` and `sealed-secrets` → `kube-system`.
   Automatic sync, pruning and self-healing are enabled with `allowEmpty: false`.
   Resource preservation is enabled and Applications have no deletion finalizers.
 
-## Media and Secrets
+## Secrets
 
-- `ns-media` defines eight Deployments and nine PVCs in namespace `media`.
-  Eight local-path PVs use reclaim policy `Delete`; shared `media-nfs-pv`
-  uses `Retain`. Preserve these policies and existing bindings.
-- All media PVCs, both SealedSecrets and the Sealed Secrets CRD have
-  `Prune=confirm,Delete=confirm`. Direct Kubernetes deletion bypasses these gates.
-- Strict-scope SealedSecrets manage `homepage-widgets` and `transmission-rpc`.
-  Their generated Secrets hold the plaintext credentials consumed by workloads.
+- Workload, storage and encrypted Secret inventories belong in the manifests;
+  consult [Argo operations](ns-argo/SETUP.md) for lifecycle safeguards and
+  [monitoring operations](ns-monitoring/README.md) for monitoring access.
 - The Sealed Secrets controller version is pinned in
   `ns-sealed-secrets/base/kustomization.yaml` and uses default 30-day key renewal.
   Laptop tools are `kubeseal v0.40.0` and `age v1.3.2`.

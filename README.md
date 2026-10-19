@@ -3,7 +3,7 @@
 K3s media stack on `node-main`, with deployable configuration under
 `infrastructure/node-main`.
 
-Argo CD reconciles media and Sealed Secrets from public GitHub `main`.
+Argo CD reconciles media, monitoring and Sealed Secrets from public GitHub `main`.
 Namespaces, the NAS PV, Argo itself and its ApplicationSet are manually managed.
 Git stores configuration; application data, NAS media and sealing keys require
 separate recovery sources. Keep credentials and private keys outside Git.
@@ -14,4 +14,4 @@ separate recovery sources. Keep credentials and private keys outside Git.
 - [Infrastructure recovery](setup.MD)
 - [Argo CD bootstrap, operations and recovery](infrastructure/node-main/ns-argo/SETUP.md)
 - [Monitoring operations](infrastructure/node-main/ns-monitoring/README.md)
-- [Next steps](TODO.md)
+- [Next steps](plans/TODO.md)

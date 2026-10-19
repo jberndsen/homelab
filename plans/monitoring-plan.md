@@ -1,274 +1,77 @@
 # Monitoring deployment and teaching plan
 
-Status: Lessons 1–3 completed, deployed and verified. Owner passed the Lesson 3
-checkpoint and requested Lesson 4. Lesson 4 is incomplete and stopped for the
-evening at the owner's request. Do not implement Lesson 5 without readiness.
+Status: Lessons 1–3 complete; their checkpoints passed. Grafana is deployed and
+verified, but Lesson 4's dashboard and checkpoint are incomplete. Stopped for
+the evening at the owner's request. Do not start Lesson 5 without readiness.
 
 ## Resume instructions
 
-- Lesson 4 started after checkpoint commit `5535041`. Grafana PVC stage
-  `624ddec`, sealed bootstrap credential `52b9a24`, workload/internal data source
-  `d754aff`, automatic plugin install/update disablement `426aa18`, ingress
-  `251024e`. Runtime login/data source/ingress are verified. Owner has logged
-  in and run Explore `up` in Instant and Range modes, setting legend `{{job}}`.
-  Screenshots show four instant series at 1 and overlapping range traces at 1.
-  Resume by creating the first editable panel (Scrape health) in a new
-  Monitoring — Learning dashboard; last instruction was to inspect Explore's
-  Add dropdown, whose contents have not yet been confirmed. Do not repeat login
-  or Explore setup unless needed. No dashboard created yet; do not
-  auto-create the whole dashboard or begin Lesson 5. Checkpoint remains pending.
-- Sealing coverage verified against mounted NAS inventory/recovery README:
-  active certificate SHA-256
-  `b77a5acd6d48fc4bf2d7620d1da9a443cd4c205789efbf0de1726c3e14e6b1a4`;
-  encrypted backup checksum matches the verified 2026-10-08 record. Used that
-  exact fetched public certificate; random password generated/sealed in memory.
-  No plaintext credential saved or printed.
-- Existing localhost:9090 port-forward responds Ready. Exporter network
-  investigation confirms /host/proc/1/net/dev includes VM ens18, whereas
-  /host/proc/net/dev shows Pod eth0. v1.12.1 netdev defaults to namespace-local
-  netlink. Network collector is still disabled; settle/validate design before
-  any VM traffic panel. Do not substitute container traffic.
-- Read AGENTS.md, relevant infrastructure system records and this plan. Start
-  cluster work with kubectl get nodes -o wide, then check Argo/Pod health.
-- Lesson 3 is deployed: kube-state-metrics (`e5eb568`), node-scoped Prometheus
-  access (`27863ce`) and authenticated kubelet scraping (`fbe421b`). Do not
-  redeploy or repeat its checkpoint. Owner correctly identified kubelet metrics
-  for growing memory usage after clarification, and independently explained
-  Prometheus history versus recent kubectl top measurements. Lesson 3 checkpoint
-  passed; owner subsequently requested Lesson 4 (in progress above).
-- Owner passed object-state recall: desired=1/available=0 means the requested
-  replica cannot become available; would inspect logs. Explained checking Pod
-  status/events first, since scheduling/image-pull failures may have no logs.
-- Keep teaching exclusively conversational and minimal: explain one small
-  change before Git/Argo deployment; one Kubernetes resource per file.
-  Owner requested clarification of metrics-server versus kube-state-metrics
-  and HTTPS/authentication before continuing. Those explanations were given.
-- All created files belong inside this repo. Use ignored tmp/ for artifacts,
-  downloaded tools and TMPDIR. Earlier /private/tmp artifacts were not moved
-  or deleted; no new files were written there after the owner's instruction.
-- Direct kubelet /metrics/resource uses namespace CA verification, rotating
-  Pod-bound token, single-node discovery and name-scoped RBAC. Do not replace
-  this with insecure TLS or nodes/proxy. Only CPU and memory working set are
-  retained, with namespace/Pod/container and node identity. All eight media
-  containers verified. See operational README for queries and access details.
-- Port-forward was re-established on localhost:9090 after rollout; check it on
-  resume. CPU 1-minute rates returned all eight containers. A full 5-minute
-  kubelet rate window has not yet been validated; prefer it after history builds.
-- Lessons 1–2 checkpoints passed. Owner knows the PVC preserves samples,
-  CPU counters need rates, and shared filesystem free space differs from PVC
-  requested capacity. Grafana's display/query role has been recapped.
-- Full Pod-replacement persistence validation remains Lesson 5. Node Exporter
-  has recursive read-only proc/root mounts; replace its Pod after host mount
-  changes. VM network collection remains a Lesson 4 design/verification task;
-  do not present container network series as VM traffic.
+- Read AGENTS.md, relevant system records, this plan and
+  [monitoring operations](../infrastructure/node-main/ns-monitoring/README.md).
+  Start cluster work with `kubectl get nodes -o wide`, then check Argo/Pod health.
+- Teach exclusively in conversation. Explain each small change before Git/Argo
+  deployment; keep one Kubernetes resource per file. Do not create teaching files.
+- Owner has logged in and run Explore `up` in Instant and Range modes with
+  legend `{{job}}`. Screenshots show four series at 1 and overlapping traces.
+  Resume by creating **Scrape health** in an editable **Monitoring — Learning**
+  dashboard. Last instruction was to inspect Explore's Add dropdown; its menu
+  has not been confirmed. No saved dashboard is confirmed. Do not repeat the
+  earlier exercises unless needed or create the whole dashboard automatically.
+- Preserve verified kubelet TLS, rotating Pod-bound credentials, single-node
+  discovery and node-name-scoped RBAC. No insecure TLS or nodes/proxy access.
+- VM network collection is unresolved. `/host/proc/1/net/dev` shows VM `ens18`;
+  `/host/proc/net/dev` shows Pod `eth0`. Node Exporter v1.12.1 defaults to
+  namespace-local netlink. Network collection remains disabled: validate the
+  VM view before enabling it or building a traffic panel.
+- Lesson port-forwards are stopped. Re-establish localhost:9090 only when needed;
+  Grafana is available through its ingress. Temporary artifacts/tools were
+  removed from ignored root `tmp/`; set TMPDIR there for new temporary files.
+- Sealing-key backup coverage was verified before sealing Grafana credentials.
+  Recheck the active certificate against the verified NAS inventory before
+  creating future credentials; use that exact covered certificate.
 
-## Implementation and teaching record
+## Remaining work
 
-- Owner stopped Grafana configuration for the evening after successfully
-  running Explore `up` in Instant and Range modes with legend `{{job}}`.
-  Conversation covered series labels, unitless scrape success, time range and
-  step/resolution, overlapping traces, and missing data versus failed scrapes.
-  This records the exercise, not a passed Lesson 4 checkpoint. First saved
-  dashboard panel remains pending. Owner asked for remaining original scope
-  beyond Grafana: VM network collection, Lesson 5 persistence/resource/retention
-  checks and recovery operations; optional device phases and notifications
-  remain separate. No further deployment or Lesson 5 work performed at wrap-up.
+- [ ] Lesson 4: validate VM network collection; build the editable learning
+  dashboard with the owner, including all panels listed below; pass checkpoint.
+- [ ] Validate full 5-minute media-container CPU rates after history accumulates.
+- [ ] Lesson 5: dashboard export/provisioning, separate editable copy, controlled
+  monitoring-Pod replacement, persistence/resource/retention checks and recovery
+  operations. Preserve all claims; no media disruption or whole-stack outage test.
+- Optional after Lesson 5: Proxmox, NAS and UPS metrics; notifications are separate.
 
-- Lesson 4 initial stages: node Ready, all three Argo Applications initially
-  Synced/Healthy, all workload Pods Ready. Clean starting tree at `5535041`.
-  PVC render/server dry-run passed; live diff adds only PVC plus existing Argo
-  tracking/defaulted metadata differences. Both Standards/Spec reviews passed.
-  After Git/Argo deployment claim was Pending with WaitForFirstConsumer as
-  expected; Grafana scheduling subsequently bound it at 1 GiB.
-- Strict-scope grafana-admin SealedSecret validated with controller; deployed
-  condition Synced=True and generated Opaque Secret verified without values.
-  Reviewed official Grafana 13.2.2 release changelog including security fixes,
-  resolved multi-platform image digest from Docker Hub. Workload/data-source
-  render, server dry-run, live diff and both review axes passed. No existing
-  workload template, kubelet TLS/RBAC, image or PVC changed. Runtime Grafana
-  validation subsequently passed as recorded below; no checkpoint claimed.
-- Grafana startup revealed default optional-plugin downloads and attempted
-  bundled-plugin updates against read-only image storage. Corrected via Git/Argo
-  `426aa18` using tagged defaults.ini settings: preinstall_disabled=true and
-  preinstall_auto_update=false. Corrected rollout has no background installer
-  activity or update errors. Initial optional plugins remain on the data PVC;
-  automatic installation/updates are disabled. No stateful image change.
-- Lesson 4 runtime validation around 22:13–22:16 CEST: all three Applications
-  Synced/Healthy at ingress stage `251024e`; all four monitoring Pods Ready,
-  zero restarts. Grafana PVC Bound, 1 GiB. grafana.home.arpa resolves to
-  192.168.30.103; Traefik redirects anonymous browser to /login, anonymous
-  /api/user returns 401. Real session login, database health, provisioned
-  Prometheus health and query `up` all pass through ingress and localhost;
-  four scrape targets return 1. Credentials used only in process memory.
-  All eight media Deployments remain 1/1 available; no media changes.
-- Both review axes passed for Grafana workload/credential/ingress stages.
-  Server dry-runs and reviewed live diffs passed; expected diff exit 1 for
-  additions/Argo metadata. Port-forwards: existing localhost:9090 verified;
-  localhost:3000 reconnected after the configuration rollout. Owner login and
-  dashboard interaction are next; network collector remains disabled pending
-  a validated collection design. Lesson 4 checkpoint and all Lesson 5 work
-  remain pending. Preserve narrow kubelet RBAC and verified TLS.
+## Completed work and validation
 
-- Lesson 3 checkpoint passed: owner correctly explained that Prometheus stores
-  historical time series while kubectl top only supplies recent measurements.
-  Initially associated kube-state-metrics with memory usage; clarified object
-  state versus consumption. On retry, owner correctly chose kubelet metrics
-  for investigating growing Radarr memory usage. Earlier desired/available
-  replica recall also passed. Lesson 4 later started as recorded above;
-  Lesson 5 remains unstarted.
+Detailed session history is retained in Git. Key milestones:
 
-- Lesson 3 consumption stage deployed through Git/Argo `fbe421b`. Matching
-  promtool syntax check, Kustomize render, server dry-run, live diff and separate
-  Standards/Spec reviews passed; no findings. Full promtool check in the running
-  Pod also passed with real mounted credential/CA paths. No image or PVC change.
-- Validation around 21:54–21:56 CEST: all three Argo Applications Synced/Healthy;
-  monitoring at `fbe421b`, all 14 desired resources Synced, none pending prune.
-  Prometheus rolled out Ready, zero restarts; all four targets up with empty
-  errors. Exactly one kubelet target discovered at
-  https://192.168.30.103:10250/metrics/resource. All eight real media containers
-  have both required series and match current kubectl Pod/container identities.
-  Exactly two container metric families retained (50 series across 25 cluster
-  containers at inspection), no empty identity or POD infrastructure series.
-  Full namespace/Pod/container identity and node label verified.
-- Memory MiB snapshot agrees with kubectl top within expected sampling changes:
-  Radarr 179.33 vs 179; Seerr 335.36 vs 335; Transmission 6.09 vs 6.
-  Jellyfin changed from 687 to about 700 between observations. One-minute CPU
-  rates returned all eight containers; Radarr about 0.00124 cores (1.24m).
-  These are snapshots, not steady-state/peak values. Full-window 5-minute CPU
-  validation remains for later accumulated history. No media restart/scale.
-- Conversational teaching covered existing kubelet versus new exporter,
-  certificate verification/authentication/authorization, scoped discovery,
-  rate in cores (1 core = 1000m), memory working set bytes/MiB and cache caveat,
-  differing sampling windows versus kubectl top, and stored Prometheus history.
-  Object-state availability is distinct from consumption and media-flow health.
-  Lesson 3 checkpoint subsequently passed as recorded above; stop here before
-  Grafana or Lessons 4–5.
+| Stage | Commits | Evidence |
+| --- | --- | --- |
+| Prometheus | `884e512` and filename follow-up | Internal Service, 10 GiB local-path PVC, seven-day/7-GiB retention, self-scrape verified |
+| VM metrics | `055c25d`, `2da684f` | CPU/memory/filesystem agree with VM; recursive read-only host mounts verified; network deferred |
+| Kubernetes object state | `e5eb568` | Six collectors and matching read-only RBAC; media replicas, readiness/restarts and PVC phases match kubectl |
+| Kubelet access and consumption | `27863ce`, `fbe421b` | Direct verified HTTPS /metrics/resource; all eight media containers; only CPU and memory working-set families retained |
+| Lesson 3 checkpoint | `5535041` | Owner distinguishes object state, consumption and stored history; Lessons 1–3 passed |
+| Grafana storage/credentials | `624ddec`, `52b9a24` | Protected 1 GiB PVC; strict-scope SealedSecret Synced=True; backup coverage checked first |
+| Grafana workload/data source | `d754aff`, `426aa18` | Pinned reviewed 13.2.2 image; server-side internal Prometheus source; plugin installation/updates explicitly disabled |
+| Grafana ingress | `251024e` | DNS resolves to VM; login required; real session, database/data-source health and four up=1 results verified through Traefik |
 
-- Lesson 3 kubelet access stage: rechecked node/Argo/Pod health and serving
-  certificate. IP SAN 192.168.30.103, issuer k3s-server-ca, expiry 2027-10-15;
-  verification against namespace CA passed, anonymous cadvisor request 401.
-  Prepared dedicated Prometheus ServiceAccount and node-name-scoped list/watch
-  nodes plus get nodes/metrics permissions. No nodes/proxy or write permissions.
-  Server dry-run and live diff passed; no workload-template change at this stage.
-  Deployed access stage in `27863ce`; Argo Synced/Healthy. Short-lived token
-  held only in memory: selector-bounded node list 200, unbounded list 403,
-  API node-proxy request 403, direct cadvisor/resource metrics 200 with verified
-  TLS, direct /pods 403. Credential not saved. Both endpoints contain the media
-  CPU/memory series. Chose /metrics/resource for its stable names and simpler
-  namespace/Pod/container labels. Prepared one new job with bounded node
-  discovery, CA/token paths, node label and filtering to two real-container
-  measurements. Prometheus Pod opts into its rotating ServiceAccount credential.
-  Local matching promtool syntax validation, render and server dry-run passed;
-  live diff changes only Pod identity/config plus generated ConfigMap (and
-  expected tracking/defaulted metadata). Runtime full promtool check follows
-  where mounted credential/CA paths exist.
-
-- Lesson 3 object-state stage deployed via Git/Argo commit `e5eb568`.
-  Selected kube-state-metrics v2.20.0 after reviewing its official release and
-  tagged CLI/deployment documentation; Kubernetes client-go v0.36.3 matches the
-  running 1.36 API family. Resolved official registry image index SHA-256.
-  Five separate resource files, six selected collectors and matching list/watch
-  RBAC; no Secrets permission, annotation/label allowlists or extra telemetry
-  scrape. Matching promtool, render, server dry-run, pre-push live diff and
-  separate Standards/Spec reviews passed. No stateful image update.
-- Runtime validation around 21:42–21:47 CEST: Argo revision `e5eb568`
-  Synced/Healthy; all 11 desired resources Synced, none pending prune.
-  Both changed Deployments rolled out; all three monitoring Pods Ready with
-  zero restarts. All three scrape targets up with empty scrape errors.
-  Exporter logs confirm exactly the six intended stores and empty label and
-  annotation allowlists. Its telemetry reports successful watches for all six
-  resource types; no failed watch series. Secret listing and Pod creation denied
-  for its ServiceAccount. 41 comparisons matched kubectl: desired/available
-  replicas for all eight media Deployments, readiness/restarts for all eight
-  containers and Bound phase for all nine media PVCs. Jellyfin and Seerr each
-  retain their pre-existing single restart; other media containers report zero.
-  All media Deployments remain 1/1 available. No media restarts/scales performed.
-  Brief CPU/memory snapshot: exporter 1m/12Mi, Node Exporter 1m/7Mi,
-  Prometheus 2m/38Mi; not steady-state or peak measurements.
-- Conversation distinguished metrics-server from kube-state-metrics and
-  Prometheus history; explained identity/RBAC/binding, desired versus available,
-  labels and cardinality, readiness/restarts and missing versus zero samples.
-  Owner subsequently passed the object-state recall check; kubelet stage and
-  final checkpoint status are recorded above. No whole-stack completion claimed.
-- Owner requires all created files to stay inside this repository. Added rule
-  to AGENTS.md and ignored root tmp/; use it for artifacts and TMPDIR henceforth.
-  Earlier session artifacts under /private/tmp were not moved or deleted.
-
-- Lesson 2: deployed through Git/Argo in commits `055c25d` and `2da684f`.
-  Reviewed official Node Exporter v1.12.1 release notes (perf/edac fixes) and
-  tagged collector documentation/source, and resolved the multi-platform digest
-  directly from Quay's registry. Added a node-bounded DaemonSet and internal
-  Service plus one explicit 30-second scrape job. No stateful image update.
-  Prometheus retained its image and PVC; config hash triggered its rollout.
-- Validation around 21:22–21:24 CEST: matching v3.15.0 promtool config check,
-  Kustomize render, server dry-run and pre-push Kubernetes diff passed. Review
-  found ordinary read-only root mounts could expose writable submounts; fixed
-  with required recursive read-only mounts before push. Standards re-review
-  and Spec review have no remaining findings. Argo revision `2da684f` reports
-  Synced/Healthy with all six desired objects Synced and no pending prune.
-  Both monitoring Pods Ready with zero restarts; runtime mount status confirms
-  recursiveReadOnly Enabled on both host mounts. Both targets up with empty
-  scrape errors; all five exporter collectors report success and all three
-  real filesystem metrics have device_error=0. Raw metric types confirm CPU
-  counter and memory/filesystem gauges.
-- VM capacity verified: eight idle CPU series match eight vCPUs; MemTotal
-  16,761,421,824 bytes matches Kubernetes capacity 16,368,576 KiB; root ext4
-  capacity 103,474,552,832 bytes exactly matches the independent kubelet summary.
-  Snapshot: available memory 12.39 GiB, memory unavailable fraction 20.64%,
-  root available 63.64 GiB versus free 68.57 GiB; 1-minute non-idle CPU 1.83%.
-  Initial CPU/working-set sample: exporter 1m/6Mi, Prometheus 3m/33Mi; these are
-  brief snapshots, not steady-state or peak measurements. All eight media
-  Deployments stayed 1/1 available; all three Argo Applications Synced/Healthy.
-- Lesson 2 conversational teaching covered DaemonSets, internal Service scraping,
-  read-only host views, Grafana recap, gauges/counters, rate, label filtering,
-  per-node CPU averaging, memory availability, root filesystem units and
-  free versus available versus requested PVC capacity. The owner initially
-  associated rate with averaging and free space with the PV; clarified rate
-  as per-second counter increase, avg as cross-CPU aggregation, and filesystem
-  measurements as distinct from both PVC and PV capacity. The owner then
-  correctly answered both follow-up checks: shared disk availability decreases
-  while the PVC request stays unchanged, and 15 idle seconds in 30 seconds
-  means 50% busy. Lesson 2 checkpoint passed; wait for readiness before Lesson 3.
-  Lesson 3 subsequently began as recorded above. No lesson files were created.
-- Lesson 1: manifests committed and pushed; bootstrap namespace
-  created through the manually managed `cluster/` workflow. Monitoring workloads
-  were deployed exclusively by the existing ApplicationSet/Argo workflow.
-- Selected Prometheus v3.15.0 after reviewing the official release notes.
-  Resolved the pinned multi-platform image digest from the official registry.
-  Downloaded matching release tools and verified the archive against its
-  published SHA-256 checksum. `promtool check config`, Kustomize rendering,
-  server dry-run and live diff passed; the diff adds only the four intended
-  monitoring objects.
-- Runtime validation around 20:55 CEST: Argo automatically deployed revision
-  `884e512`; all four resources report Synced and Application health is Healthy.
-  Inspected Argo's resource comparison: no OutOfSync resources or pending prune.
-  Automatic sync began on discovery; this Argo comparison was after sync, while
-  the pre-push diff was the Kubernetes server diff. The post-sync Kubernetes
-  diff showed only Argo-injected tracking annotations and a dry-run generation
-  change; no workload configuration difference. Rollout completed with one
-  Ready Pod and zero restarts. Readiness and the Targets page returned HTTP 200;
-  target API reports exactly one healthy self-target, no scrape error and a
-  30-second interval. Raw `prometheus_build_info` confirms v3.15.0, and
-  `up{job="prometheus"}` returns 1. Startup logs confirm 1-week/7-GiB retention.
-  Initial `kubectl top pods` snapshot was 22m CPU and 34 MiB memory, less than
-  a minute after creation; it is not a steady-state or peak measurement.
-  Seven-day retention and Pod-replacement persistence have not been empirically
-  tested. All eight media Deployments remained 1/1 available; existing Argo
-  Applications remained Synced/Healthy.
-- Review: no Lesson 1 manifest defects found. Corrected the existing recovery
-  procedure to include the third Application and disposable metrics history.
-- Owner asked whether Argo should deploy everything and undo manual changes.
-  Explained the existing boundary: bootstrap resources are manually managed;
-  Argo manages discovered workload overlays and self-heals their drift.
-- Owner requested conversation-only teaching. Removed the generated lesson,
-  shared lesson stylesheet and teaching workspace scaffolding. Keep
-  [operations notes](../infrastructure/node-main/ns-monitoring/README.md)
-  for running the stack; do not create lesson or teaching reference files.
-- Owner correctly answered the storage checkpoint with "the PVC" and received
-  explanations of GitOps ownership and ConfigMap generation. The owner then
-  requested a filename consistency fix, which was deployed and verified, and
-  requested this continuation record. At that checkpoint Lessons 2–5 had not started; no
-  whole-stack completion or full persistence validation is claimed.
+- Manifest rendering, server dry-runs, reviewed live diffs and Standards/Spec
+  reviews passed for deployed stages. Runtime promtool config validation passes.
+- Grafana's first startup downloaded optional plugins and attempted bundled-plugin
+  updates; `426aa18` disabled preinstallation and automatic updates. Existing
+  optional plugins remain on its PVC; corrected startup has no installer errors.
+- Sealing certificate SHA-256:
+  `b77a5acd6d48fc4bf2d7620d1da9a443cd4c205789efbf0de1726c3e14e6b1a4`.
+  It matches the verified 2026-10-08 NAS inventory; encrypted backup checksum
+  matches its recovery README. Password generation/sealing used process memory,
+  with no plaintext saved or printed. No new key backup was necessary.
+- Final cleanup check on 2026-10-19: node Ready, all three Argo Applications
+  Synced/Healthy, all four monitoring Pods Ready with zero restarts, both claims
+  Bound, all eight media Deployments available. Monitoring render/server dry-run
+  and running promtool check passed. No workload changes were made during cleanup.
+- Persistence through controlled Pod replacement, seven-day observed retention,
+  Grafana application-data backup coverage and media playback were not tested
+  in this lesson. No Lesson 4 checkpoint or whole-stack completion is claimed.
 
 ## Confirmed decisions
 
@@ -332,31 +135,12 @@ one wins, so seven days is a maximum rather than a guaranteed minimum.
 The size retention policy covers retained blocks, not a hard cap on total
 database usage; allow room for WAL, head data and compaction.
 
-Read-only preflight completed on 2026-10-19 around 19:07–19:09 CEST:
-
-| Check | Observed result |
-| --- | --- |
-| Node | `vm-ubuntu-k3s`, Ready, K3s `v1.36.2+k3s1` |
-| Capacity | 8 vCPU; 16,368,576 KiB memory (15.61 GiB) |
-| Actual usage (`kubectl top nodes`) | 85m CPU (1%); 4,130 MiB memory (25%) |
-| Available memory (kubelet summary) | 12,494,651,392 bytes (11.64 GiB) |
-| Node filesystem capacity | 103,474,552,832 bytes (96.37 GiB) |
-| Node filesystem available | 68,757,733,376 bytes (64.04 GiB) |
-| Existing local PVC filesystem | Same capacity and approximately same available space as node filesystem |
-| Local-path base directory | `/var/lib/rancher/k3s/storage` |
-| StorageClass | `local-path`, `WaitForFirstConsumer`, reclaim `Delete`, expansion disabled |
-| Pressure | MemoryPressure, DiskPressure and PIDPressure all False |
-| Scheduled resource requests | 200m CPU and 140 MiB RAM across the existing cluster |
-
-Outcome: the agreed budget fits current observed capacity. An additional
-2 GiB working set would bring memory use to roughly 38%; writing the full
-11 GiB planned data budget would leave roughly 53 GiB available on this
-filesystem before other growth. These are estimates from an idle snapshot,
-not peak-load measurements or reservations. Existing workloads mostly have
-no requests/limits, so scheduler reservations alone do not establish headroom.
-Local-path requested capacity is not enforced as an individual filesystem quota.
-No test Pods, PVCs, workloads or cluster configuration were created or changed.
-The preflight is completed here, not a future implementation phase.
+Read-only capacity preflight completed on 2026-10-19. The 8-vCPU/15.61-GiB
+VM had approximately 11.64 GiB available memory and 64.04 GiB available disk;
+all pressure conditions were False. The agreed budget fit that idle snapshot.
+Local-path uses `/var/lib/rancher/k3s/storage`, WaitForFirstConsumer and Delete
+reclaim policy, without expansion. Requested capacity is not a filesystem quota.
+These observations are historical, not peak measurements or current guarantees.
 
 ## Instructions for the implementation and teaching agent
 

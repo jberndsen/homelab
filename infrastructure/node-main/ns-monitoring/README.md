@@ -6,7 +6,8 @@ this file contains operations notes only.
 
 Lessons 1–3 are deployed, verified and complete; the owner passed Lesson 3's
 checkpoint. Lesson 4 is in progress. See the plan for validation evidence and
-resume instructions. Lesson 5 remains pending.
+resume instructions. Lesson 5 remains pending. Lesson port-forwards were stopped
+at evening cleanup; reconnect only when needed.
 
 ## Grafana (Lesson 4 in progress)
 
@@ -178,5 +179,6 @@ out of output/files. Verify config inside the running Pod:
 kubectl -n monitoring exec deployment/prometheus -- /bin/promtool check config /etc/prometheus/prometheus.yaml
 ```
 
-This does not establish application playback/search health. Grafana,
-notification delivery and controlled persistence testing remain later work.
+This does not establish application playback/search health. Grafana is deployed;
+its learning dashboard is unfinished. Notification delivery is a separate future
+phase, and controlled persistence testing remains Lesson 5.
