@@ -34,7 +34,7 @@ the evening at the owner's request. Do not start Lesson 5 without readiness.
 
 - [ ] Lesson 4: validate VM network collection; build the editable learning
   dashboard with the owner, including all panels listed below; pass checkpoint.
-- [ ] Validate full 5-minute media-container CPU rates after history accumulates.
+- [x] Full 5-minute CPU rates return all eight media containers (final inspection).
 - [ ] Lesson 5: dashboard export/provisioning, separate editable copy, controlled
   monitoring-Pod replacement, persistence/resource/retention checks and recovery
   operations. Preserve all claims; no media disruption or whole-stack outage test.
@@ -69,6 +69,21 @@ Detailed session history is retained in Git. Key milestones:
   Synced/Healthy, all four monitoring Pods Ready with zero restarts, both claims
   Bound, all eight media Deployments available. Monitoring render/server dry-run
   and running promtool check passed. No workload changes were made during cleanup.
+- Subsequent final inspection: all namespace controllers/Pods healthy (completed
+  bootstrap Jobs excluded from readiness), all 11 PVCs/PVs Bound, no warning
+  events or observed scrape failures in the last 15 minutes. Existing restarts
+  are historical; running Pods' last terminations are from the October 15 boot.
+  API readyz passes; all SealedSecrets Synced=True; Argo has no conditions or
+  pending prune. VM 5-minute CPU busy about 1.9%, available RAM 12.1 GiB, root
+  disk available 61.7 GiB, load5 0.09. Monitoring uses about 236 MiB in a recent
+  kubectl top snapshot. No exporter collector/device errors, TSDB compaction
+  failures or WAL corruptions. These are current observations, not peak-load,
+  seven-day retention or backup tests. Agent inspection recipes are linked
+  from AGENTS.md; no permanent forward or workload change is required.
+  All checked app ingress pages respond HTTP 200; Transmission returns the
+  expected unauthenticated 401. Prometheus, Grafana and kube-state-metrics
+  report no error-level log entries in the last 15 minutes. These HTTP checks
+  do not exercise media playback or authenticated Transmission RPC.
 - Persistence through controlled Pod replacement, seven-day observed retention,
   Grafana application-data backup coverage and media playback were not tested
   in this lesson. No Lesson 4 checkpoint or whole-stack completion is claimed.

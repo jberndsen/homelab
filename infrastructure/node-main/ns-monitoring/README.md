@@ -54,6 +54,38 @@ Sealing-key coverage was checked against the verified NAS inventory before
 sealing; see the plan and ns-argo/SETUP.md for the recovery workflow. No new
 Grafana application-data backup coverage or persistence test is claimed.
 
+## Read-only cluster inspections
+
+Start with `kubectl get nodes -o wide`, Argo Applications and Pods across all
+namespaces. Inspect events and `kubectl top nodes` / `kubectl top pods -A` for
+current problems and recent consumption. Use Prometheus for stored history;
+Grafana Explore uses the provisioned Prometheus source. No saved dashboard is
+required. A query can also run without login credentials or a port-forward:
+
+```sh
+kubectl -n monitoring exec deployment/prometheus -- wget -qO- 'http://localhost:9090/api/v1/query?query=up'
+```
+
+For other queries, URL-encode PromQL in the `query` parameter, or use Grafana
+Explore / a temporary localhost Prometheus forward and close it afterward.
+
+| Question | PromQL |
+| --- | --- |
+| Scrape health now | `up` |
+| Observed scrape failures in 15 minutes | `min_over_time(up[15m]) < 1` |
+| VM CPU busy percent over 5 minutes | `100 * (1 - avg(rate(node_cpu_seconds_total{job="node-exporter",mode="idle"}[5m])))` |
+| VM available RAM in GiB | `node_memory_MemAvailable_bytes{job="node-exporter"} / 1024^3` |
+| VM root available disk in GiB | `node_filesystem_avail_bytes{job="node-exporter",mountpoint="/"} / 1024^3` |
+| Exporter collector failures | `node_scrape_collector_success{job="node-exporter"} == 0` |
+
+Object-state and media CPU/memory queries are in the sections below. Preserve
+namespace/Pod/container identity when investigating an app. Compare with kubectl;
+sample times/windows differ. Check current targets as well as `up`: a missing
+series is not a healthy zero, and disappeared targets can leave stale history.
+Node Exporter observes the Ubuntu VM, not Proxmox. VM network metrics and
+Proxmox/NAS/UPS exporters are not configured. Neither scrape success nor a Ready
+Pod proves playback, search, downloads or backup/recovery work.
+
 ## Ownership and updates
 
 `cluster/` manually owns the monitoring namespace. The existing ApplicationSet

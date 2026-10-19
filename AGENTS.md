@@ -13,6 +13,13 @@ discoverable runtime state, or transient capacity snapshots in system records.
 Use the locally installed `kubectl` and its preconfigured kubeconfig for
 cluster work. Start with `kubectl get nodes -o wide`.
 
+For cluster inspections, use `kubectl` for current state/events and `kubectl top`
+for recent usage. Prometheus now provides historical VM, Kubernetes object-state
+and container CPU/memory metrics; Grafana provides Explore access. Consult
+[monitoring operations](infrastructure/node-main/ns-monitoring/README.md#read-only-cluster-inspections)
+for queries without retrieving application credentials or leaving a port-forward
+running. VM network metrics and Proxmox/NAS/UPS coverage are not yet available.
+
 For stateful image updates, review the release, take an application-native
 backup, update one pinned digest, wait for rollout, and run the application's
 smoke test. Do not introduce unattended updates or runtime socket access.
