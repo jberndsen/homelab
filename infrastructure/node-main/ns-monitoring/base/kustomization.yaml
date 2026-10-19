@@ -9,6 +9,8 @@ resources:
   - prometheus-service.yaml
   - grafana-pvc.yaml
   - grafana-admin-sealedsecret.yaml
+  - grafana-deployment.yaml
+  - grafana-service.yaml
   - node-exporter-daemonset.yaml
   - node-exporter-service.yaml
   - kube-state-metrics-serviceaccount.yaml
@@ -17,6 +19,9 @@ resources:
   - kube-state-metrics-deployment.yaml
   - kube-state-metrics-service.yaml
 configMapGenerator:
+  - name: grafana-datasources
+    files:
+      - grafana-datasources.yaml
   - name: prometheus-config
     files:
       - prometheus.yaml
