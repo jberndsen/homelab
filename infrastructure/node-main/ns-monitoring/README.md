@@ -4,9 +4,8 @@ Implementation follows [the approved plan](../../../plans/monitoring-plan.md),
 one lesson at a time. Teaching takes place exclusively in conversation;
 this file contains operations notes only.
 
-Lessons 1–2 are complete. Lesson 3's kube-state-metrics stage is deployed and
-verified; pause to inspect results before adding kubelet consumption metrics.
-The full Lesson 3 checkpoint and Lessons 4–5 remain pending. See the plan for
+Lessons 1–2 are complete. Both Lesson 3 sources are deployed and verified.
+Pause at the Lesson 3 owner checkpoint; Lessons 4–5 remain pending. See the plan for
 validation evidence and resume instructions.
 
 ## Ownership and updates
@@ -85,7 +84,7 @@ kube_pod_container_status_restarts_total{namespace="media"}
 Compare with `kubectl -n media get deployments,pods`. Restart values belong to
 current Pod/container identities; Pod replacement changes that identity. Missing
 series must not be interpreted as zero. These metrics describe Kubernetes state,
-not media playback or search success. CPU/memory consumption is a later stage;
+not media playback or search success. CPU/memory consumption comes from the kubelet job below;
 metrics-server remains the source for current `kubectl top` measurements.
 
 For collector troubleshooting, temporarily forward Deployment port 8081 and
@@ -93,3 +92,46 @@ inspect `/metrics` for `kube_state_metrics_watch_total` success/error results.
 This port is used for readiness but is not an additional persistent scrape job.
 Keep saved output and tools in repository-root `tmp/`; set TMPDIR there for
 commands that create temporary files. Never commit temporary artifacts.
+
+## Container CPU and memory
+
+Prometheus discovers only node `vm-ubuntu-k3s`, using a matching metadata.name
+field selector required by its name-scoped list/watch RBAC. Node discovery
+supplies the kubelet IP/port. Its `kubelet-resource` job reads /metrics/resource
+directly over HTTPS, verifying the serving certificate with the mounted cluster
+CA. Kubernetes mounts/rotates its Pod-bound ServiceAccount token. No manually
+maintained credential Secret, insecure TLS or nodes/proxy permission is used.
+The only kubelet permission is get nodes/metrics for that node. Adding a node
+requires deliberate RBAC/discovery changes and certificate verification.
+
+Only container_cpu_usage_seconds_total and container_memory_working_set_bytes
+are retained from this job, excluding empty namespace/Pod/container identities
+and container=POD. Namespace, Pod and container names are preserved; the node
+label comes from discovery. Cardinality grows with container count and Pod churn.
+The broader cAdvisor endpoint was inspected but is not scraped.
+
+```promql
+rate(container_cpu_usage_seconds_total{job="kubelet-resource",namespace="media",container!="",container!="POD"}[5m])
+container_memory_working_set_bytes{job="kubelet-resource",namespace="media",container!="",container!="POD"} / 1024 / 1024
+```
+
+CPU units are cores, not percent of the entire VM: 0.1 cores = 100 millicores.
+Use a 1-minute window initially when fewer than five minutes of samples exist;
+rate needs multiple samples and a zero differs from a missing series. Memory is
+MiB of working set, including some cache, not application heap alone. Compare
+plausibility with kubectl top, allowing different sample times/windows.
+Prometheus supplies stored history; metrics-server supplies recent measurements.
+
+Check up{job="kubelet-resource"} and /targets; discovery failure can leave no
+target at all. Inspect Prometheus logs for discovery/RBAC errors. Certificate
+errors require checking the actual endpoint, CA, SANs and validity; never solve
+them by disabling verification. If the trust CA changes, replace the Prometheus
+Pod after confirming its trust bundle and serving certificate. Keep credentials
+out of output/files. Verify config inside the running Pod:
+
+```sh
+kubectl -n monitoring exec deployment/prometheus -- /bin/promtool check config /etc/prometheus/prometheus.yaml
+```
+
+This does not establish application playback/search health. Grafana,
+notification delivery and controlled persistence testing remain later work.

@@ -1,66 +1,70 @@
 # Monitoring deployment and teaching plan
 
-Status: Lessons 1–2 completed. Lesson 3 object-state stage deployed and verified
-on 2026-10-19. Owner passed the object-state recall check and authorized
-continuing with kubelet consumption metrics; access-stage validation is underway. Lesson 3 checkpoint has not yet been reached.
-Continue one small stage at a time. Lessons 4–5 have not started.
+Status: Lessons 1–2 completed. Both Lesson 3 stages are deployed and verified.
+Pause at the Lesson 3 owner checkpoint; do not implement Lessons 4–5.
 
 ## Resume instructions
 
-- Latest steering: the owner wants minimal configuration that is easy to read
-  for the first time. Use one resource per file and explain each addition.
-  Owner authorized continuing with kube-state-metrics only, then pausing to
-  read the results together. Owner correctly explained desired=1/available=0
-  and would inspect logs; clarified Pod events/readiness before logs. Owner
-  subsequently authorized kubelet work after explanation of HTTPS, identity and
-  permissions. Do not repeat Lessons 1–2 or deploy Lessons 4–5.
-- Lesson 3 object-state manifests use separate ServiceAccount, ClusterRole,
-  ClusterRoleBinding, Deployment and Service files, plus one scrape job.
-  No additional telemetry scrape or Service port. Telemetry container port
-  remains for readiness. Matching promtool, Kustomize render, server dry-run,
-  live diff and Standards/Spec reviews passed for this revised stage.
-- Preflight: node Ready, all three Argo Applications Synced/Healthy, running
-  Pods Ready. Kubelet certificate includes 192.168.30.103 and verifies with the
-  namespace CA; unauthenticated /metrics/cadvisor returned 401. Authenticated
-  narrow-RBAC access has not yet been implemented or tested. Local forwarding
-  was established on 9090; check it again on resume.
-- Explained metrics-server supplies recent resource measurements for kubectl
-  top/autoscaling; kube-state-metrics exposes object state, while Prometheus
-  stores scraped history. Owner asked for this distinction before deployment.
-
-- Read `AGENTS.md`, the relevant system records and this plan. Start cluster
-  work with `kubectl get nodes -o wide`, then verify current Argo/Pod health.
-- Lesson 2 is complete. Do not redeploy it or repeat its checkpoint. The owner
-  correctly answered that another application's writes decrease shared disk
-  availability without changing the PVC request, and that 15 idle CPU seconds
-  over 30 seconds means 50% busy. Allow questions and wait for owner readiness
-  before further stages. Do not implement Lessons 3–5 together.
-- Teach exclusively in conversation. Do not create lesson files or teaching
-  workspace scaffolding. Explain each small change before deploying via Git/Argo.
-- The owner correctly identified the PVC as what preserves samples across Pod
-  replacement. We explained Prometheus's independent collection/query role,
-  GitOps ownership, generated ConfigMaps and their hash-driven rollout.
-  Grafana's role was explained but not separately tested by owner recall;
-  briefly recap it when introducing the next queries.
-- The config filename is now `prometheus.yaml` everywhere. Commit `86e18d9`
-  renamed it and updated the generator and container argument. Argo completed
-  the rollout Synced/Healthy, loaded the new path, and `up{job="prometheus"}`
-  remained 1. No image or PVC changes were made.
-- Re-establish port-forwarding if needed; do not assume a previous session's
-  local process remains available. Full persistence validation remains Lesson 5.
-- Node Exporter intentionally enables only cpu, meminfo, filesystem, loadavg
-  and stat collectors. Host procfs plus root mounts supply VM counters and PID
-  1's mount table without hostPID/hostNetwork. Both mounts require recursive
-  read-only access; live mount propagation is incompatible, so replace the
-  exporter Pod after host mount changes. Lesson 4's VM network activity remains
-  to be designed/verified with host namespace access; do not use container
-  network series and label them as VM network traffic.
-- The 1-minute CPU query was validated after several scrapes. A fresh target's
-  5-minute rate was distorted by partial-window extrapolation. Prefer 5 minutes
-  after history accumulates; a full-window 5-minute result was not yet validated
-  at the initial measurement. Lesson 2 owner recall is recorded below.
+- Read AGENTS.md, relevant infrastructure system records and this plan. Start
+  cluster work with kubectl get nodes -o wide, then check Argo/Pod health.
+- Lesson 3 is deployed: kube-state-metrics (`e5eb568`), node-scoped Prometheus
+  access (`27863ce`) and authenticated kubelet scraping (`fbe421b`). Do not
+  redeploy or add components. Pause for the two Lesson 3 checkpoint answers:
+  choose object-state versus consumption metrics, and explain why kubectl top
+  is not stored history. Owner has not answered the full checkpoint yet.
+- Owner passed object-state recall: desired=1/available=0 means the requested
+  replica cannot become available; would inspect logs. Explained checking Pod
+  status/events first, since scheduling/image-pull failures may have no logs.
+- Keep teaching exclusively conversational and minimal: explain one small
+  change before Git/Argo deployment; one Kubernetes resource per file.
+  Owner requested clarification of metrics-server versus kube-state-metrics
+  and HTTPS/authentication before continuing. Those explanations were given.
+- All created files belong inside this repo. Use ignored tmp/ for artifacts,
+  downloaded tools and TMPDIR. Earlier /private/tmp artifacts were not moved
+  or deleted; no new files were written there after the owner's instruction.
+- Direct kubelet /metrics/resource uses namespace CA verification, rotating
+  Pod-bound token, single-node discovery and name-scoped RBAC. Do not replace
+  this with insecure TLS or nodes/proxy. Only CPU and memory working set are
+  retained, with namespace/Pod/container and node identity. All eight media
+  containers verified. See operational README for queries and access details.
+- Port-forward was re-established on localhost:9090 after rollout; check it on
+  resume. CPU 1-minute rates returned all eight containers. A full 5-minute
+  kubelet rate window has not yet been validated; prefer it after history builds.
+- Lessons 1–2 checkpoints passed. Owner knows the PVC preserves samples,
+  CPU counters need rates, and shared filesystem free space differs from PVC
+  requested capacity. Grafana's display/query role has been recapped.
+- Full Pod-replacement persistence validation remains Lesson 5. Node Exporter
+  has recursive read-only proc/root mounts; replace its Pod after host mount
+  changes. VM network collection remains a Lesson 4 design/verification task;
+  do not present container network series as VM traffic.
 
 ## Implementation and teaching record
+
+- Lesson 3 consumption stage deployed through Git/Argo `fbe421b`. Matching
+  promtool syntax check, Kustomize render, server dry-run, live diff and separate
+  Standards/Spec reviews passed; no findings. Full promtool check in the running
+  Pod also passed with real mounted credential/CA paths. No image or PVC change.
+- Validation around 21:54–21:56 CEST: all three Argo Applications Synced/Healthy;
+  monitoring at `fbe421b`, all 14 desired resources Synced, none pending prune.
+  Prometheus rolled out Ready, zero restarts; all four targets up with empty
+  errors. Exactly one kubelet target discovered at
+  https://192.168.30.103:10250/metrics/resource. All eight real media containers
+  have both required series and match current kubectl Pod/container identities.
+  Exactly two container metric families retained (50 series across 25 cluster
+  containers at inspection), no empty identity or POD infrastructure series.
+  Full namespace/Pod/container identity and node label verified.
+- Memory MiB snapshot agrees with kubectl top within expected sampling changes:
+  Radarr 179.33 vs 179; Seerr 335.36 vs 335; Transmission 6.09 vs 6.
+  Jellyfin changed from 687 to about 700 between observations. One-minute CPU
+  rates returned all eight containers; Radarr about 0.00124 cores (1.24m).
+  These are snapshots, not steady-state/peak values. Full-window 5-minute CPU
+  validation remains for later accumulated history. No media restart/scale.
+- Conversational teaching covered existing kubelet versus new exporter,
+  certificate verification/authentication/authorization, scoped discovery,
+  rate in cores (1 core = 1000m), memory working set bytes/MiB and cache caveat,
+  differing sampling windows versus kubectl top, and stored Prometheus history.
+  Object-state availability is distinct from consumption and media-flow health.
+  Lesson 3 checkpoint pending; stop here before Grafana or Lessons 4–5.
 
 - Lesson 3 kubelet access stage: rechecked node/Argo/Pod health and serving
   certificate. IP SAN 192.168.30.103, issuer k3s-server-ca, expiry 2027-10-15;
@@ -106,9 +110,8 @@ Continue one small stage at a time. Lessons 4–5 have not started.
 - Conversation distinguished metrics-server from kube-state-metrics and
   Prometheus history; explained identity/RBAC/binding, desired versus available,
   labels and cardinality, readiness/restarts and missing versus zero samples.
-  Pause to inspect queries with owner; no Lesson 3 recall checkpoint passed yet.
-  Kubelet authenticated access remains unimplemented. Do not claim all Lesson 3
-  or the whole stack complete.
+  Owner subsequently passed the object-state recall check; kubelet stage and
+  final checkpoint status are recorded above. No whole-stack completion claimed.
 - Owner requires all created files to stay inside this repository. Added rule
   to AGENTS.md and ignored root tmp/; use it for artifacts and TMPDIR henceforth.
   Earlier session artifacts under /private/tmp were not moved or deleted.
