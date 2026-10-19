@@ -1,17 +1,18 @@
 # Monitoring deployment and teaching plan
 
-Status: Lessons 1–2 deployed and verified on 2026-10-19. Lesson 2 explanations
-delivered in conversation; owner checkpoint is pending. Resume at that checkpoint.
+Status: Lessons 1–2 deployed, verified and taught on 2026-10-19. The owner
+passed Lesson 2's checkpoint. Wait for owner readiness before Lesson 3.
 Continue one lesson at a time, pausing at each owner checkpoint.
 
 ## Resume instructions
 
 - Read `AGENTS.md`, the relevant system records and this plan. Start cluster
   work with `kubectl get nodes -o wide`, then verify current Argo/Pod health.
-- Lesson 2 is deployed. Do not redeploy it. Ask the pending checkpoint: why does
-  a CPU counter need a rate, and why does a PVC's requested capacity not tell us
-  actual filesystem free space? Give feedback, allow questions, and wait for
-  owner readiness before Lesson 3. Do not implement Lessons 3–5 together.
+- Lesson 2 is complete. Do not redeploy it or repeat its checkpoint. The owner
+  correctly answered that another application's writes decrease shared disk
+  availability without changing the PVC request, and that 15 idle CPU seconds
+  over 30 seconds means 50% busy. Allow questions and wait for owner readiness
+  before Lesson 3. Do not implement Lessons 3–5 together.
 - Teach exclusively in conversation. Do not create lesson files or teaching
   workspace scaffolding. Explain each small change before deploying via Git/Argo.
 - The owner correctly identified the PVC as what preserves samples across Pod
@@ -35,7 +36,7 @@ Continue one lesson at a time, pausing at each owner checkpoint.
 - The 1-minute CPU query was validated after several scrapes. A fresh target's
   5-minute rate was distorted by partial-window extrapolation. Prefer 5 minutes
   after history accumulates; a full-window 5-minute result was not yet validated
-  at the initial measurement. No owner recall is claimed for Lesson 2 yet.
+  at the initial measurement. Lesson 2 owner recall is recorded below.
 
 ## Implementation and teaching record
 
@@ -67,8 +68,14 @@ Continue one lesson at a time, pausing at each owner checkpoint.
 - Lesson 2 conversational teaching covered DaemonSets, internal Service scraping,
   read-only host views, Grafana recap, gauges/counters, rate, label filtering,
   per-node CPU averaging, memory availability, root filesystem units and
-  free versus available versus requested PVC capacity. Paused for the owner
-  checkpoint; Lessons 3–5 have not started. No lesson files were created.
+  free versus available versus requested PVC capacity. The owner initially
+  associated rate with averaging and free space with the PV; clarified rate
+  as per-second counter increase, avg as cross-CPU aggregation, and filesystem
+  measurements as distinct from both PVC and PV capacity. The owner then
+  correctly answered both follow-up checks: shared disk availability decreases
+  while the PVC request stays unchanged, and 15 idle seconds in 30 seconds
+  means 50% busy. Lesson 2 checkpoint passed; wait for readiness before Lesson 3.
+  Lessons 3–5 have not started. No lesson files were created.
 - Lesson 1: manifests committed and pushed; bootstrap namespace
   created through the manually managed `cluster/` workflow. Monitoring workloads
   were deployed exclusively by the existing ApplicationSet/Argo workflow.
