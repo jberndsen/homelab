@@ -68,7 +68,18 @@ Continue one small stage at a time. Lessons 4–5 have not started.
   Prepared dedicated Prometheus ServiceAccount and node-name-scoped list/watch
   nodes plus get nodes/metrics permissions. No nodes/proxy or write permissions.
   Server dry-run and live diff passed; no workload-template change at this stage.
-  Direct authenticated access will be tested before scrape configuration changes.
+  Deployed access stage in `27863ce`; Argo Synced/Healthy. Short-lived token
+  held only in memory: selector-bounded node list 200, unbounded list 403,
+  API node-proxy request 403, direct cadvisor/resource metrics 200 with verified
+  TLS, direct /pods 403. Credential not saved. Both endpoints contain the media
+  CPU/memory series. Chose /metrics/resource for its stable names and simpler
+  namespace/Pod/container labels. Prepared one new job with bounded node
+  discovery, CA/token paths, node label and filtering to two real-container
+  measurements. Prometheus Pod opts into its rotating ServiceAccount credential.
+  Local matching promtool syntax validation, render and server dry-run passed;
+  live diff changes only Pod identity/config plus generated ConfigMap (and
+  expected tracking/defaulted metadata). Runtime full promtool check follows
+  where mounted credential/CA paths exist.
 
 - Lesson 3 object-state stage deployed via Git/Argo commit `e5eb568`.
   Selected kube-state-metrics v2.20.0 after reviewing its official release and

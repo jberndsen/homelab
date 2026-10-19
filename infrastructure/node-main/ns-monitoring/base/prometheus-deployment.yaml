@@ -14,7 +14,9 @@ spec:
       labels:
         app.kubernetes.io/name: prometheus
     spec:
-      automountServiceAccountToken: false
+      serviceAccountName: prometheus
+      # Kubernetes mounts and rotates this Pod-bound credential and its CA.
+      automountServiceAccountToken: true
       terminationGracePeriodSeconds: 120
       securityContext:
         runAsNonRoot: true

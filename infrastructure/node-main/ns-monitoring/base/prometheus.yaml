@@ -22,3 +22,29 @@ scrape_configs:
     honor_labels: true
     static_configs:
       - targets: ['kube-state-metrics.monitoring.svc.cluster.local:8080']
+  - job_name: kubelet-resource
+    scheme: https
+    metrics_path: /metrics/resource
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    kubernetes_sd_configs:
+      - role: node
+        selectors:
+          - role: node
+            field: metadata.name=vm-ubuntu-k3s
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: node
+    # Store only the two measurements needed by this lesson/dashboard.
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: container_cpu_usage_seconds_total|container_memory_working_set_bytes
+        action: keep
+      - source_labels: [namespace, pod, container]
+        regex: .+;.+;.+
+        action: keep
+      - source_labels: [container]
+        regex: POD
+        action: drop
