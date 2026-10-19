@@ -1,14 +1,17 @@
 # Monitoring deployment and teaching plan
 
-Status: Lesson 1 deployed, verified and taught on 2026-10-19. Resume at Lesson 2.
+Status: Lessons 1–2 deployed and verified on 2026-10-19. Lesson 2 explanations
+delivered in conversation; owner checkpoint is pending. Resume at that checkpoint.
 Continue one lesson at a time, pausing at each owner checkpoint.
 
 ## Resume instructions
 
 - Read `AGENTS.md`, the relevant system records and this plan. Start cluster
   work with `kubectl get nodes -o wide`, then verify current Argo/Pod health.
-- Continue with Lesson 2 (Node Exporter and first useful PromQL); do not
-  redeploy Lesson 1 or implement Lessons 2–5 together.
+- Lesson 2 is deployed. Do not redeploy it. Ask the pending checkpoint: why does
+  a CPU counter need a rate, and why does a PVC's requested capacity not tell us
+  actual filesystem free space? Give feedback, allow questions, and wait for
+  owner readiness before Lesson 3. Do not implement Lessons 3–5 together.
 - Teach exclusively in conversation. Do not create lesson files or teaching
   workspace scaffolding. Explain each small change before deploying via Git/Argo.
 - The owner correctly identified the PVC as what preserves samples across Pod
@@ -22,9 +25,50 @@ Continue one lesson at a time, pausing at each owner checkpoint.
   remained 1. No image or PVC changes were made.
 - Re-establish port-forwarding if needed; do not assume a previous session's
   local process remains available. Full persistence validation remains Lesson 5.
+- Node Exporter intentionally enables only cpu, meminfo, filesystem, loadavg
+  and stat collectors. Host procfs plus root mounts supply VM counters and PID
+  1's mount table without hostPID/hostNetwork. Both mounts require recursive
+  read-only access; live mount propagation is incompatible, so replace the
+  exporter Pod after host mount changes. Lesson 4's VM network activity remains
+  to be designed/verified with host namespace access; do not use container
+  network series and label them as VM network traffic.
+- The 1-minute CPU query was validated after several scrapes. A fresh target's
+  5-minute rate was distorted by partial-window extrapolation. Prefer 5 minutes
+  after history accumulates; a full-window 5-minute result was not yet validated
+  at the initial measurement. No owner recall is claimed for Lesson 2 yet.
 
 ## Implementation and teaching record
 
+- Lesson 2: deployed through Git/Argo in commits `055c25d` and `2da684f`.
+  Reviewed official Node Exporter v1.12.1 release notes (perf/edac fixes) and
+  tagged collector documentation/source, and resolved the multi-platform digest
+  directly from Quay's registry. Added a node-bounded DaemonSet and internal
+  Service plus one explicit 30-second scrape job. No stateful image update.
+  Prometheus retained its image and PVC; config hash triggered its rollout.
+- Validation around 21:22–21:24 CEST: matching v3.15.0 promtool config check,
+  Kustomize render, server dry-run and pre-push Kubernetes diff passed. Review
+  found ordinary read-only root mounts could expose writable submounts; fixed
+  with required recursive read-only mounts before push. Standards re-review
+  and Spec review have no remaining findings. Argo revision `2da684f` reports
+  Synced/Healthy with all six desired objects Synced and no pending prune.
+  Both monitoring Pods Ready with zero restarts; runtime mount status confirms
+  recursiveReadOnly Enabled on both host mounts. Both targets up with empty
+  scrape errors; all five exporter collectors report success and all three
+  real filesystem metrics have device_error=0. Raw metric types confirm CPU
+  counter and memory/filesystem gauges.
+- VM capacity verified: eight idle CPU series match eight vCPUs; MemTotal
+  16,761,421,824 bytes matches Kubernetes capacity 16,368,576 KiB; root ext4
+  capacity 103,474,552,832 bytes exactly matches the independent kubelet summary.
+  Snapshot: available memory 12.39 GiB, memory unavailable fraction 20.64%,
+  root available 63.64 GiB versus free 68.57 GiB; 1-minute non-idle CPU 1.83%.
+  Initial CPU/working-set sample: exporter 1m/6Mi, Prometheus 3m/33Mi; these are
+  brief snapshots, not steady-state or peak measurements. All eight media
+  Deployments stayed 1/1 available; all three Argo Applications Synced/Healthy.
+- Lesson 2 conversational teaching covered DaemonSets, internal Service scraping,
+  read-only host views, Grafana recap, gauges/counters, rate, label filtering,
+  per-node CPU averaging, memory availability, root filesystem units and
+  free versus available versus requested PVC capacity. Paused for the owner
+  checkpoint; Lessons 3–5 have not started. No lesson files were created.
 - Lesson 1: manifests committed and pushed; bootstrap namespace
   created through the manually managed `cluster/` workflow. Monitoring workloads
   were deployed exclusively by the existing ApplicationSet/Argo workflow.
@@ -62,7 +106,7 @@ Continue one lesson at a time, pausing at each owner checkpoint.
 - Owner correctly answered the storage checkpoint with "the PVC" and received
   explanations of GitOps ownership and ConfigMap generation. The owner then
   requested a filename consistency fix, which was deployed and verified, and
-  requested this continuation record. Lessons 2–5 have not started; no
+  requested this continuation record. At that checkpoint Lessons 2–5 had not started; no
   whole-stack completion or full persistence validation is claimed.
 
 ## Confirmed decisions
