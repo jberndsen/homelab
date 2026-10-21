@@ -1,8 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
+
 metadata:
   name: node-main
   namespace: argocd
+
 spec:
   goTemplate: true
   goTemplateOptions:

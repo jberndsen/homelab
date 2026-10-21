@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: prowlarr
   labels:
     app.kubernetes.io/name: prowlarr
+
 spec:
   replicas: 1
   progressDeadlineSeconds: 600
@@ -19,10 +21,12 @@ spec:
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 60
+
       containers:
         - name: prowlarr
           image: lscr.io/linuxserver/prowlarr@sha256:4e992f9b9229bc8c97c666b10b042a7360bce1d99b196e8aa29fd9805849cbf1
           imagePullPolicy: IfNotPresent
+
           env:
             - name: PUID
               value: "1000"
@@ -32,23 +36,28 @@ spec:
               value: "002"
             - name: TZ
               value: Europe/Amsterdam
+
           ports:
             - name: http
               containerPort: 9696
               protocol: TCP
+
           startupProbe:
             tcpSocket:
               port: http
             periodSeconds: 5
             failureThreshold: 60
+
           readinessProbe:
             tcpSocket:
               port: http
             periodSeconds: 10
             failureThreshold: 3
+
           volumeMounts:
             - name: config
               mountPath: /config
+
       volumes:
         - name: config
           persistentVolumeClaim:

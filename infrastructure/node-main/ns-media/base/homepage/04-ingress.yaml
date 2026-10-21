@@ -1,9 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
+
 metadata:
   name: homepage
   labels:
     app.kubernetes.io/name: homepage
+
 spec:
   ingressClassName: traefik
   rules:

@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: sonarr
   labels:
     app.kubernetes.io/name: sonarr
+
 spec:
   replicas: 1
   progressDeadlineSeconds: 600
@@ -19,10 +21,12 @@ spec:
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 60
+
       containers:
         - name: sonarr
           image: lscr.io/linuxserver/sonarr@sha256:44b06045a98bc1f237b9ffefc4b28dab64cb29305e4a2a94875ae93b5224e4cc
           imagePullPolicy: IfNotPresent
+
           env:
             - name: PUID
               value: "1000"
@@ -32,25 +36,30 @@ spec:
               value: "002"
             - name: TZ
               value: Europe/Amsterdam
+
           ports:
             - name: http
               containerPort: 8989
               protocol: TCP
+
           startupProbe:
             tcpSocket:
               port: http
             periodSeconds: 5
             failureThreshold: 60
+
           readinessProbe:
             tcpSocket:
               port: http
             periodSeconds: 10
             failureThreshold: 3
+
           volumeMounts:
             - name: config
               mountPath: /config
             - name: media
               mountPath: /data
+
       volumes:
         - name: config
           persistentVolumeClaim:

@@ -457,10 +457,7 @@ explicit about the remaining verification gap rather than forcing a live outage.
   durable facts unavailable from code or normal read-only inspection, including
   owner decisions and any unresolved constraint future sessions must know.
   Remove or revise the short known-risk note once this issue is resolved.
-- Preserve unrelated local work. At this handoff's creation, `TODO.md` (now
-  `plans/TODO.md`),
-  `infrastructure/node-main/system.md` and `infrastructure/network/system.md`
-  already had uncommitted changes; do not overwrite or bundle them blindly.
+- Inspect the current working tree and preserve unrelated local work.
 - Keep credentials/private evidence out of commits. Owner authorizes task-related
   pushes to the public repo per AGENTS.md; review the exact staged diff first.
 - Report separately: stale-CAL fix status, communication-loss cause, backup

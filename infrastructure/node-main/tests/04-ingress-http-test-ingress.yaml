@@ -1,9 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
+
 metadata:
   name: ingress-http-test
   labels:
     app.kubernetes.io/name: ingress-http-test
+
 spec:
   ingressClassName: traefik
   rules:

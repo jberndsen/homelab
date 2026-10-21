@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: bazarr
   labels:
     app.kubernetes.io/name: bazarr
+
 spec:
   replicas: 1
   progressDeadlineSeconds: 600
@@ -19,10 +21,12 @@ spec:
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 60
+
       containers:
         - name: bazarr
           image: lscr.io/linuxserver/bazarr@sha256:fb0437897eaa7f96cf6ac42f795f8dcc208d34ec969eac5d366454e767304eb9
           imagePullPolicy: IfNotPresent
+
           env:
             - name: PUID
               value: "1000"
@@ -32,25 +36,30 @@ spec:
               value: "002"
             - name: TZ
               value: Europe/Amsterdam
+
           ports:
             - name: http
               containerPort: 6767
               protocol: TCP
+
           startupProbe:
             tcpSocket:
               port: http
             periodSeconds: 5
             failureThreshold: 60
+
           readinessProbe:
             tcpSocket:
               port: http
             periodSeconds: 10
             failureThreshold: 3
+
           volumeMounts:
             - name: config
               mountPath: /config
             - name: media
               mountPath: /data
+
       volumes:
         - name: config
           persistentVolumeClaim:

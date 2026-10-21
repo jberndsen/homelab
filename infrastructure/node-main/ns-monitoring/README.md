@@ -1,18 +1,15 @@
 # Monitoring operations
 
-Implementation follows [the approved plan](../../../plans/monitoring-plan.md),
-one lesson at a time. Teaching takes place exclusively in conversation;
-this file contains operations notes only.
+Prometheus collects VM, Kubernetes object-state and container resource metrics;
+Grafana provides the Git-managed overview and Explore. The
+[completed plan](../../../plans/monitoring-plan.md) records validation and limits.
 
-Lessons 1–3 are deployed, verified and complete; the owner passed Lesson 3's
-checkpoint. The full overview implementation and current operating checks are
-complete; Lesson 4's full teaching checkpoint is not separately recorded. See
-the plan for evidence and limits. Lesson 5 includes a successful Grafana Pod-replacement
-persistence exercise. The owner skipped further Pod-replacement testing;
-Prometheus replacement is untested. The overview is provisioned from Git;
-its System, Cluster and Workloads sections are described below. Deployment
-evidence and the remaining teaching checkpoint are tracked in the plan.
-Reconnect lesson port-forwards only when needed and stop them afterward.
+Run commands from the repository root. Keep temporary files inside ignored `tmp/`:
+
+```sh
+mkdir -p tmp
+export TMPDIR="$PWD/tmp"
+```
 
 ## Grafana
 
@@ -32,24 +29,11 @@ kubectl -n monitoring port-forward svc/grafana 3000:3000
 kubectl -n monitoring rollout status deployment/grafana
 ```
 
-The localhost forward must be reconnected after Pod replacement. Ingress,
-real session login, anonymous API denial, data-source health and the query
-`up` through Grafana were verified. The owner also ran `up` in Explore using
-Instant and Range modes with legend `{{job}}`. The owner has now saved the
-editable Monitoring — Learning dashboard with Scrape health and demonstrated
-VM CPU, memory and root disk panels. Manual dashboard practice is paused;
-the owner requested the remaining overview panels in one implementation pass.
-See the plan for implementation evidence, the teaching checkpoint and limits.
-
-Grafana uses the protected 1 GiB local-path grafana-data PVC and Recreate
-strategy. Its provisioned Prometheus data source (UID prometheus) connects
-server-side to http://prometheus:9090, with a 30-second scrape interval setting.
-The configuration hash triggers rollout after data-source configuration edits.
-Editable dashboards live in Grafana's database; UI edits do not update Git.
-Grafana Pod-replacement persistence passed on 2026-10-21: the same learning
-dashboard UID and all four saved panels loaded after replacement, with the same
-PVC identity and volume binding. The owner skipped the Prometheus Pod-replacement
-exercise; it is untested. See the plan for evidence and limits.
+The localhost forward must be reconnected after Pod replacement and stopped
+when finished. Grafana uses a persistent database for editable dashboards,
+users and changed passwords. Its provisioned Prometheus data source (UID
+`prometheus`) connects server-side to `http://prometheus:9090`, with a 30-second
+scrape interval setting. UI edits do not update Git.
 
 ### Git-managed dashboard
 
@@ -120,11 +104,8 @@ Plugin preinstallation and automatic plugin updates are explicitly disabled.
 The initial startup downloaded optional plugins into the data PVC before this
 default was corrected; no plugin auto-update mechanism is left enabled.
 
-Sealing-key coverage was checked against the verified NAS inventory before
-sealing; see the plan and ns-argo/SETUP.md for the recovery workflow. The owner
-confirmed nightly full-VM backups with seven-day retention; restores are untested.
-The successful persistence exercise preserved existing storage and did not test
-recovery after storage loss or consistency of the VM backup's Grafana database.
+Check sealing-key backup coverage before creating credentials; follow
+[Argo operations](../ns-argo/SETUP.md#sealed-secrets).
 
 ## Recovery and rollback
 
@@ -132,8 +113,9 @@ Use [Argo recovery](../ns-argo/SETUP.md#recovery-and-everyday-operations) for
 whole-VM restore or fresh-cluster bootstrap. Before reconciling a restored VM,
 review its backup date, included disks, sealing-key coverage and intended Git
 revision. Follow that runbook's automation safeguards. Nightly full-VM backups
-with seven-day retention are owner-confirmed, but no restore or independent
-backup inventory was tested in this dashboard update.
+with seven-day retention are owner-confirmed, but restores and application
+consistency remain untested. See the
+[node recovery sources](../system.md#recovery-sources) for the confirmed policy.
 
 1. **Configuration loss:** restore namespace/bootstrap ownership and Argo from
    Git using the existing runbook. Restore the matching sealing keys before
@@ -175,7 +157,7 @@ backup restoration still require a separate, deliberately planned test.
 
 ## Resource and retention checks
 
-Use kubectl top for recent consumption and the Prometheus queries above for
+Use kubectl top for recent consumption and the Prometheus queries below for
 history. Inspect monitoring container restart counts/last termination state and
 events for OOMs. Container CFS throttling metrics are not retained by the narrow
 kubelet-resource scrape; do not interpret their absence as zero throttling.
@@ -302,7 +284,7 @@ an application-native backup, one digest update, rollout and smoke test.
 
 History is disposable after storage loss. Reinstall configuration from Git;
 do not assume restore success from a backup schedule. See the recovery procedure
-above and the plan for the owner-skipped persistence test and remaining limits.
+above and the completed plan for validation limits.
 
 ## Kubernetes object state
 
@@ -375,5 +357,4 @@ kubectl -n monitoring exec deployment/prometheus -- /bin/promtool check config /
 
 This does not establish application playback/search health. Grafana's curated
 overview is Git-managed; its editable learning copy is independent. Notification
-delivery is a separate future phase. Further controlled persistence testing was
-explicitly skipped by the owner.
+delivery is a separate future topic.

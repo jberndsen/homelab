@@ -1,7 +1,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
+
 metadata:
   name: monitoring-prometheus
+
 rules:
   # Discovery must use the matching metadata.name field selector.
   - apiGroups: ['']

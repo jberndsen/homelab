@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: radarr
   labels:
     app.kubernetes.io/name: radarr
+
 spec:
   replicas: 1
   progressDeadlineSeconds: 600
@@ -19,10 +21,12 @@ spec:
     spec:
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 60
+
       containers:
         - name: radarr
           image: lscr.io/linuxserver/radarr@sha256:ff4430fe2d6159b4dbaac9903acfecee5aa68dec8c929259e2f3114c63f7a09e
           imagePullPolicy: IfNotPresent
+
           env:
             - name: PUID
               value: "1000"
@@ -32,25 +36,30 @@ spec:
               value: "002"
             - name: TZ
               value: Europe/Amsterdam
+
           ports:
             - name: http
               containerPort: 7878
               protocol: TCP
+
           startupProbe:
             tcpSocket:
               port: http
             periodSeconds: 5
             failureThreshold: 60
+
           readinessProbe:
             tcpSocket:
               port: http
             periodSeconds: 10
             failureThreshold: 3
+
           volumeMounts:
             - name: config
               mountPath: /config
             - name: media
               mountPath: /data
+
       volumes:
         - name: config
           persistentVolumeClaim:

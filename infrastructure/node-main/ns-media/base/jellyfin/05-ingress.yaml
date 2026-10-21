@@ -1,9 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
+
 metadata:
   name: jellyfin
   labels:
     app.kubernetes.io/name: jellyfin
+
 spec:
   ingressClassName: traefik
   rules:

@@ -188,7 +188,7 @@ differences. Preserve existing images, selectors, mounts and credentials.
 
 A PVC (PersistentVolumeClaim) is an application's request for storage. A PV
 (PersistentVolume) is the storage assigned to it. Their binding links the claim
-to its data. The eight local PVs use reclaim policy `Delete`, which allows disk
+to its data. Local-path PVs use reclaim policy `Delete`, which allows disk
 cleanup after claim deletion; the shared NAS PV uses `Retain`.
 
 Use the NAS key-backup directory and password-manager entry in
@@ -381,11 +381,10 @@ accepts existing credentials for read-only `session-get`. Check Homepage's four
 widgets and play existing NAS media in Jellyfin. Do not use downloads, imports,
 deletions or library cleanup as tests. The manifests under `tests/` include a
 NAS **write** test; do not apply them as a read-only recovery check.
-For monitoring, verify Grafana login and its Prometheus data source, and check
-all four Prometheus scrape targets using a temporary localhost port-forward.
-Close it afterward. The dashboard checkpoint remains pending Lesson 4 and
-persistence acceptance remains Lesson 5; these health checks do not prove
-backup coverage.
+For monitoring, verify Grafana login, its Prometheus data source and all three
+sections of the Git-managed overview. Check all five expected scrape targets
+using the [read-only monitoring queries](../ns-monitoring/README.md#read-only-cluster-inspections).
+These health checks do not prove backup coverage or restore success.
 
 ### Normal changes
 

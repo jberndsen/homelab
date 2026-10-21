@@ -1,9 +1,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
+
 metadata:
   name: prometheus-data
   annotations:
     argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+
 spec:
   accessModes:
     - ReadWriteOnce

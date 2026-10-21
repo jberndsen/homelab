@@ -1,7 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: grafana
+
 spec:
   replicas: 1
   strategy:
@@ -15,6 +17,7 @@ spec:
         app.kubernetes.io/name: grafana
     spec:
       automountServiceAccountToken: false
+
       securityContext:
         runAsNonRoot: true
         runAsUser: 472
@@ -23,13 +26,16 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
+
       containers:
         - name: grafana
           # Official Grafana OSS 13.2.2 multi-platform image index.
           image: grafana/grafana:13.2.2@sha256:ac461fb352abc50da10a51c7d02462e9c05488f11f53f14b3ad79a8145f638a0
+
           ports:
             - name: http
               containerPort: 3000
+
           env:
             - name: GF_SECURITY_ADMIN_USER
               valueFrom:
@@ -57,6 +63,7 @@ spec:
               value: 'true'
             - name: GF_PLUGINS_PREINSTALL_AUTO_UPDATE
               value: 'false'
+
           resources:
             requests:
               cpu: 100m
@@ -64,26 +71,31 @@ spec:
             limits:
               cpu: '1'
               memory: 512Mi
+
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
+
           startupProbe:
             httpGet:
               path: /api/health
               port: http
             periodSeconds: 5
             failureThreshold: 60
+
           readinessProbe:
             httpGet:
               path: /api/health
               port: http
+
           livenessProbe:
             httpGet:
               path: /api/health
               port: http
             initialDelaySeconds: 10
+
           volumeMounts:
             - name: data
               mountPath: /var/lib/grafana
@@ -98,6 +110,7 @@ spec:
               readOnly: true
             - name: tmp
               mountPath: /tmp
+
       volumes:
         - name: data
           persistentVolumeClaim:

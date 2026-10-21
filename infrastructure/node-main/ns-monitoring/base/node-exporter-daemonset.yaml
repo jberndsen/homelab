@@ -1,7 +1,9 @@
 apiVersion: apps/v1
 kind: DaemonSet
+
 metadata:
   name: node-exporter
+
 spec:
   selector:
     matchLabels:
@@ -19,12 +21,14 @@ spec:
       # process reads PID 1's network counters through this same host procfs.
       hostPID: false
       hostNetwork: false
+
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
         runAsGroup: 65534
         seccompProfile:
           type: RuntimeDefault
+
       containers:
         - name: node-exporter
           # Official v1.12.1 multi-platform image index, reviewed 2026-10-19.
@@ -40,14 +44,17 @@ spec:
             - --collector.stat
             - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run|var/lib/kubelet|var/lib/rancher/k3s/agent/containerd)($|/)
             - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs)$
+
           ports:
             - name: metrics
               containerPort: 9100
+
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
+
           resources:
             requests:
               cpu: 25m
@@ -55,15 +62,18 @@ spec:
             limits:
               cpu: 250m
               memory: 128Mi
+
           readinessProbe:
             httpGet:
               path: /
               port: metrics
+
           livenessProbe:
             httpGet:
               path: /
               port: metrics
             initialDelaySeconds: 10
+
           volumeMounts:
             - name: proc
               mountPath: /host/proc
@@ -88,14 +98,17 @@ spec:
             - --collector.netdev.device-include=^ens18$
             - --web.listen-address=:9101
             - --web.disable-exporter-metrics
+
           ports:
             - name: network-metrics
               containerPort: 9101
+
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
+
           resources:
             requests:
               cpu: 10m
@@ -103,20 +116,24 @@ spec:
             limits:
               cpu: 100m
               memory: 64Mi
+
           readinessProbe:
             httpGet:
               path: /
               port: network-metrics
+
           livenessProbe:
             httpGet:
               path: /
               port: network-metrics
             initialDelaySeconds: 10
+
           volumeMounts:
             - name: proc
               mountPath: /host/proc
               readOnly: true
               recursiveReadOnly: Enabled
+
       volumes:
         - name: proc
           hostPath:

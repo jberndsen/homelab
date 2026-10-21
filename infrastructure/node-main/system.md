@@ -13,9 +13,6 @@
   16 GiB RAM. Its only virtual NIC is attached to `vmbr0`.
 - The guest's default route and route to the NAS (`192.168.1.32`) use `ens18`
   via `192.168.30.1`, not host interface `vmbr0.1`.
-- K3s uses Flannel VXLAN with Pod CIDR `10.42.0.0/24`. Its Traefik image is
-  `rancher/mirrored-library-traefik:3.7.4`; ServiceLB exposes HTTP/HTTPS at
-  `192.168.30.103`.
 - The VM has `nfs-common` installed and no `/dev/dri/renderD*` device;
   hardware transcoding is unavailable.
 - K3s uses the configuration in
@@ -32,7 +29,6 @@
 - `nut-monitor.service` is enabled; the UPS certificate is not verified.
   See [infrastructure recovery](../../setup.MD#ups-shutdown-on-proxmox) for setup
   and connection checks.
-
 - Known unresolved risk: the distribution NUT client can shut down early after
   communication loss with stale calibration state. Shutdown protection remains
   enabled. The owner wants an official compatible Debian fix, not a locally
@@ -40,43 +36,16 @@
   automatic physical restart after power restoration remain unverified.
   See [the NUT investigation and future update plan](../../plans/nut-update.md).
 
-## Git and ownership
+## External services and access
 
-- Public source: `https://github.com/jberndsen/homelab`, default branch `main`.
-  The laptop's `origin` uses SSH; Argo reads
-  `https://github.com/jberndsen/homelab.git` anonymously over HTTPS.
 - Source files and the configured `kubectl` client live on the dev laptop,
   outside the K3s VM. Plaintext credentials and private keys stay outside Git.
-- The hosted Renovate GitHub app is enabled. Repository configuration in
-  `../../renovate.json` scans node-main Kubernetes manifests, excludes the
-  inactive node-secondary stack, and keeps container image PRs ungrouped with
-  automerge disabled. Digest-only images track the registry's `latest` digest;
-  review releases and take application-native backups before merging updates.
-- Renovate has no hourly PR creation limit and allows up to 10 concurrent PRs.
-  The owner confirmed PR creation, a manual merge and the subsequent Argo
-  rollout on 2026-10-09.
-- `cluster/` manually manages bootstrap namespaces and the NAS PV.
-  `ns-argo/` manually manages Argo CD and its separately applied ApplicationSet;
-  Argo does not manage itself.
-- Argo uses the standard non-HA install pinned in `ns-argo/kustomization.yaml`,
-  retaining upstream NetworkPolicies. Its ApplicationSet Deployment and
-  application-controller StatefulSet each use one replica.
-- `http://argocd.home.arpa` routes through Traefik to Argo's HTTP server with
-  `server.insecure: "true"`. Restrict access to the trusted LAN. The `admin`
-  password is in the owner's password manager; the initial-password Secret is
-  absent.
-- ApplicationSet `node-main` discovers `ns-*/overlays/prod`, excluding Argo.
-  Automatic sync, pruning and self-healing are enabled with `allowEmpty: false`.
-  Resource preservation is enabled and Applications have no deletion finalizers.
-
-## Secrets
-
-- Workload, storage and encrypted Secret inventories belong in the manifests;
-  consult [Argo operations](ns-argo/SETUP.md) for lifecycle safeguards and
+- The hosted Renovate GitHub app is enabled. Its repository settings are in
+  [renovate.json](../../renovate.json); image updates remain manually reviewed.
+- The Argo `admin` password is in the owner's password manager.
+- Consult [Argo operations](ns-argo/SETUP.md) for bootstrap ownership,
+  reconciliation and credential lifecycle, and
   [monitoring operations](ns-monitoring/README.md) for monitoring access.
-- The Sealed Secrets controller version is pinned in
-  `ns-sealed-secrets/base/kustomization.yaml` and uses default 30-day key renewal.
-  Laptop tools are `kubeseal v0.40.0` and `age v1.3.2`.
 
 ## Recovery sources
 

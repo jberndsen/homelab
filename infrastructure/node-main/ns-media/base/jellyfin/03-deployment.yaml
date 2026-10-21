@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: jellyfin
   labels:
     app.kubernetes.io/name: jellyfin
+
 spec:
   replicas: 1
   progressDeadlineSeconds: 600
@@ -29,6 +31,7 @@ spec:
           args:
             - |
               chown -R 1000:988 /config /cache
+
           securityContext:
             runAsUser: 0
             runAsGroup: 0
@@ -38,15 +41,18 @@ spec:
                 - CHOWN
               drop:
                 - ALL
+
           volumeMounts:
             - name: config
               mountPath: /config
             - name: cache
               mountPath: /cache
+
       containers:
         - name: jellyfin
           image: docker.io/jellyfin/jellyfin@sha256:357724bf0ae27a672c7cbaa899db2d9abeb13dbd8657ccce750258a4c059d037
           imagePullPolicy: IfNotPresent
+
           securityContext:
             runAsUser: 1000
             runAsGroup: 988
@@ -54,20 +60,24 @@ spec:
             capabilities:
               drop:
                 - ALL
+
           ports:
             - name: http
               containerPort: 8096
               protocol: TCP
+
           startupProbe:
             tcpSocket:
               port: http
             periodSeconds: 5
             failureThreshold: 60
+
           readinessProbe:
             tcpSocket:
               port: http
             periodSeconds: 10
             failureThreshold: 3
+
           volumeMounts:
             - name: config
               mountPath: /config
@@ -76,6 +86,7 @@ spec:
             - name: media
               mountPath: /data
               readOnly: true
+
       volumes:
         - name: config
           persistentVolumeClaim:

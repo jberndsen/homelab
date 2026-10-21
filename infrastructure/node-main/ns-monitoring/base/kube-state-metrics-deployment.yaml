@@ -1,7 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: kube-state-metrics
+
 spec:
   replicas: 1
   selector:
@@ -14,37 +16,44 @@ spec:
     spec:
       serviceAccountName: kube-state-metrics
       automountServiceAccountToken: true
+
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
         runAsGroup: 65534
         seccompProfile:
           type: RuntimeDefault
+
       containers:
         - name: kube-state-metrics
           # Official v2.20.0 multi-platform index, reviewed 2026-10-19.
           image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.20.0@sha256:42cfe3723a5f058171c627537fb57a3ea0f26e4380fa18555a95cb1a1b4cfc5b
           args:
             - --resources=nodes,pods,deployments,persistentvolumes,persistentvolumeclaims,storageclasses
+
           ports:
             - name: metrics
               containerPort: 8080
             - name: telemetry
               containerPort: 8081
+
           readinessProbe:
             httpGet:
               path: /readyz
               port: telemetry
+
           livenessProbe:
             httpGet:
               path: /livez
               port: metrics
             initialDelaySeconds: 10
+
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
               drop: [ALL]
+
           resources:
             requests:
               cpu: 25m

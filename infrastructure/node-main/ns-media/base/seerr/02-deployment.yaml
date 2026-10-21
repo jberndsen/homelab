@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: seerr
   labels:
     app.kubernetes.io/name: seerr
+
 spec:
   replicas: 1
   progressDeadlineSeconds: 600
@@ -29,6 +31,7 @@ spec:
             - -ec
           args:
             - chown -R 1000:1000 /app/config
+
           securityContext:
             runAsUser: 0
             runAsGroup: 0
@@ -38,17 +41,21 @@ spec:
                 - CHOWN
               drop:
                 - ALL
+
           volumeMounts:
             - name: config
               mountPath: /app/config
+
       containers:
         - name: seerr
           # Seerr v3.2.0.
           image: ghcr.io/seerr-team/seerr@sha256:27602401178d54f1964442287b9f23f67a3fa2252645ee8065839ea1c3f69e45
           imagePullPolicy: IfNotPresent
+
           env:
             - name: TZ
               value: Europe/Amsterdam
+
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
@@ -56,25 +63,30 @@ spec:
             capabilities:
               drop:
                 - ALL
+
           ports:
             - name: http
               containerPort: 5055
               protocol: TCP
+
           startupProbe:
             httpGet:
               path: /api/v1/settings/public
               port: http
             periodSeconds: 5
             failureThreshold: 60
+
           readinessProbe:
             httpGet:
               path: /api/v1/settings/public
               port: http
             periodSeconds: 10
             failureThreshold: 3
+
           volumeMounts:
             - name: config
               mountPath: /app/config
+
       volumes:
         - name: config
           persistentVolumeClaim:
