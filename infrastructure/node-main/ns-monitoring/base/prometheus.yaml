@@ -18,6 +18,11 @@ scrape_configs:
       - targets: ['node-exporter.monitoring.svc.cluster.local:9100']
         labels:
           node: vm-ubuntu-k3s
+  - job_name: node-exporter-network
+    static_configs:
+      - targets: ['node-exporter.monitoring.svc.cluster.local:9101']
+        labels:
+          node: vm-ubuntu-k3s
   - job_name: kube-state-metrics
     honor_labels: true
     static_configs:

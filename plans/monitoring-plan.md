@@ -1,8 +1,10 @@
 # Monitoring deployment and teaching plan
 
 Status: Lessons 1–3 complete; their checkpoints passed. Grafana is deployed and
-verified, but Lesson 4's dashboard and checkpoint are incomplete. Stopped for
-the evening at the owner's request. Do not start Lesson 5 without readiness.
+verified, but Lesson 4's dashboard and checkpoint are incomplete. On 2026-10-21
+the owner paused manual dashboard practice and asked to continue the plan,
+with the agent to create the final dashboard later. Do not start Lesson 5
+without readiness.
 
 ## Resume instructions
 
@@ -11,18 +13,24 @@ the evening at the owner's request. Do not start Lesson 5 without readiness.
   Start cluster work with `kubectl get nodes -o wide`, then check Argo/Pod health.
 - Teach exclusively in conversation. Explain each small change before Git/Argo
   deployment; keep one Kubernetes resource per file. Do not create teaching files.
-- Owner has logged in and run Explore `up` in Instant and Range modes with
-  legend `{{job}}`. Screenshots show four series at 1 and overlapping traces.
-  Resume by creating **Scrape health** in an editable **Monitoring — Learning**
-  dashboard. Last instruction was to inspect Explore's Add dropdown; its menu
-  has not been confirmed. No saved dashboard is confirmed. Do not repeat the
-  earlier exercises unless needed or create the whole dashboard automatically.
+- Owner saved the editable **Monitoring — Learning** dashboard and its
+  **Scrape health** panel. Screenshots confirm VM CPU busy (~2%), VM memory
+  used (~23%) and VM root disk available (~62 GiB) panels. Memory and disk
+  units/scales are verified; CPU unit/scale changes were requested but not
+  subsequently confirmed. Media container CPU was proposed, not confirmed saved.
+  Owner understands scrape health does not prove playback and that shorter
+  rate windows expose brief spikes with less smoothing. Manual panel practice
+  is paused; create the final dashboard only when the owner requests it later.
 - Preserve verified kubelet TLS, rotating Pod-bound credentials, single-node
   discovery and node-name-scoped RBAC. No insecure TLS or nodes/proxy access.
 - VM network collection is unresolved. `/host/proc/1/net/dev` shows VM `ens18`;
   `/host/proc/net/dev` shows Pod `eth0`. Node Exporter v1.12.1 defaults to
   namespace-local netlink. Network collection remains disabled: validate the
   VM view before enabling it or building a traffic panel.
+  Read-only checks on 2026-10-21 reconfirmed these distinct views. The v1.12.1
+  source confirms disabling netlink alone reads `<procfs>/net/dev`, so that
+  flag alone does not fix the namespace mismatch. Preserve internal endpoint
+  access when choosing a solution; no collector/workload change was deployed.
 - Lesson port-forwards are stopped. Re-establish localhost:9090 only when needed;
   Grafana is available through its ingress. Temporary artifacts/tools were
   removed from ignored root `tmp/`; set TMPDIR there for new temporary files.

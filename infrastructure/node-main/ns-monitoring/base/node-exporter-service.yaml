@@ -10,3 +10,6 @@ spec:
     - name: metrics
       port: 9100
       targetPort: metrics
+    - name: network-metrics
+      port: 9101
+      targetPort: network-metrics

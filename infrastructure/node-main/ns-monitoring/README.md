@@ -30,8 +30,11 @@ kubectl -n monitoring rollout status deployment/grafana
 The localhost forward must be reconnected after Pod replacement. Ingress,
 real session login, anonymous API denial, data-source health and the query
 `up` through Grafana were verified. The owner also ran `up` in Explore using
-Instant and Range modes with legend `{{job}}`. No learning dashboard has been
-saved yet; Lesson 4 was stopped for the evening before the first panel.
+Instant and Range modes with legend `{{job}}`. The owner has now saved the
+editable Monitoring — Learning dashboard with Scrape health and demonstrated
+VM CPU, memory and root disk panels. Manual dashboard practice is paused;
+the owner wants the agent to create the final dashboard later. Lesson 4
+remains incomplete; see the plan for remaining work and verification limits.
 
 Grafana uses the protected 1 GiB local-path grafana-data PVC and Recreate
 strategy. Its provisioned Prometheus data source (UID prometheus) connects

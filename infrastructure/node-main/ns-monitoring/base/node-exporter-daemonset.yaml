@@ -15,7 +15,8 @@ spec:
       nodeSelector:
         kubernetes.io/hostname: vm-ubuntu-k3s
       # Host procfs supplies CPU/memory and PID 1's VM mount table without
-      # joining the host PID or network namespaces. No network collector yet.
+      # joining the host PID or network namespaces. A separate netdev-only
+      # process reads PID 1's network counters through this same host procfs.
       hostPID: false
       hostNetwork: false
       securityContext:
@@ -73,6 +74,48 @@ spec:
               readOnly: true
               # Includes nested mounts. Replace the Pod after host mount changes;
               # recursive read-only access cannot use mount propagation.
+              recursiveReadOnly: Enabled
+        - name: node-exporter-network
+          # Same reviewed v1.12.1 image as the main exporter; stateless process.
+          image: quay.io/prometheus/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+          args:
+            # Only netdev may use this root: other collectors need /host/proc.
+            # Disabling netlink makes netdev read /host/proc/1/net/dev (VM view).
+            - --path.procfs=/host/proc/1
+            - --collector.disable-defaults
+            - --collector.netdev
+            - --no-collector.netdev.netlink
+            - --collector.netdev.device-include=^ens18$
+            - --web.listen-address=:9101
+            - --web.disable-exporter-metrics
+          ports:
+            - name: network-metrics
+              containerPort: 9101
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 24Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: network-metrics
+          livenessProbe:
+            httpGet:
+              path: /
+              port: network-metrics
+            initialDelaySeconds: 10
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly: true
               recursiveReadOnly: Enabled
       volumes:
         - name: proc
