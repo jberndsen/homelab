@@ -9,7 +9,7 @@ checkpoint. Lesson 4 is in progress. See the plan for validation evidence and
 resume instructions. Lesson 5 has begun with a successful Grafana Pod-replacement
 persistence exercise. The owner skipped further Pod-replacement testing;
 Prometheus replacement is untested. The existing four-panel dashboard is now
-configured for Git provisioning; deployment evidence is tracked in the plan.
+provisioned from Git and verified; deployment evidence is tracked in the plan.
 Lesson port-forwards were stopped
 at evening cleanup; reconnect only when needed.
 

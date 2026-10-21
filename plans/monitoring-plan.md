@@ -7,8 +7,8 @@ with the agent to create the final dashboard later. Lesson 5 concepts have
 been introduced conversationally; Grafana Pod-replacement persistence passed
 on 2026-10-21. Owner explicitly skipped further Pod-replacement testing to
 continue the lesson; do not repeat it. Owner requested moving the existing UI
-dashboard to Git: four-panel export/provisioning is in progress, preserving
-the separate editable learning copy.
+dashboard to Git: four-panel export/provisioning deployed and verified at
+`4bcf858`, preserving the separate editable learning copy.
 Lesson 4 remains incomplete.
 
 ## Resume instructions
@@ -69,16 +69,36 @@ Lesson 4 remains incomplete.
 - [x] Full 5-minute CPU rates return all eight media containers (final inspection).
 - [x] Lesson 5: controlled Grafana Pod replacement preserves the saved learning
   dashboard; both PVC identities/volumes remain unchanged.
+- [x] Lesson 5: export/provision the existing four-panel dashboard from Git
+  with stable UID `monitoring-overview`, preserving editable `adhnb5z`.
 - Prometheus controlled Pod replacement: skipped by owner on 2026-10-21;
   not tested and no longer required for this guided session.
-- [ ] Lesson 5: dashboard export/provisioning, separate editable copy,
-  resource/retention checks and recovery
+- [ ] Lesson 5: provision remaining promised panels and verify applicable
+  namespace/workload filters; finish resource/retention checks and recovery
   operations. Preserve all claims; no media disruption or whole-stack outage test.
 - Optional after Lesson 5: Proxmox, NAS and UPS metrics; notifications are separate.
 
 ## Completed work and validation
 
 Detailed session history is retained in Git. Key milestones:
+
+2026-10-21 dashboard Git provisioning (`4bcf858`): exported the current learning
+dashboard through Grafana's Classic JSON export. Verified its local reference
+matches the UI export after canonicalization. The committed snapshot changes
+only identity/management metadata: stable UID `monitoring-overview`, title
+Monitoring - Overview, null local ID, description, version and editable=false.
+All four panel queries, units and layout are preserved. Generated ConfigMaps
+mount the provider and JSON read-only; hashes trigger a Grafana rollout.
+Standards and Spec reviews passed without findings. Render, server dry-run,
+reviewed live diff and all four real-data query checks passed. Argo deployed
+the commit Synced/Healthy; Grafana is Ready with zero restarts, and its overview
+shows all four panels with real data in folder Homelab. The original dashboard
+`adhnb5z` reloads separately with all four panels and its Edit action. Startup
+logs show dashboard provisioning completed without error-level entries.
+Both claims remain
+Bound and all eight media Deployments remain available. Remaining promised
+network/media panels and namespace/workload filters are not part of this export.
+No storage-loss recovery or new backup coverage is claimed.
 
 2026-10-21 resource/retention lesson: active Prometheus status flags confirm
 `storage.tsdb.retention.time=1w` and `storage.tsdb.retention.size=7GiB`.
