@@ -23,14 +23,11 @@ without readiness.
   is paused; create the final dashboard only when the owner requests it later.
 - Preserve verified kubelet TLS, rotating Pod-bound credentials, single-node
   discovery and node-name-scoped RBAC. No insecure TLS or nodes/proxy access.
-- VM network collection is unresolved. `/host/proc/1/net/dev` shows VM `ens18`;
-  `/host/proc/net/dev` shows Pod `eth0`. Node Exporter v1.12.1 defaults to
-  namespace-local netlink. Network collection remains disabled: validate the
-  VM view before enabling it or building a traffic panel.
-  Read-only checks on 2026-10-21 reconfirmed these distinct views. The v1.12.1
-  source confirms disabling netlink alone reads `<procfs>/net/dev`, so that
-  flag alone does not fix the namespace mismatch. Preserve internal endpoint
-  access when choosing a solution; no collector/workload change was deployed.
+- VM network collection is deployed and verified (2026-10-21, `8190f98`).
+  A netdev-only Node Exporter sidecar reads `/host/proc/1/net/dev` with netlink
+  disabled and an explicit `ens18` filter. Other collectors retain `/host/proc`.
+  Both endpoints remain internal; no host network/PID namespace was added.
+  There are now five scrape jobs, including `node-exporter-network`.
 - Lesson port-forwards are stopped. Re-establish localhost:9090 only when needed;
   Grafana is available through its ingress. Temporary artifacts/tools were
   removed from ignored root `tmp/`; set TMPDIR there for new temporary files.
@@ -40,8 +37,9 @@ without readiness.
 
 ## Remaining work
 
-- [ ] Lesson 4: validate VM network collection; build the editable learning
-  dashboard with the owner, including all panels listed below; pass checkpoint.
+- [x] Lesson 4: validate VM network collection.
+- [ ] Lesson 4: finish all promised dashboard panels (agent creation deferred
+  by owner), verify settings/filters/no-data behavior and pass checkpoint.
 - [x] Full 5-minute CPU rates return all eight media containers (final inspection).
 - [ ] Lesson 5: dashboard export/provisioning, separate editable copy, controlled
   monitoring-Pod replacement, persistence/resource/retention checks and recovery
@@ -51,6 +49,22 @@ without readiness.
 ## Completed work and validation
 
 Detailed session history is retained in Git. Key milestones:
+
+2026-10-21 network follow-up: rendering, server dry-run, live diff and running
+promtool validation passed. Standards and Spec reviews found no blocking issues.
+Argo reached `8190f98` Synced/Healthy; exporter Pod is 2/2 Ready and Prometheus
+is Ready, both with zero restarts. All five targets report up=1 with empty
+lastError. Deployed network collector success=1; only ens18 network series are
+exported. Receive counter 36,167,071,274 bytes exactly matched the surrounding
+host reads; transmit 34,123,010,087 bytes lay between host reads 34,123,005,844
+and 34,123,010,365 bytes. This validates the VM view rather than Pod eth0.
+One-minute receive/transmit rates returned real series. The network sidecar
+used about 1m CPU/3 MiB memory in the post-rollout snapshot; all monitoring
+containers totaled about 315 MiB. No monitoring warning events were present,
+all three Argo Applications were Synced/Healthy and all eight media Deployments
+remained available. These are recent snapshots, not peak-load measurements.
+This configuration-driven Prometheus replacement is not the full Lesson 5
+persistence exercise; Grafana persistence and saved dashboards still need testing.
 
 | Stage | Commits | Evidence |
 | --- | --- | --- |

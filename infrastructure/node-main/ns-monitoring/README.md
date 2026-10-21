@@ -85,8 +85,8 @@ Object-state and media CPU/memory queries are in the sections below. Preserve
 namespace/Pod/container identity when investigating an app. Compare with kubectl;
 sample times/windows differ. Check current targets as well as `up`: a missing
 series is not a healthy zero, and disappeared targets can leave stale history.
-Node Exporter observes the Ubuntu VM, not Proxmox. VM network metrics and
-Proxmox/NAS/UPS exporters are not configured. Neither scrape success nor a Ready
+Node Exporter observes the Ubuntu VM, not Proxmox. VM network metrics cover
+ens18; Proxmox/NAS/UPS exporters are not configured. Neither scrape success nor a Ready
 Pod proves playback, search, downloads or backup/recovery work.
 
 ## Ownership and updates
@@ -127,8 +127,29 @@ Host procfs/root mounts require recursive read-only runtime support and do not
 propagate new host mounts. Replace only the exporter Pod after host mount changes
 and verify filesystem series. Keep recursive read-only access enabled. Host
 network/PID namespaces and API credentials are not needed for the currently
-enabled collectors. VM network collection is deferred to the dashboard lesson;
-do not enable namespace-sensitive collectors without validating their host view.
+enabled collectors.
+
+VM network counters come from a separate netdev-only Node Exporter process in
+the same Pod, exposed internally on Service port 9101 and scraped by job
+`node-exporter-network`. It uses `--path.procfs=/host/proc/1` with netlink
+disabled, so it reads the VM PID 1 network view rather than the Pod's eth0.
+Only ens18 is included, avoiding double-counting virtual bridges/interfaces.
+Other collectors must retain `/host/proc`; PID 1's directory is only suitable
+for this dedicated netdev process. The configured procfs backend is documented
+in the [pinned collector source](https://github.com/prometheus/node_exporter/blob/v1.12.1/collector/netdev_linux.go).
+Both byte counters were compared with surrounding raw host counter reads.
+
+```promql
+rate(node_network_receive_bytes_total{job="node-exporter-network",device="ens18"}[5m])
+rate(node_network_transmit_bytes_total{job="node-exporter-network",device="ens18"}[5m])
+```
+
+These rates are bytes per second at the VM interface, not per-application traffic
+or physical Proxmox link throughput. Monitor both `up` and
+`node_scrape_collector_success{job="node-exporter-network",collector="netdev"}`;
+also require the expected ens18 series to exist. A renamed/missing interface
+can produce no network series despite a successful collection. Revalidate the
+VM view before changing interface selection or enabling other network collectors.
 
 ConfigMap generation retains content hashes, so config edits trigger a new Pod.
 Recreate strategy prevents concurrent database writers. History lives on the

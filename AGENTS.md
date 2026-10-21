@@ -18,7 +18,7 @@ for recent usage. Prometheus now provides historical VM, Kubernetes object-state
 and container CPU/memory metrics; Grafana provides Explore access. Consult
 [monitoring operations](infrastructure/node-main/ns-monitoring/README.md#read-only-cluster-inspections)
 for queries without retrieving application credentials or leaving a port-forward
-running. VM network metrics and Proxmox/NAS/UPS coverage are not yet available.
+running. VM network metrics cover `ens18`; Proxmox/NAS/UPS coverage is not yet available.
 
 For stateful image updates, review the release, take an application-native
 backup, update one pinned digest, wait for rollout, and run the application's
