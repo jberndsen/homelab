@@ -23,6 +23,12 @@ configMapGenerator:
   - name: grafana-datasources
     files:
       - grafana-datasources.yaml
+  - name: grafana-dashboard-provider
+    files:
+      - grafana-dashboards.yaml
+  - name: grafana-dashboards
+    files:
+      - dashboards/monitoring-overview.json
   - name: prometheus-config
     files:
       - prometheus.yaml

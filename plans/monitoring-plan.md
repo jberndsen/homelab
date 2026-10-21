@@ -3,8 +3,13 @@
 Status: Lessons 1–3 complete; their checkpoints passed. Grafana is deployed and
 verified, but Lesson 4's dashboard and checkpoint are incomplete. On 2026-10-21
 the owner paused manual dashboard practice and asked to continue the plan,
-with the agent to create the final dashboard later. Do not start Lesson 5
-without readiness.
+with the agent to create the final dashboard later. Lesson 5 concepts have
+been introduced conversationally; Grafana Pod-replacement persistence passed
+on 2026-10-21. Owner explicitly skipped further Pod-replacement testing to
+continue the lesson; do not repeat it. Owner requested moving the existing UI
+dashboard to Git: four-panel export/provisioning is in progress, preserving
+the separate editable learning copy.
+Lesson 4 remains incomplete.
 
 ## Resume instructions
 
@@ -16,11 +21,32 @@ without readiness.
 - Owner saved the editable **Monitoring — Learning** dashboard and its
   **Scrape health** panel. Screenshots confirm VM CPU busy (~2%), VM memory
   used (~23%) and VM root disk available (~62 GiB) panels. Memory and disk
-  units/scales are verified; CPU unit/scale changes were requested but not
-  subsequently confirmed. Media container CPU was proposed, not confirmed saved.
+  units/scales are verified; a subsequent browser baseline confirms CPU displays
+  percent with a 0–100% scale. Media container CPU was proposed, not confirmed saved.
   Owner understands scrape health does not prove playback and that shorter
   rate windows expose brief spikes with less smoothing. Manual panel practice
-  is paused; create the final dashboard only when the owner requests it later.
+  is paused. Owner has now requested Git provisioning of the existing dashboard;
+  adding the remaining promised panels is still deferred.
+- Conversational checks on 2026-10-21: owner correctly distinguished the
+  displayed one-hour history from each point's five-minute rate window, and
+  missing data from a measured zero. Initially proposed renaming the metric
+  for bits/sec; after explanation, correctly converted 1,000 bytes/sec to
+  8,000 bits/sec. Owner correctly identified that only the committed/provisioned
+  dashboard can be recreated from Git after Grafana PVC loss. Owner also
+  correctly explained that Prometheus supplies history, data persists on PVCs
+  beyond Pod lifetime, and Pod readiness alone does not prove persistence.
+  Do not claim the full Lesson 4 checkpoint from these answers.
+- Persistence baselines captured read-only on 2026-10-21: ignored
+  `tmp/monitoring-persistence-baseline.json` contains fixed-time raw historical
+  samples, their fingerprint, and monitoring Pod/PVC identities. Grafana
+  dashboard UID `adhnb5z` (Monitoring - Learning) loads after browser reload
+  with four saved panels: Scrape health, VM CPU Busy, VM Memory Used, VM root
+  disk available. Grafana replacement subsequently passed; no dashboard
+  export/provisioning was performed in that baseline step. Owner subsequently skipped the Prometheus
+  replacement exercise; leave it untested and do not request it again. Continue
+  with resource/retention and recovery concepts, then requested moving the
+  existing dashboard to Git. Preserve its four-panel scope and editable copy.
+  The historical baseline is only useful within retained history.
 - Preserve verified kubelet TLS, rotating Pod-bound credentials, single-node
   discovery and node-name-scoped RBAC. No insecure TLS or nodes/proxy access.
 - VM network collection is deployed and verified (2026-10-21, `8190f98`).
@@ -41,14 +67,42 @@ without readiness.
 - [ ] Lesson 4: finish all promised dashboard panels (agent creation deferred
   by owner), verify settings/filters/no-data behavior and pass checkpoint.
 - [x] Full 5-minute CPU rates return all eight media containers (final inspection).
-- [ ] Lesson 5: dashboard export/provisioning, separate editable copy, controlled
-  monitoring-Pod replacement, persistence/resource/retention checks and recovery
+- [x] Lesson 5: controlled Grafana Pod replacement preserves the saved learning
+  dashboard; both PVC identities/volumes remain unchanged.
+- Prometheus controlled Pod replacement: skipped by owner on 2026-10-21;
+  not tested and no longer required for this guided session.
+- [ ] Lesson 5: dashboard export/provisioning, separate editable copy,
+  resource/retention checks and recovery
   operations. Preserve all claims; no media disruption or whole-stack outage test.
 - Optional after Lesson 5: Proxmox, NAS and UPS metrics; notifications are separate.
 
 ## Completed work and validation
 
 Detailed session history is retained in Git. Key milestones:
+
+2026-10-21 resource/retention lesson: active Prometheus status flags confirm
+`storage.tsdb.retention.time=1w` and `storage.tsdb.retention.size=7GiB`.
+Recent kubectl top snapshot totals approximately 13m CPU and 289 MiB memory
+across monitoring containers, below the 2 GiB planning target in this snapshot.
+Data-directory usage is about 31.4 MiB for Prometheus and 52.5 MiB for Grafana;
+the VM filesystem mounted at /prometheus has about 61.7 GiB available.
+The latter is shared filesystem capacity, not a 10 GiB PVC quota. These are
+recent observations, not peak-load, growth-trend or seven-day retention tests.
+No further Pod replacement was performed after the owner skipped that exercise.
+
+2026-10-21 Grafana persistence exercise: deleted only Grafana Pod
+`grafana-7498f5d556-bjj7b` after owner readiness. Its controller created
+`grafana-7498f5d556-tcxch`, Ready with zero restarts. The Pod UID changed;
+both monitoring PVC UIDs and volume bindings remained identical to baseline.
+After browser reload, dashboard `adhnb5z` retained all four saved panels and
+displayed real data. Other monitoring Pod identities were unchanged. All 60
+fixed-time historical CPU samples matched the baseline fingerprint exactly;
+all five scrape jobs reported up=1. Argo's three Applications were Synced/Healthy,
+all eight media Deployments were available, and no monitoring Warning events
+were present. Detailed local evidence is in ignored
+`tmp/grafana-persistence-result.json`. This verifies Grafana Pod-replacement
+persistence only; Prometheus replacement, storage-loss recovery, backup
+coverage and full dashboard completion are not claimed.
 
 2026-10-21 network follow-up: rendering, server dry-run, live diff and running
 promtool validation passed. Standards and Spec reviews found no blocking issues.

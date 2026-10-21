@@ -6,7 +6,11 @@ this file contains operations notes only.
 
 Lessons 1–3 are deployed, verified and complete; the owner passed Lesson 3's
 checkpoint. Lesson 4 is in progress. See the plan for validation evidence and
-resume instructions. Lesson 5 remains pending. Lesson port-forwards were stopped
+resume instructions. Lesson 5 has begun with a successful Grafana Pod-replacement
+persistence exercise. The owner skipped further Pod-replacement testing;
+Prometheus replacement is untested. The existing four-panel dashboard is now
+configured for Git provisioning; deployment evidence is tracked in the plan.
+Lesson port-forwards were stopped
 at evening cleanup; reconnect only when needed.
 
 ## Grafana (Lesson 4 in progress)
@@ -41,7 +45,42 @@ strategy. Its provisioned Prometheus data source (UID prometheus) connects
 server-side to http://prometheus:9090, with a 30-second scrape interval setting.
 The configuration hash triggers rollout after data-source configuration edits.
 Editable dashboards live in Grafana's database; UI edits do not update Git.
-Dashboard provisioning and Pod-replacement testing remain Lesson 5.
+Grafana Pod-replacement persistence passed on 2026-10-21: the same learning
+dashboard UID and all four saved panels loaded after replacement, with the same
+PVC identity and volume binding. The owner skipped the Prometheus Pod-replacement
+exercise; it is untested. See the plan for evidence and limits.
+
+### Git-managed dashboard
+
+`Monitoring - Overview` (UID `monitoring-overview`) in folder `Homelab` is the
+Git-managed copy of the existing four-panel dashboard. Its definition is
+[`base/dashboards/monitoring-overview.json`](base/dashboards/monitoring-overview.json).
+It uses the provisioned `prometheus` data-source UID. The original
+`Monitoring - Learning` dashboard (UID `adhnb5z`) remains a separate editable
+copy in Grafana's database. This snapshot includes scrape health, VM CPU, VM
+memory and root disk; the additional network/media panels remain future work.
+
+Grafana mounts the provider and JSON from read-only generated ConfigMaps.
+Content hashes trigger a Grafana rollout through Argo after configuration
+changes. The provider polls every 30 seconds, disallows saving UI changes to
+the provisioned dashboard, and retains the database copy if its source file
+is removed (`disableDeletion: true`). Removing a file alone therefore does
+not remove its old dashboard from Grafana.
+
+To update the Git-managed dashboard:
+
+1. Edit and save the separate learning copy in Grafana.
+2. Export as code, expand Advanced options and select Classic. Leave external
+   sharing disabled to preserve the `prometheus` data-source UID.
+3. Review the JSON and replace the committed definition. Keep the curated
+   `uid` (`monitoring-overview`), `title` (`Monitoring - Overview`), `id: null`
+   and `editable: false`; do not copy the learning dashboard's UID or local ID.
+4. Render, server dry-run and review the diff, then commit/push and wait for
+   Argo. Verify the overview panels and keep the learning copy editable.
+
+Provisioning recreates the curated definition from Git after storage loss.
+UI-only learning changes still require a Grafana database backup for recovery;
+this workflow does not establish backup coverage.
 
 Strict-scope grafana-admin supplies the initial admin-user/admin-password.
 Anonymous access and self-signup are disabled. The bootstrap password only
@@ -55,7 +94,8 @@ default was corrected; no plugin auto-update mechanism is left enabled.
 
 Sealing-key coverage was checked against the verified NAS inventory before
 sealing; see the plan and ns-argo/SETUP.md for the recovery workflow. No new
-Grafana application-data backup coverage or persistence test is claimed.
+Grafana application-data backup coverage is claimed. The successful persistence
+exercise preserved existing storage; it did not test recovery after storage loss.
 
 ## Read-only cluster inspections
 
