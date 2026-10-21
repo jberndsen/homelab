@@ -1,15 +1,27 @@
 # Monitoring deployment and teaching plan
 
-Status: Lessons 1–3 complete; their checkpoints passed. Grafana is deployed and
-verified, but Lesson 4's dashboard and checkpoint are incomplete. On 2026-10-21
-the owner paused manual dashboard practice and asked to continue the plan,
-with the agent to create the final dashboard later. Lesson 5 concepts have
-been introduced conversationally; Grafana Pod-replacement persistence passed
-on 2026-10-21. Owner explicitly skipped further Pod-replacement testing to
-continue the lesson; do not repeat it. Owner requested moving the existing UI
-dashboard to Git: four-panel export/provisioning deployed and verified at
-`4bcf858`, preserving the separate editable learning copy.
-Lesson 4 remains incomplete.
+Status: Lessons 1–3 complete; their checkpoints passed. The initial four-panel
+overview was provisioned at `4bcf858`, preserving the editable learning copy.
+On 2026-10-21 the owner requested all remaining panels in one dashboard update,
+ordered System, Cluster and Workloads, plus operating checks and recovery notes.
+That implementation pass is underway. Lesson 5 storage/retention/recovery
+concepts have been taught; Grafana Pod-replacement persistence passed. Further
+Pod-replacement testing was explicitly skipped by the owner; do not repeat it.
+The full Lesson 4 teaching checkpoint remains distinct from implementation.
+
+## Current dashboard update pass
+
+- Expand the same stable overview UID with three open metric sections.
+- Keep system/cluster context global; use namespace and Deployment filters for
+  workload metrics, defaulting to all media Deployments. Preserve the learning copy.
+- Show missing data explicitly and validate actual series, all/single/multiple
+  filter selections and empty selections without changing media workloads.
+- Inspect monitoring OOM state, CPU throttling, scrape failures, storage and
+  retention; record observation windows and limits rather than claiming peak tests.
+- Record the owner-confirmed nightly full-VM backups, seven-day retention and
+  untested restores. Finish recovery notes without performing an outage/restore test.
+- Render, dry-run, review, commit and deploy the dashboard once through Argo,
+  then verify all sections in Grafana. No further persistence exercises.
 
 ## Resume instructions
 
@@ -25,8 +37,8 @@ Lesson 4 remains incomplete.
   percent with a 0–100% scale. Media container CPU was proposed, not confirmed saved.
   Owner understands scrape health does not prove playback and that shorter
   rate windows expose brief spikes with less smoothing. Manual panel practice
-  is paused. Owner has now requested Git provisioning of the existing dashboard;
-  adding the remaining promised panels is still deferred.
+  is paused. Owner subsequently requested Git provisioning and now the complete
+  layered dashboard; the remaining promised panels are authorized in this pass.
 - Conversational checks on 2026-10-21: owner correctly distinguished the
   displayed one-hour history from each point's five-minute rate window, and
   missing data from a measured zero. Initially proposed renaming the metric
@@ -45,7 +57,8 @@ Lesson 4 remains incomplete.
   export/provisioning was performed in that baseline step. Owner subsequently skipped the Prometheus
   replacement exercise; leave it untested and do not request it again. Continue
   with resource/retention and recovery concepts, then requested moving the
-  existing dashboard to Git. Preserve its four-panel scope and editable copy.
+  existing dashboard to Git. The owner now authorizes the remaining panels in
+  one pass; preserve the stable overview UID and separate editable copy.
   The historical baseline is only useful within retained history.
 - Preserve verified kubelet TLS, rotating Pod-bound credentials, single-node
   discovery and node-name-scoped RBAC. No insecure TLS or nodes/proxy access.
@@ -81,6 +94,32 @@ Lesson 4 remains incomplete.
 ## Completed work and validation
 
 Detailed session history is retained in Git. Key milestones:
+
+2026-10-21 consolidated dashboard preparation: overview now defines 19 metric
+panels under System, Cluster and Workloads rows. Backend query checks passed
+for default media/All (eight container/Deployment series where applicable),
+single Jellyfin, Radarr+Sonarr, media+monitoring, and a nonexistent Deployment.
+Empty selections return no series; an absent expected scrape target returns
+the explicit Missing sentinel (-1), distinct from scrape failure (0).
+Render and server dry-run passed; UI/Argo validation follows deployment.
+
+Operating checks in the same pass: all five current scrape jobs are up; no
+scrape failures were observed in the preceding 15 minutes. One node-exporter
+failure appears in the one-hour window, which includes its earlier rollout;
+no failure-free whole-hour claim is made. Current monitoring containers have
+zero restarts and no last-termination/OOM state. Their cgroup throttle counters
+did not increase between observations at 20:08:06 and 20:10:44 UTC (about
+158 seconds); some lifetime counters are nonzero, so throttling is not claimed
+never to have occurred. The read used existing read-only exporter host mounts,
+without new scrape jobs, credentials, RBAC or runtime access. Compaction-failure
+and WAL-corruption counters are zero. A recent top snapshot is about 16m CPU /
+258 MiB RAM; data directories are about 32.2 MiB Prometheus / 52.5 MiB Grafana,
+with 61.7 GiB available on the shared VM filesystem. Effective retention is
+1w / 7GiB. These are bounded observations, not peak or seven-day history tests.
+Owner confirmed nightly full-VM backups, seven-day retention and no restore test;
+the durable fact is recorded in node-main/system.md. Recovery/rollback notes now
+cover Git, sealing keys, Grafana database state, disposable metrics history and
+future application-native pre-upgrade backups. No restore was performed.
 
 2026-10-21 dashboard Git provisioning (`4bcf858`): exported the current learning
 dashboard through Grafana's Classic JSON export. Verified its local reference

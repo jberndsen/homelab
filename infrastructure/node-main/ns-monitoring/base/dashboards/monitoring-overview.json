@@ -15,12 +15,333 @@
       }
     ]
   },
-  "description": "Git-managed snapshot of the four-panel learning dashboard. Edit the separate Monitoring - Learning copy, then export and review changes in Git.",
+  "description": "System: the Ubuntu/K3s VM. Cluster: global Kubernetes and collection health. Workloads: Deployment Pods selected by namespace and Deployment. Missing data remains visible; resource and readiness metrics do not prove media playback.",
   "editable": false,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "liveNow": false,
   "panels": [
+    {
+      "id": 100,
+      "type": "row",
+      "title": "01 — System · Ubuntu VM",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent",
+          "noValue": "No data",
+          "decimals": 2,
+          "min": 0,
+          "max": 100
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "id": 2,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{job=\"node-exporter\",mode=\"idle\"}[$__rate_interval])))",
+          "legendFormat": "VM",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "CPU busy",
+      "type": "stat",
+      "description": "Ubuntu/K3s VM, not the underlying Proxmox host. CPU is averaged over the rate window; memory is total minus available."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent",
+          "noValue": "No data",
+          "decimals": 2,
+          "min": 0,
+          "max": 100
+        }
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "id": 3,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "100 * (1 - node_memory_MemAvailable_bytes{job=\"node-exporter\"} / node_memory_MemTotal_bytes{job=\"node-exporter\"})",
+          "legendFormat": "VM",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Memory used",
+      "type": "stat",
+      "description": "Ubuntu/K3s VM, not the underlying Proxmox host. CPU is averaged over the rate window; memory is total minus available."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 10737418240
+              },
+              {
+                "color": "green",
+                "value": 21474836480
+              }
+            ]
+          },
+          "unit": "bytes",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "id": 4,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "node_filesystem_avail_bytes{job=\"node-exporter\",mountpoint=\"/\"}",
+          "legendFormat": "VM root",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Root disk available",
+      "type": "stat",
+      "description": "Space available on the shared VM filesystem. A local-path PVC request is not a filesystem quota."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0,
+          "max": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Failed",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Healthy",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 1,
+        "w": 6,
+        "h": 4
+      },
+      "id": 5,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "node_scrape_collector_success{job=\"node-exporter-network\",collector=\"netdev\"}",
+          "legendFormat": "ens18 collector",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Network collector",
+      "type": "stat",
+      "description": "Collector success is separate from scrape health. Missing or renamed ens18 can still leave the traffic panel without data."
+    },
     {
       "datasource": {
         "type": "prometheus",
@@ -40,7 +361,7 @@
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 8,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -49,12 +370,12 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "showValues": false,
             "spanNulls": false,
             "stacking": {
@@ -69,35 +390,38 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
-          }
+          },
+          "unit": "percent",
+          "noValue": "No data",
+          "decimals": 2,
+          "min": 0,
+          "max": 100
         }
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
         "x": 0,
-        "y": 0
+        "y": 5,
+        "w": 8,
+        "h": 7
       },
-      "id": 1,
+      "id": 6,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
       "pluginVersion": "13.2.2",
@@ -108,15 +432,16 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "up",
-          "legendFormat": "{{job}}",
-          "range": true,
+          "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{job=\"node-exporter\",mode=\"idle\"}[$__rate_interval])))",
+          "legendFormat": "VM CPU",
           "refId": "A",
-          "instant": false
+          "instant": false,
+          "range": true
         }
       ],
-      "title": "Scrape health",
-      "type": "timeseries"
+      "title": "CPU · busy over time",
+      "type": "timeseries",
+      "description": "Percentage of all VM CPU capacity in use; the rate window adapts to chart resolution."
     },
     {
       "datasource": {
@@ -137,7 +462,7 @@
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 8,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -146,12 +471,12 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "showValues": false,
             "spanNulls": false,
             "stacking": {
@@ -166,138 +491,38 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           },
           "unit": "percent",
+          "noValue": "No data",
+          "decimals": 2,
           "min": 0,
           "max": 100
         }
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
+        "x": 8,
+        "y": 5,
+        "w": 8,
+        "h": 7
       },
-      "id": 2,
+      "id": 7,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
-          "showLegend": false,
-          "enableFacetedFilter": true
+          "showLegend": true
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "13.2.2",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "editorMode": "code",
-          "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{job=\"node-exporter\",mode=\"idle\"}[5m])))",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "VM CPU Busy",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "showValues": false,
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percent",
-          "min": 0,
-          "max": 100
-        }
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
-      "id": 3,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
       "pluginVersion": "13.2.2",
@@ -309,13 +534,15 @@
           },
           "editorMode": "code",
           "expr": "100 * (1 - node_memory_MemAvailable_bytes{job=\"node-exporter\"} / node_memory_MemTotal_bytes{job=\"node-exporter\"})",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
+          "legendFormat": "VM memory",
+          "refId": "A",
+          "instant": false,
+          "range": true
         }
       ],
-      "title": "VM Memory Used",
-      "type": "timeseries"
+      "title": "Memory · used over time",
+      "type": "timeseries",
+      "description": "100 × (1 − available / total). Available memory includes reclaimable cache."
     },
     {
       "datasource": {
@@ -336,7 +563,7 @@
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 8,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -345,12 +572,12 @@
             },
             "insertNulls": false,
             "lineInterpolation": "linear",
-            "lineWidth": 1,
+            "lineWidth": 2,
             "pointSize": 5,
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "auto",
+            "showPoints": "never",
             "showValues": false,
             "spanNulls": false,
             "stacking": {
@@ -365,37 +592,37 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
+                "color": "blue",
+                "value": null
               }
             ]
           },
-          "unit": "bytes",
+          "unit": "Bps",
+          "noValue": "No data",
+          "decimals": 0,
           "min": 0
         }
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
+        "x": 16,
+        "y": 5,
+        "w": 8,
+        "h": 7
       },
-      "id": 4,
+      "id": 8,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
-          "showLegend": false
+          "showLegend": true
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
       "pluginVersion": "13.2.2",
@@ -406,18 +633,1117 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "node_filesystem_avail_bytes{job=\"node-exporter\",mountpoint=\"/\"}",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
+          "expr": "rate(node_network_receive_bytes_total{job=\"node-exporter-network\",device=\"ens18\"}[$__rate_interval])",
+          "legendFormat": "Receive",
+          "refId": "A",
+          "instant": false,
+          "range": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_network_transmit_bytes_total{job=\"node-exporter-network\",device=\"ens18\"}[$__rate_interval])",
+          "legendFormat": "Transmit",
+          "refId": "B",
+          "instant": false,
+          "range": true
         }
       ],
-      "title": "VM root disk available",
-      "type": "timeseries"
+      "title": "Network · ens18",
+      "type": "timeseries",
+      "description": "Bytes per second at the VM interface. Receive and transmit are both positive; this is not per-application traffic."
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "02 — Cluster · health & storage",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": -1,
+          "max": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "-1": {
+                  "text": "Missing",
+                  "color": "red",
+                  "index": 0
+                },
+                "0": {
+                  "text": "Down",
+                  "color": "red",
+                  "index": 1
+                },
+                "1": {
+                  "text": "Up",
+                  "color": "green",
+                  "index": 2
+                }
+              }
+            }
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 12,
+        "h": 5
+      },
+      "id": 1,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "(up{job=\"prometheus\"} or (absent(up{job=\"prometheus\"}) * -1)) or (up{job=\"node-exporter\"} or (absent(up{job=\"node-exporter\"}) * -1)) or (up{job=\"node-exporter-network\"} or (absent(up{job=\"node-exporter-network\"}) * -1)) or (up{job=\"kube-state-metrics\"} or (absent(up{job=\"kube-state-metrics\"}) * -1)) or (up{job=\"kubelet-resource\"} or (absent(up{job=\"kubelet-resource\"}) * -1))",
+          "legendFormat": "{{job}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Scrape targets",
+      "type": "stat",
+      "description": "Five expected targets. Up = scrape succeeded; Down = scrape failed; Missing = expected target has no current series. This does not prove application behavior."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0,
+          "max": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Not ready",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Ready",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 13,
+        "w": 4,
+        "h": 5
+      },
+      "id": 9,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "kube_node_status_condition{job=\"kube-state-metrics\",condition=\"Ready\",status=\"true\"}",
+          "legendFormat": "{{node}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Node Ready",
+      "type": "stat",
+      "description": "Kubernetes Ready condition; a missing measurement stays No data."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0,
+          "max": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Normal",
+                  "color": "green",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Pressure",
+                  "color": "red",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 13,
+        "w": 4,
+        "h": 5
+      },
+      "id": 10,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "max by (node) (kube_node_status_condition{job=\"kube-state-metrics\",condition=~\"MemoryPressure|DiskPressure|PIDPressure\",status=\"true\"})",
+          "legendFormat": "{{node}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Node pressure",
+      "type": "stat",
+      "description": "Reports whether memory, disk or PID pressure is currently asserted. Also inspect Node Ready and scrape health."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0
+        }
+      },
+      "gridPos": {
+        "x": 20,
+        "y": 13,
+        "w": 4,
+        "h": 5
+      },
+      "id": 11,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(kube_persistentvolumeclaim_status_phase{job=\"kube-state-metrics\",phase=\"Bound\"})",
+          "legendFormat": "Bound",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "count(kube_persistentvolumeclaim_info{job=\"kube-state-metrics\"})",
+          "legendFormat": "Total",
+          "refId": "B",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "PVCs · bound / total",
+      "type": "stat",
+      "description": "Binding state across all namespaces. Bound does not prove filesystem free space, application integrity or backup coverage."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum by (namespace) (kube_deployment_spec_replicas{job=\"kube-state-metrics\"})",
+          "legendFormat": "{{namespace}} · desired",
+          "refId": "A",
+          "instant": false,
+          "range": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum by (namespace) (kube_deployment_status_replicas_available{job=\"kube-state-metrics\"})",
+          "legendFormat": "{{namespace}} · available",
+          "refId": "B",
+          "instant": false,
+          "range": true
+        }
+      ],
+      "title": "Deployment replicas · cluster",
+      "type": "timeseries",
+      "description": "All namespaces, independent of workload filters. Deployment replicas only; DaemonSets and StatefulSets are not counted."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0,
+          "max": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Unbound",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Bound",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "id": 13,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "kube_persistentvolumeclaim_status_phase{job=\"kube-state-metrics\",phase=\"Bound\"}",
+          "legendFormat": "{{namespace}} / {{persistentvolumeclaim}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "PVC binding · all namespaces",
+      "type": "stat",
+      "description": "Current binding state for each claim. No data is not treated as a healthy zero."
+    },
+    {
+      "id": 102,
+      "type": "row",
+      "title": "03 — Workloads · Deployments",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 12,
+        "h": 7
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "kube_deployment_spec_replicas{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\",deployment=~\"${workload:regex}\"}",
+          "legendFormat": "{{namespace}} / {{deployment}} · desired",
+          "refId": "A",
+          "instant": false,
+          "range": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "kube_deployment_status_replicas_available{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\",deployment=~\"${workload:regex}\"}",
+          "legendFormat": "{{namespace}} / {{deployment}} · available",
+          "refId": "B",
+          "instant": false,
+          "range": true
+        }
+      ],
+      "title": "Deployment replicas · selected",
+      "type": "timeseries",
+      "description": "Desired versus available replicas for the selected Deployments. Namespace and Deployment filters apply here. ReplicaSet controller ownership selects Deployment Pods; standalone Pods, Jobs, DaemonSets and StatefulSets are outside this section. Missing owner or consumption series stay missing."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0,
+          "max": 1,
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Not ready",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Ready",
+                  "color": "green",
+                  "index": 1
+                }
+              }
+            }
+          ]
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 26,
+        "w": 12,
+        "h": 7
+      },
+      "id": 15,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "(kube_pod_container_status_ready{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\"}) * on (namespace, pod) group_left (deployment) (max by (namespace, pod, deployment) (label_replace(kube_pod_owner{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\",owner_kind=\"ReplicaSet\",owner_is_controller=\"true\",owner_name=~\"${workload:regex}-[a-z0-9]+\"}, \"deployment\", \"$1\", \"owner_name\", \"(.+)-[a-z0-9]+\")))",
+          "legendFormat": "{{namespace}} / {{deployment}} / {{container}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Container readiness",
+      "type": "stat",
+      "description": "One current series per Pod/container. Ready does not prove playback, search or downloads. Namespace and Deployment filters apply here. ReplicaSet controller ownership selects Deployment Pods; standalone Pods, Jobs, DaemonSets and StatefulSets are outside this section. Missing owner or consumption series stay missing."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "suffix:cores",
+          "noValue": "No data",
+          "decimals": 3,
+          "min": 0
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 12,
+        "h": 8
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "(rate(container_cpu_usage_seconds_total{job=\"kubelet-resource\",namespace=~\"${namespace:regex}\",container!=\"\",container!=\"POD\"}[$__rate_interval])) * on (namespace, pod) group_left (deployment) (max by (namespace, pod, deployment) (label_replace(kube_pod_owner{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\",owner_kind=\"ReplicaSet\",owner_is_controller=\"true\",owner_name=~\"${workload:regex}-[a-z0-9]+\"}, \"deployment\", \"$1\", \"owner_name\", \"(.+)-[a-z0-9]+\")))",
+          "legendFormat": "{{namespace}} / {{pod}} / {{container}}",
+          "refId": "A",
+          "instant": false,
+          "range": true
+        }
+      ],
+      "title": "Container CPU",
+      "type": "timeseries",
+      "description": "CPU cores consumed per container: 0.1 cores = 100 millicores. Not a percentage of the VM. Namespace and Deployment filters apply here. ReplicaSet controller ownership selects Deployment Pods; standalone Pods, Jobs, DaemonSets and StatefulSets are outside this section. Missing owner or consumption series stay missing."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 8,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 33,
+        "w": 12,
+        "h": 8
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "(container_memory_working_set_bytes{job=\"kubelet-resource\",namespace=~\"${namespace:regex}\",container!=\"\",container!=\"POD\"}) * on (namespace, pod) group_left (deployment) (max by (namespace, pod, deployment) (label_replace(kube_pod_owner{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\",owner_kind=\"ReplicaSet\",owner_is_controller=\"true\",owner_name=~\"${workload:regex}-[a-z0-9]+\"}, \"deployment\", \"$1\", \"owner_name\", \"(.+)-[a-z0-9]+\")))",
+          "legendFormat": "{{namespace}} / {{pod}} / {{container}}",
+          "refId": "A",
+          "instant": false,
+          "range": true
+        }
+      ],
+      "title": "Container memory · working set",
+      "type": "timeseries",
+      "description": "Working-set memory, including some cache; not application heap alone. Namespace and Deployment filters apply here. ReplicaSet controller ownership selects Deployment Pods; standalone Pods, Jobs, DaemonSets and StatefulSets are outside this section. Missing owner or consumption series stay missing."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 0,
+          "min": 0
+        }
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 41,
+        "w": 12,
+        "h": 7
+      },
+      "id": 18,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "(kube_pod_container_status_restarts_total{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\"}) * on (namespace, pod) group_left (deployment) (max by (namespace, pod, deployment) (label_replace(kube_pod_owner{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\",owner_kind=\"ReplicaSet\",owner_is_controller=\"true\",owner_name=~\"${workload:regex}-[a-z0-9]+\"}, \"deployment\", \"$1\", \"owner_name\", \"(.+)-[a-z0-9]+\")))",
+          "legendFormat": "{{namespace}} / {{deployment}} / {{container}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Restarts · current Pods",
+      "type": "stat",
+      "description": "Cumulative restart count for each current Pod/container. A replacement Pod has a new identity and count. Namespace and Deployment filters apply here. ReplicaSet controller ownership selects Deployment Pods; standalone Pods, Jobs, DaemonSets and StatefulSets are outside this section. Missing owner or consumption series stay missing."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short",
+          "noValue": "No data",
+          "decimals": 2,
+          "min": 0
+        }
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 41,
+        "w": 12,
+        "h": 7
+      },
+      "id": 19,
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "13.2.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "(increase(kube_pod_container_status_restarts_total{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\"}[$__range])) * on (namespace, pod) group_left (deployment) (max by (namespace, pod, deployment) (label_replace(kube_pod_owner{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\",owner_kind=\"ReplicaSet\",owner_is_controller=\"true\",owner_name=~\"${workload:regex}-[a-z0-9]+\"}, \"deployment\", \"$1\", \"owner_name\", \"(.+)-[a-z0-9]+\")))",
+          "legendFormat": "{{namespace}} / {{deployment}} / {{container}}",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "title": "Restarts · selected time range",
+      "type": "stat",
+      "description": "Estimated increase over the dashboard time range for currently owned Pods. increase extrapolates and can be fractional; it does not count replacement Pods that have disappeared. Namespace and Deployment filters apply here. ReplicaSet controller ownership selects Deployment Pods; standalone Pods, Jobs, DaemonSets and StatefulSets are outside this section. Missing owner or consumption series stay missing."
     }
   ],
   "preload": false,
-  "refresh": "",
+  "refresh": "30s",
   "schemaVersion": 42,
   "time": {
     "from": "now-1h",
@@ -439,7 +1765,69 @@
   },
   "timezone": "browser",
   "title": "Monitoring - Overview",
-  "version": 1,
+  "version": 2,
   "uid": "monitoring-overview",
-  "id": null
+  "id": null,
+  "tags": [
+    "homelab",
+    "monitoring"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "label": "Workload namespace",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(kube_deployment_spec_replicas{job=\"kube-state-metrics\"}, namespace)",
+        "definition": "label_values(kube_deployment_spec_replicas{job=\"kube-state-metrics\"}, namespace)",
+        "refresh": 2,
+        "sort": 1,
+        "hide": 0,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": {
+          "text": [
+            "media"
+          ],
+          "value": [
+            "media"
+          ]
+        },
+        "options": [],
+        "skipUrlSync": false
+      },
+      {
+        "name": "workload",
+        "label": "Deployment",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(kube_deployment_spec_replicas{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\"}, deployment)",
+        "definition": "label_values(kube_deployment_spec_replicas{job=\"kube-state-metrics\",namespace=~\"${namespace:regex}\"}, deployment)",
+        "refresh": 2,
+        "sort": 1,
+        "hide": 0,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "skipUrlSync": false
+      }
+    ]
+  }
 }

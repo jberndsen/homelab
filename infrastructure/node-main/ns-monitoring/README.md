@@ -8,10 +8,10 @@ Lessons 1–3 are deployed, verified and complete; the owner passed Lesson 3's
 checkpoint. Lesson 4 is in progress. See the plan for validation evidence and
 resume instructions. Lesson 5 has begun with a successful Grafana Pod-replacement
 persistence exercise. The owner skipped further Pod-replacement testing;
-Prometheus replacement is untested. The existing four-panel dashboard is now
-provisioned from Git and verified; deployment evidence is tracked in the plan.
-Lesson port-forwards were stopped
-at evening cleanup; reconnect only when needed.
+Prometheus replacement is untested. The overview is provisioned from Git;
+its System, Cluster and Workloads sections are described below. Deployment
+evidence and the remaining teaching checkpoint are tracked in the plan.
+Reconnect lesson port-forwards only when needed and stop them afterward.
 
 ## Grafana (Lesson 4 in progress)
 
@@ -37,8 +37,8 @@ real session login, anonymous API denial, data-source health and the query
 Instant and Range modes with legend `{{job}}`. The owner has now saved the
 editable Monitoring — Learning dashboard with Scrape health and demonstrated
 VM CPU, memory and root disk panels. Manual dashboard practice is paused;
-the owner wants the agent to create the final dashboard later. Lesson 4
-remains incomplete; see the plan for remaining work and verification limits.
+the owner requested the remaining overview panels in one implementation pass.
+See the plan for implementation evidence, the teaching checkpoint and limits.
 
 Grafana uses the protected 1 GiB local-path grafana-data PVC and Recreate
 strategy. Its provisioned Prometheus data source (UID prometheus) connects
@@ -53,12 +53,37 @@ exercise; it is untested. See the plan for evidence and limits.
 ### Git-managed dashboard
 
 `Monitoring - Overview` (UID `monitoring-overview`) in folder `Homelab` is the
-Git-managed copy of the existing four-panel dashboard. Its definition is
+Git-managed dashboard. Its definition is
 [`base/dashboards/monitoring-overview.json`](base/dashboards/monitoring-overview.json).
 It uses the provisioned `prometheus` data-source UID. The original
 `Monitoring - Learning` dashboard (UID `adhnb5z`) remains a separate editable
-copy in Grafana's database. This snapshot includes scrape health, VM CPU, VM
-memory and root disk; the additional network/media panels remain future work.
+copy in Grafana's database. It is an experimental copy, not an automatically
+updated mirror of the curated dashboard.
+
+The overview has three expanded sections:
+
+| Section | Coverage | Filters |
+| --- | --- | --- |
+| System | VM CPU, memory, root disk available, ens18 receive/transmit and netdev collector health | Always the Ubuntu/K3s VM |
+| Cluster | Five expected scrape targets, Node Ready/pressure, PVC binding and namespace-level Deployment replica totals | Always the whole cluster |
+| Workloads | Desired/available replicas, container readiness, CPU cores, memory working set and restarts | Workload namespace and Deployment; default media / All |
+
+The workload dropdown is populated from Deployment metrics. Pod/container
+queries join the controlling ReplicaSet owner and derive the Deployment name
+by removing its final hash suffix. Exact owner matching avoids prefix collisions
+between Deployment names. This section intentionally excludes standalone Pods,
+Jobs, DaemonSets and StatefulSets. Namespace/Pod/container identity remains in
+the consumption series. The selected-range restart increase uses current owners;
+it does not count already-deleted Pods and may be fractional due to extrapolation.
+
+The scrape-target panel distinguishes Up (1), Down (0) and Missing (-1) for
+the five configured jobs. Other absent measurements display No data; no zero
+fill or null bridging turns missing data into health. Node/PVC/readiness values
+describe Kubernetes state, not working playback, filesystem integrity or backups.
+Rate windows adapt with `$__rate_interval`; memory/disk use byte units, network
+uses bytes/sec, and container CPU uses cores. Stat tiles are instant queries at
+the selected end time; trend panels cover the displayed interval. The overview
+refreshes every 30 seconds.
 
 Grafana mounts the provider and JSON from read-only generated ConfigMaps.
 Content hashes trigger a Grafana rollout through Argo after configuration
@@ -69,7 +94,9 @@ not remove its old dashboard from Grafana.
 
 To update the Git-managed dashboard:
 
-1. Edit and save the separate learning copy in Grafana.
+1. Edit and save an experimental copy in Grafana, or edit the committed JSON
+   directly. To start from the full current overview, save a separate editable
+   copy; the older learning dashboard contains only its original four panels.
 2. Export as code, expand Advanced options and select Classic. Leave external
    sharing disabled to preserve the `prometheus` data-source UID.
 3. Review the JSON and replace the committed definition. Keep the curated
@@ -79,8 +106,8 @@ To update the Git-managed dashboard:
    Argo. Verify the overview panels and keep the learning copy editable.
 
 Provisioning recreates the curated definition from Git after storage loss.
-UI-only learning changes still require a Grafana database backup for recovery;
-this workflow does not establish backup coverage.
+UI-only learning changes still require Grafana database recovery after storage
+loss; see the recovery procedure below.
 
 Strict-scope grafana-admin supplies the initial admin-user/admin-password.
 Anonymous access and self-signup are disabled. The bootstrap password only
@@ -93,9 +120,79 @@ The initial startup downloaded optional plugins into the data PVC before this
 default was corrected; no plugin auto-update mechanism is left enabled.
 
 Sealing-key coverage was checked against the verified NAS inventory before
-sealing; see the plan and ns-argo/SETUP.md for the recovery workflow. No new
-Grafana application-data backup coverage is claimed. The successful persistence
-exercise preserved existing storage; it did not test recovery after storage loss.
+sealing; see the plan and ns-argo/SETUP.md for the recovery workflow. The owner
+confirmed nightly full-VM backups with seven-day retention; restores are untested.
+The successful persistence exercise preserved existing storage and did not test
+recovery after storage loss or consistency of the VM backup's Grafana database.
+
+## Recovery and rollback
+
+Use [Argo recovery](../ns-argo/SETUP.md#recovery-and-everyday-operations) for
+whole-VM restore or fresh-cluster bootstrap. Before reconciling a restored VM,
+review its backup date, included disks, sealing-key coverage and intended Git
+revision. Follow that runbook's automation safeguards. Nightly full-VM backups
+with seven-day retention are owner-confirmed, but no restore or independent
+backup inventory was tested in this dashboard update.
+
+1. **Configuration loss:** restore namespace/bootstrap ownership and Argo from
+   Git using the existing runbook. Restore the matching sealing keys before
+   relying on the Grafana SealedSecret. Keep plaintext credentials out of output.
+2. **Grafana data preserved:** retain its claim, PV mapping and database, then
+   sync monitoring. The saved learning dashboards and changed passwords come
+   from the database; the data source and curated overview come from Git.
+3. **Grafana data lost:** recover application data from the selected VM backup
+   using the existing restore runbook. A fresh-cluster extraction and PV mapping
+   must be established before starting against restored data; do not silently
+   replace a missing database with an empty volume. If the owner deliberately
+   chooses a fresh Grafana database, the Secret supplies its bootstrap login and
+   Git recreates the data source/overview, but UI-only dashboards, users and later
+   password changes are lost. This is not authorization to discard other app data.
+4. **Prometheus data lost:** historical samples are disposable by agreement.
+   Restore configuration and deliberately provision fresh monitoring storage
+   only after confirming storage loss; collection starts new history. Preserve
+   existing claims while troubleshooting. Git cannot recover old samples.
+5. **Validate:** check Argo Synced/Healthy, PVC binding, monitoring readiness,
+   all expected scrape targets, Grafana login and overview queries. If recovering
+   its database, check the learning dashboard and database-held settings too.
+   Verify media availability independently; infrastructure health is not playback.
+
+For a dashboard/configuration rollback, revert the relevant Git change, review
+the render/diff, push and wait for Argo. Do not delete a PVC to roll back, and do
+not blindly downgrade an image against an incompatible database schema.
+PVC confirmation annotations protect Argo operations, not direct deletion.
+
+Before any future stateful image update, review the release and take the required
+application-native backup before changing one pinned digest. Grafana's supported
+SQLite backup procedure requires stopping Grafana before copying its database;
+plan that maintenance through Git/Argo so self-healing does not restart it during
+the copy. Include needed plugin data/settings and protect the backup as sensitive
+application data. A nightly VM backup is not evidence that this pre-upgrade
+application-native procedure ran. See [Grafana backup guidance](https://grafana.com/docs/grafana/latest/administration/back-up-grafana/).
+For Prometheus, use a supported TSDB snapshot procedure; no snapshot endpoint
+or additional access was enabled by this dashboard change. Recovery methods and
+backup restoration still require a separate, deliberately planned test.
+
+## Resource and retention checks
+
+Use kubectl top for recent consumption and the Prometheus queries above for
+history. Inspect monitoring container restart counts/last termination state and
+events for OOMs. Container CFS throttling metrics are not retained by the narrow
+kubelet-resource scrape; do not interpret their absence as zero throttling.
+For a targeted inspection, Node Exporter's existing read-only host mount can
+read each container's cgroup `cpu.stat`; match the current runtime container ID
+to its cgroup and compare `nr_throttled`/`throttled_usec` across two observations.
+Do not change exporters, runtime permissions or scrape scope merely for this check.
+
+Check `min_over_time(up[15m]) < 1` and current target errors as well as the
+expected-target view. Check `prometheus_tsdb_compactions_failed_total` and
+`prometheus_tsdb_wal_corruptions_total` for storage errors. An empty historical
+failure result is meaningful only together with expected/current target coverage.
+The active `/api/v1/status/flags` exposes the effective retention time and size.
+Compare data-directory `du` usage and filesystem `df` availability over time.
+Prometheus head/WAL and compaction need room outside retained blocks; local-path
+PVC capacity requests are not disk quotas. Seven days is the configured maximum,
+not a guaranteed history length. A seven-day observation and a peak-load test
+cannot be replaced by one low-usage snapshot; latest evidence is in the plan.
 
 ## Read-only cluster inspections
 
@@ -203,8 +300,8 @@ downgrade a database image. Future stateful image updates require release review
 an application-native backup, one digest update, rollout and smoke test.
 
 History is disposable after storage loss. Reinstall configuration from Git;
-do not assume verified backup coverage for a new PVC. Persistence testing and
-the broader recovery lesson are scheduled for Lesson 5.
+do not assume restore success from a backup schedule. See the recovery procedure
+above and the plan for the owner-skipped persistence test and remaining limits.
 
 ## Kubernetes object state
 
@@ -275,6 +372,7 @@ out of output/files. Verify config inside the running Pod:
 kubectl -n monitoring exec deployment/prometheus -- /bin/promtool check config /etc/prometheus/prometheus.yaml
 ```
 
-This does not establish application playback/search health. Grafana is deployed;
-its learning dashboard is unfinished. Notification delivery is a separate future
-phase, and controlled persistence testing remains Lesson 5.
+This does not establish application playback/search health. Grafana's curated
+overview is Git-managed; its editable learning copy is independent. Notification
+delivery is a separate future phase. Further controlled persistence testing was
+explicitly skipped by the owner.

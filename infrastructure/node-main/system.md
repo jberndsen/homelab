@@ -82,6 +82,8 @@
 
 - Application data recovery uses Proxmox backups of VM `103` with every
   application PVC disk included. External NAS media requires its own backup.
+- The owner confirmed on 2026-10-21 that the entire VM is backed up nightly,
+  with seven days of retention. These backups have not been restore-tested.
 - Encrypted sealing-key backups and their recovery `README.md` live at
   `smb://192.168.1.32/backups/NUC/kubernetes`, mounted on the dev laptop at
   `/Volumes/backups/NUC/kubernetes`.

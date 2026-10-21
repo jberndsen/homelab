@@ -245,8 +245,10 @@ validate the intended restore method before relying on it.
 6. Review and sync `monitoring` separately, keeping prune/force/replace off.
    Verify its Grafana SealedSecret decrypts before starting Grafana. Preserve
    Grafana's database and dashboards when restoring existing application data;
-   Git currently contains its data source but no saved dashboard definitions.
-   Grafana database backup/restore coverage has not yet been verified; consult
+   Git contains its data source and curated overview dashboard. UI-only learning
+   dashboards and changed passwords still require database recovery. The owner
+   confirms nightly full-VM backups with seven-day retention; restores and
+   Grafana database consistency have not been tested. Consult
    [monitoring operations](../ns-monitoring/README.md) before choosing a recovery source.
    Historical Prometheus samples are disposable after storage loss and may
    start empty on a fresh monitoring volume. Preserve any existing claim;
