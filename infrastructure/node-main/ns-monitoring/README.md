@@ -5,15 +5,16 @@ one lesson at a time. Teaching takes place exclusively in conversation;
 this file contains operations notes only.
 
 Lessons 1–3 are deployed, verified and complete; the owner passed Lesson 3's
-checkpoint. Lesson 4 is in progress. See the plan for validation evidence and
-resume instructions. Lesson 5 has begun with a successful Grafana Pod-replacement
+checkpoint. The full overview implementation and current operating checks are
+complete; Lesson 4's full teaching checkpoint is not separately recorded. See
+the plan for evidence and limits. Lesson 5 includes a successful Grafana Pod-replacement
 persistence exercise. The owner skipped further Pod-replacement testing;
 Prometheus replacement is untested. The overview is provisioned from Git;
 its System, Cluster and Workloads sections are described below. Deployment
 evidence and the remaining teaching checkpoint are tracked in the plan.
 Reconnect lesson port-forwards only when needed and stop them afterward.
 
-## Grafana (Lesson 4 in progress)
+## Grafana
 
 Open http://grafana.home.arpa on the trusted LAN. Login is required (username
 admin). Copy the initial password privately in the owner's Mac terminal and

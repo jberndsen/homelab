@@ -4,12 +4,13 @@ Status: Lessons 1–3 complete; their checkpoints passed. The initial four-panel
 overview was provisioned at `4bcf858`, preserving the editable learning copy.
 On 2026-10-21 the owner requested all remaining panels in one dashboard update,
 ordered System, Cluster and Workloads, plus operating checks and recovery notes.
-That implementation pass is underway. Lesson 5 storage/retention/recovery
+That implementation pass deployed and passed verification at `d8fbdcd`.
+Lesson 5 storage/retention/recovery
 concepts have been taught; Grafana Pod-replacement persistence passed. Further
 Pod-replacement testing was explicitly skipped by the owner; do not repeat it.
 The full Lesson 4 teaching checkpoint remains distinct from implementation.
 
-## Current dashboard update pass
+## Completed dashboard update pass
 
 - Expand the same stable overview UID with three open metric sections.
 - Keep system/cluster context global; use namespace and Deployment filters for
@@ -77,8 +78,10 @@ The full Lesson 4 teaching checkpoint remains distinct from implementation.
 ## Remaining work
 
 - [x] Lesson 4: validate VM network collection.
-- [ ] Lesson 4: finish all promised dashboard panels (agent creation deferred
-  by owner), verify settings/filters/no-data behavior and pass checkpoint.
+- [x] Lesson 4: finish all promised dashboard panels and verify settings,
+  filters and no-data behavior in the consolidated owner-authorized pass.
+- Lesson 4's full teaching checkpoint is not separately claimed; manual panel
+  practice remains paused. This is distinct from completed implementation.
 - [x] Full 5-minute CPU rates return all eight media containers (final inspection).
 - [x] Lesson 5: controlled Grafana Pod replacement preserves the saved learning
   dashboard; both PVC identities/volumes remain unchanged.
@@ -86,14 +89,34 @@ The full Lesson 4 teaching checkpoint remains distinct from implementation.
   with stable UID `monitoring-overview`, preserving editable `adhnb5z`.
 - Prometheus controlled Pod replacement: skipped by owner on 2026-10-21;
   not tested and no longer required for this guided session.
-- [ ] Lesson 5: provision remaining promised panels and verify applicable
-  namespace/workload filters; finish resource/retention checks and recovery
-  operations. Preserve all claims; no media disruption or whole-stack outage test.
+- [x] Lesson 5: provision all promised panels and verify namespace/workload
+  filters; complete current resource/retention checks and recovery notes.
+  Preserve all claims; no media disruption or whole-stack outage test.
+- Longer-term validation remains unperformed: a full seven-day observed
+  retention/growth window, peak-load measurement and VM backup restore test.
+  These are recorded limits, not claims of completion or extra outage exercises.
 - Optional after Lesson 5: Proxmox, NAS and UPS metrics; notifications are separate.
 
 ## Completed work and validation
 
 Detailed session history is retained in Git. Key milestones:
+
+2026-10-21 consolidated dashboard deployment (`d8fbdcd`): Standards and Spec
+reviews passed without findings. Argo deployed the single dashboard revision
+Synced/Healthy. Grafana's configuration rollout completed, preserving both PVCs;
+Prometheus, kube-state-metrics and Node Exporter were not replaced. Browser
+verification shows all three ordered sections with real data, all eight media
+containers, five Up targets and eleven Bound claims. Single Jellyfin and
+Radarr+Sonarr filters isolate the intended containers. Switching to monitoring
+shows monitoring Deployment Pods; historical trend series include earlier Pods
+within the selected interval, while readiness uses current instant state.
+A nonexistent Deployment shows No data in consumption/readiness/restarts,
+and the default media/All view was restored. Namespace/Deployment UI queries
+work; backend multi-namespace and missing-target checks passed as noted below.
+All eight media Deployments remain available. Grafana provisioning logs report
+successful completion. One query-range request was canceled during browser
+verification (`context canceled`); no provisioning error was reported. The unchanged learning copy remains
+separate and editable; no further Pod-replacement or restore test was performed.
 
 2026-10-21 consolidated dashboard preparation: overview now defines 19 metric
 panels under System, Cluster and Workloads rows. Backend query checks passed
@@ -101,7 +124,7 @@ for default media/All (eight container/Deployment series where applicable),
 single Jellyfin, Radarr+Sonarr, media+monitoring, and a nonexistent Deployment.
 Empty selections return no series; an absent expected scrape target returns
 the explicit Missing sentinel (-1), distinct from scrape failure (0).
-Render and server dry-run passed; UI/Argo validation follows deployment.
+Render and server dry-run passed; UI/Argo validation passed after deployment.
 
 Operating checks in the same pass: all five current scrape jobs are up; no
 scrape failures were observed in the preceding 15 minutes. One node-exporter
