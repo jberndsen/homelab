@@ -24,7 +24,7 @@ spec:
 
       containers:
         - name: prowlarr
-          image: lscr.io/linuxserver/prowlarr@sha256:4e992f9b9229bc8c97c666b10b042a7360bce1d99b196e8aa29fd9805849cbf1
+          image: lscr.io/linuxserver/prowlarr@sha256:04be30163fbaf48d6aeee7b5893c9f6614ffbad6d853971df0d6dcdf01c7f104
           imagePullPolicy: IfNotPresent
 
           env:
