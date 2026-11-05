@@ -20,21 +20,24 @@
 
 ## UPS
 
-- Proxmox is the only physical UPS shutdown target. VM `102` (`vm-haos`) and
-  VM `103` have working QEMU guest agents and Start at boot enabled.
-  Validate guest shutdown behavior before relying on unattended outage recovery.
-- NUT `nut-client` uses `MODE=netclient` and a `secondary` monitor for
-  `ups@192.168.1.34:3493`, username `ups`, with TLS. The password is in
-  `/etc/nut/upsmon.conf` and the owner's password manager.
-- `nut-monitor.service` is enabled; the UPS certificate is not verified.
-  See [infrastructure recovery](../../setup.MD#ups-shutdown-on-proxmox) for setup
-  and connection checks.
-- Known unresolved risk: the distribution NUT client can shut down early after
-  communication loss with stale calibration state. Shutdown protection remains
-  enabled. The owner wants an official compatible Debian fix, not a locally
-  maintained package or unstable dependencies. Communication-loss cause and
-  automatic physical restart after power restoration remain unverified.
-  See [the NUT investigation and future update plan](../../plans/nut-update.md).
+- Proxmox is the only physical UPS shutdown target; let it manage shutdown of
+  HAOS VM `102` and Ubuntu/K3s VM `103`. Validate guest shutdown behavior before
+  relying on unattended outage recovery.
+- The NUT password is in the owner's password manager. Preserve the existing
+  TLS policy (without UPS certificate verification) during package maintenance;
+  changes to certificate trust are separate work. See
+  [infrastructure recovery](../../setup.MD#ups-shutdown-on-proxmox) for configuration
+  and connection checks rather than treating this record as a runtime snapshot.
+- Use official Debian NUT packages with the CAL-clearing fix and keep them in
+  the normal reviewed APT update process, without a package hold. Follow
+  [NUT operations](nut/README.md) for the narrowly scoped proposed-updates
+  source, clean installation and retirement of that source after stable promotion.
+  The earlier custom-package fallback is unnecessary for this fix.
+- The owner declined simulated UPS failure testing. Preserve genuine
+  low-battery/FSD protection and the Proxmox guest shutdown sequence; physical
+  outage tests require an agreed maintenance window and backup readiness.
+  Communication-loss cause and automatic physical restart remain unverified.
+  See [incident evidence and follow-ups](../../plans/nut-incidents.md).
 
 ## External services and access
 

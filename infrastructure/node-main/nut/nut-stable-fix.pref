@@ -1,0 +1,7 @@
+Package: nut-client
+Pin: version 2.8.1-5+deb13u1
+Pin-Priority: 500
+
+Package: *
+Pin: release n=trixie-proposed-updates
+Pin-Priority: -1

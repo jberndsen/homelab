@@ -33,7 +33,11 @@ and [network facts](infrastructure/network/system.md) before recovery.
 
    Run `ifup vmbr0.1` to activate it without restarting the existing bridge.
 
-3. On Proxmox, run `apt-get install nut-client`. Set `MODE=netclient` in
+3. Install a fixed official `nut-client` using the
+   [NUT package and maintenance procedure](infrastructure/node-main/nut/README.md).
+   The original trixie `2.8.1-5` package has a stale-calibration defect;
+   do not treat a successful install of that version as a completed recovery.
+   Set `MODE=netclient` in
    `/etc/nut/nut.conf`. In `/etc/nut/upsmon.conf`, keep `MINSUPPLIES 1` and
    `SHUTDOWNCMD "/sbin/shutdown -h +0"`, and set:
 

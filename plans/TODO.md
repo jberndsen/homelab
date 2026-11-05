@@ -20,13 +20,13 @@
 6. Set up branch protection for `main`: require all changes to go through pull
    requests and prevent direct pushes, including administrator bypasses.
 7. Explore proxy-level SSO using Keycloak OIDC, with Envoy replacing Traefik.
-8. Resolve the [known Proxmox NUT issue](nut-update.md) through a compatible
-   official Debian fix; UPS communication loss and automatic power recovery
-   also remain unverified. Existing shutdown protection stays enabled.
+8. Follow up on [UPS communication loss and physical power recovery](nut-update.md#remaining-work).
+   The stale-CAL package fix is installed; retire its scoped proposed-updates
+   source once the fixed package reaches the regular stable repositories.
 
 ## Optional monitoring and recovery follow-ups
 
-The [initial monitoring plan](monitoring-plan.md) is complete.
+The initial monitoring setup is complete; see [monitoring operations](../infrastructure/node-main/ns-monitoring/README.md).
 
 - Observe retention and disk growth over a full week and measure peak usage.
 - Plan a backup restore test, including application consistency and independent
