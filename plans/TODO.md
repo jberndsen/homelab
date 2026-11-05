@@ -6,8 +6,10 @@
    for iPhone photo backup.
 3. Plan how to reinstall the second node with Proxmox and use it for cluster
    capacity or backup.
-4. Reinstall HAOS, restore solar monitoring and document repeatable setup.
-   Configure static IPs for connected devices, including the Envoy and P1 meter.
+4. Complete [Home Assistant validation and follow-ups](home-assistant-stability.md):
+   post-update smoke checks, P1 diagnostics, Hue IoT migration and recovery.
+   Preserve the existing installation; resume metrics through the separate
+   [owner-led Prometheus teaching plan](HA-prometheus-connection.md).
 5. Consider free security scanning alongside Renovate:
    - In `homelab`, run Trivy on PRs and daily: scan
      rendered production Kubernetes configuration and its exact pinned images.
@@ -20,9 +22,18 @@
 6. Set up branch protection for `main`: require all changes to go through pull
    requests and prevent direct pushes, including administrator bypasses.
 7. Explore proxy-level SSO using Keycloak OIDC, with Envoy replacing Traefik.
-8. Follow up on [UPS communication loss and physical power recovery](nut-update.md#remaining-work).
-   The stale-CAL package fix is installed; retire its scoped proposed-updates
-   source once the fixed package reaches the regular stable repositories.
+8. Investigate [UPS communication loss](nut-incidents.md): correlate host,
+   UPS-service and Study-switch events; if historical evidence is unavailable,
+   define bounded, redacted monitoring for the next event. The stale-CAL fix is installed.
+9. **Solve automatic physical restart after power restoration.** Confirm the
+   NUC's BIOS AC-recovery/WOL capabilities and UPS restore behavior; design a
+   recovery path that also handles a gracefully halted host whose AC never
+   disappeared. Account for the NAS and switch before considering UPS output
+   cycling. Document the chosen setup and validate host power-on, VM startup and
+   service recovery in an owner-approved maintenance window with verified backups
+   and a manual recovery method. Guest onboot alone does not complete this task.
+10. Retire the scoped NUT proposed-updates source once the fixed package reaches
+    regular Debian sources, following [NUT maintenance](../infrastructure/node-main/nut/README.md#routine-updates-and-source-retirement).
 
 ## Optional monitoring and recovery follow-ups
 

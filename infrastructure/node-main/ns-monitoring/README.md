@@ -1,8 +1,14 @@
 # Monitoring operations
 
 Prometheus collects VM, Kubernetes object-state and container resource metrics;
-Grafana provides the Git-managed overview and Explore. The
-[completed plan](../../../plans/monitoring-plan.md) records validation and limits.
+Grafana provides the Git-managed overview and Explore.
+
+The initial deployment was completed on 2026-10-21. Dashboard queries and
+Grafana data persistence across Pod replacement were checked. The owner skipped
+further Pod-replacement exercises; Prometheus replacement, full-week observed
+retention/peak load and backup restoration were not tested. Do not resume those
+exercises automatically. Recovery validation and notification design remain
+separate [TODOs](../../../plans/TODO.md).
 
 Run commands from the repository root. Keep temporary files inside ignored `tmp/`:
 
@@ -113,8 +119,8 @@ Use [Argo recovery](../ns-argo/SETUP.md#recovery-and-everyday-operations) for
 whole-VM restore or fresh-cluster bootstrap. Before reconciling a restored VM,
 review its backup date, included disks, sealing-key coverage and intended Git
 revision. Follow that runbook's automation safeguards. Nightly full-VM backups
-with seven-day retention are owner-confirmed, but restores and application
-consistency remain untested. See the
+are owner-confirmed, but restores and application consistency remain untested.
+Check retained archives and freshness before recovery. See the
 [node recovery sources](../system.md#recovery-sources) for the confirmed policy.
 
 1. **Configuration loss:** restore namespace/bootstrap ownership and Argo from

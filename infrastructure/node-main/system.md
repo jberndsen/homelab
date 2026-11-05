@@ -2,7 +2,9 @@
 
 ## Host and network
 
-- `node-main` runs Proxmox VE 9.2.4 on VLAN `30` at `192.168.30.5`.
+- `node-main` is the Proxmox host on VLAN `30` at `192.168.30.5`.
+  Inspect the installed version and recovery compatibility before a rebuild;
+  a historical version in an investigation is not an installation pin.
 - The owner confirmed on 2026-10-12 that the physical host has 32 GB RAM,
   with 16 GB allocated to Ubuntu/K3s VM `103` and 4 GB to HAOS VM `102`.
 - `vmbr0` bridges `nic0` and uses gateway `192.168.30.1`. Its tagged VLAN `1`
@@ -55,7 +57,13 @@
 - Application data recovery uses Proxmox backups of VM `103` with every
   application PVC disk included. External NAS media requires its own backup.
 - The owner confirmed on 2026-10-21 that the entire VM is backed up nightly,
-  with seven days of retention. These backups have not been restore-tested.
+  intending roughly one week of recovery points. Check actual retained archives
+  before recovery; these backups have not been restore-tested.
+- The [2026-10-21 read-only backup review](../../plans/proxmox-backup-review-2026-10-21.md)
+  records observed backup coverage, EFI warning explanations and recovery
+  follow-ups. It is an inspection report, not proof of successful recovery.
+  Independent protection against NAS loss and a Proxmox host recovery backup
+  remain unconfirmed; do not infer either from nightly VM backup success.
 - Encrypted sealing-key backups and their recovery `README.md` live at
   `smb://192.168.1.32/backups/NUC/kubernetes`, mounted on the dev laptop at
   `/Volumes/backups/NUC/kubernetes`.

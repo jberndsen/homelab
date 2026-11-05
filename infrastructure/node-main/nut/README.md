@@ -17,7 +17,8 @@ it through ordinary reviewed APT maintenance.
 Sources: [Debian bug and upload](https://bugs.debian.org/1138630),
 [upstream fix](https://github.com/networkupstools/nut/pull/2169),
 [Debian proposed-updates policy](https://www.debian.org/releases/proposed-updates).
-Deployment and validation evidence lives in [the execution record](../../../plans/nut-update.md).
+Package provenance and deployment evidence are recorded below; unresolved
+communication-loss evidence remains in [the incident record](../../../plans/nut-incidents.md).
 
 ## Clean installation or update
 
@@ -211,9 +212,47 @@ journalctl -u nut-monitor --since '5 minutes ago' --no-pager
 If that version has left the repositories, use the protected original `.deb`
 retained before maintenance (`apt-get install /absolute/path/to/package.deb`,
 with `--allow-downgrades` and configuration preservation as above). The
-[execution record](../../../plans/nut-update.md) identifies the protected recovery
-assets verified for that deployment. These are not prerequisites for a clean
+[deployment evidence](#deployment-evidence--2026-11-05) identifies the protected
+recovery assets verified for that deployment. These are not prerequisites for a clean
 installation. Never publish configuration backups.
 Re-run live UPS/guest checks and explicitly track the restored defect; the
 normal candidate remains the fixed version, so resolve the regression before
 subsequent routine updates.
+
+## Deployment evidence — 2026-11-05
+
+Installed on trixie/amd64 through authenticated APT, changing only `nut-client`
+from `2.8.1-5` to `2.8.1-5+deb13u1`; client library unchanged. Compared Debian
+packaging against the old version: only changelog, patch-series entry and the
+two-line CAL-clearing patch changed. Critical/FSD logic was preserved.
+
+Source and package provenance:
+
+- [Official binary](https://deb.debian.org/debian/pool/main/n/nut/nut-client_2.8.1-5+deb13u1_amd64.deb)
+- [Debian source changes](https://deb.debian.org/debian/pool/main/n/nut/nut_2.8.1-5+deb13u1.debian.tar.xz)
+- [Source descriptor](https://deb.debian.org/debian/pool/main/n/nut/nut_2.8.1-5+deb13u1.dsc)
+
+| Artifact | Reviewed SHA-256 |
+| --- | --- |
+| Official amd64 package | `feb6fdec2df70d7cfd603d2e2058bce2e0a3b1fceb24b5b08e1b41a39ab9a301` |
+| Debian source changes | `506804e1f74c5e75f786d9f2fdd82709e9042a5af39ec0c59b3fbfcc2865f065` |
+| Packaged/running upsmon | `66983df8f19be341d989c6d53c1e1fb593757e98b142bc7d3880d00af33d5b6f` |
+
+The existing root-protected `/root/nut-repair-20261015` contained the original
+`nut-client_2.8.1-5_amd64.deb` and `config-before` matching `/etc/nut`. It was
+verified for rollback and retained; do not assume a replacement host has it.
+Configuration, secondary role, TLS and shutdown command were unchanged.
+NUT restarted at 10:09:01 CET and TLS reconnected at 10:09:02. Both running
+processes matched the official binary. Live status query returned OL and 100%
+charge; subsequent connection/log checks passed. No hold or rollback was needed.
+
+Both guest-agent checks passed, no failed host units were reported, local and
+NAS storage were active, K3s was Ready, three Argo Applications were Healthy/Synced,
+eight media Deployments available and nine PVCs bound. These are dated deployment
+checks, not ongoing health guarantees. No reboot, failure simulation, physical
+outage, playback, HA-function or restore test was performed.
+
+Follow-ups are separate tasks in [TODO](../../../plans/TODO.md): retire the
+scoped source after stable promotion, investigate communication loss and design
+automatic physical restart. Storage activity does not establish backup integrity;
+see the [backup review](../../../plans/proxmox-backup-review-2026-10-21.md).

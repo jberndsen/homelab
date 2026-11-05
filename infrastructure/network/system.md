@@ -1,6 +1,11 @@
 # Current state
 
 - UniFi gateway: Cloud Gateway Max.
+- The owner requested on 2026-10-22 that Home Assistant and its dependent
+  devices have stable IP addresses managed through UniFi, introduced one
+  device at a time with connectivity validation. Recheck current UniFi
+  reservations before changing them; dated device checks are in the
+  [HA stability plan](../../plans/home-assistant-stability.md).
 - Home switches are USW Lite 8 PoE. Proxmox and the UPS management port connect
   to the same UPS-powered switch. The Proxmox port has native Servers VLAN `30`
   and allows tagged VLANs.

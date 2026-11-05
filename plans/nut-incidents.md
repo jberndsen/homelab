@@ -1,8 +1,8 @@
 # NUT incident evidence — October 2026
 
 Historical evidence, not current installation instructions. The stale-CAL fix
-was installed on 2026-11-05; see [execution record](nut-update.md) and
-[NUT operations](../infrastructure/node-main/nut/README.md).
+was installed on 2026-11-05; see
+[NUT operations and deployment evidence](../infrastructure/node-main/nut/README.md).
 These observations do not establish current service health or prove the cause
 of communication loss. Raw UPS status at each failure was not captured.
 

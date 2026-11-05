@@ -1,0 +1,22 @@
+# Prepared reference for the owner-led plans/HA-prometheus-connection.md.
+# Not yet installed in the running HAOS instance.
+# Copy to /config/prometheus.yaml and add to configuration.yaml:
+# prometheus: !include prometheus.yaml
+namespace: homeassistant
+requires_auth: true
+filter:
+  include_entities:
+    - sensor.p1_meter_power
+    - sensor.p1_meter_energy_import
+    - sensor.p1_meter_energy_export
+    - sensor.envoy_482332031113_current_power_production
+    - sensor.envoy_482332031113_lifetime_energy_production
+    - sensor.envoy_482332031113_energy_production_today
+    - light.lamp_1
+    - light.hue_go
+    - light.kerstboom
+    - light.lamp_3
+    - light.lamp_2
+    - light.bedlamp
+    - light.slaapkamer
+    - light.woonkamer

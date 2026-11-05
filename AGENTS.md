@@ -32,6 +32,13 @@ The owner authorizes pushing task-related changes to this repository. Keep
 plaintext credentials, private keys, and local reference files out of commits.
 Update the relevant system records whenever facts within that scope change.
 
+Keep the entire repository complete, consistent and well organized. When a
+decision changes, reconcile affected instructions, plans, records and links
+across the repository; remove superseded guidance or clearly label retained
+history. Do not rely on a newer document silently overriding conflicting ones.
+Challenge owner requests that would undermine this coherence, explaining the
+conflict and proposing a consistent alternative.
+
 # Plans
 
 Always keep implementation plans, investigation plans, and handoff plans in the
