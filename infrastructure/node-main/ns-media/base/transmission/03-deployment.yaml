@@ -44,7 +44,7 @@ spec:
 
       containers:
         - name: transmission
-          image: lscr.io/linuxserver/transmission@sha256:ebefa8cb3e36a8ce667b7739f51b86c24e9fd07f367e9fee9f21df48ea4e6542
+          image: lscr.io/linuxserver/transmission@sha256:fb8fe625941cf15eb69aba4e5c0a678e035ddb11605fd85af4516a4e641f2687
           imagePullPolicy: IfNotPresent
 
           env:
