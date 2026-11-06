@@ -54,6 +54,19 @@
 
 ## Recovery sources
 
+- For the planned Immich deployment, the owner confirmed on 2026-11-06 that
+  UNAS Pro has a new empty Shared Drive named `photos`, intended for photo
+  storage. Its NFS export has not yet been configured; confirm its supported
+  export mechanism, path and permissions rather than reusing media-share
+  assumptions. The owner wants easy growth and is willing to add NAS drives
+  when physical capacity requires it. See the
+  [Immich implementation handoff](../../plans/immich.md) for agreed scope and
+  setup verification steps.
+- On 2026-11-06, the owner confirmed Collaborative Mode (All Squash) as the
+  existing NAS NFS convention and chose the same for `photos`, retaining
+  UniFi/SMB browsing. Restrict access to the K3s VM where supported and verify
+  the actual rules during setup; do not infer restrictions from squash mode.
+
 - Application data recovery uses Proxmox backups of VM `103` with every
   application PVC disk included. External NAS media requires its own backup.
 - The owner confirmed on 2026-10-21 that the entire VM is backed up nightly,

@@ -2,8 +2,11 @@
 
 1. Add a finance namespace with [Budgero](https://budgero.app/docs/self-hosting-guide)
    to try replacing YNAB.
-2. Add a photos namespace with [Immich](https://docs.immich.app/install/kubernetes/)
-   for iPhone photo backup.
+2. Add an `immich` namespace with [Immich](https://docs.immich.app/install/kubernetes/)
+   for an additional copy of iPhone photos, retaining existing originals.
+   Follow the [Immich implementation handoff](immich.md) one step per agent
+   session; [execution progress](immich-progress.md) starts at step 1. Scope
+   includes media/Immich resource allocation and Grafana headroom visibility.
 3. Plan how to reinstall the second node with Proxmox and use it for cluster
    capacity or backup.
 4. Complete [Home Assistant validation and follow-ups](home-assistant-stability.md):
@@ -34,6 +37,22 @@
    and a manual recovery method. Guest onboot alone does not complete this task.
 10. Retire the scoped NUT proposed-updates source once the fixed package reaches
     regular Debian sources, following [NUT maintenance](../infrastructure/node-main/nut/README.md#routine-updates-and-source-retirement).
+11. Plan and implement offsite protection against NAS data loss using the
+    owner's requested newly offered UniFi service with Backblaze. Confirm the
+    service and its capabilities during that work. Protect critical data;
+    exclude replaceable media files, with the exact selection confirmed before
+    implementation. Include photo originals in the scope discussion, retention
+    against accidental deletion, and a restore test; mirroring alone must not
+    be assumed to provide recoverable history. This is separate from and out of
+    scope for the Immich planning session.
+    Revisit whether local NAS snapshots are worthwhile and choose retention
+    with storage costs in mind; snapshots are deferred from the initial Immich
+    deployment by owner decision.
+12. Introduce trusted HTTPS consistently across internal applications,
+    including Immich. Plan certificate issuance, client trust, renewal and
+    ingress/DNS changes while preserving private access. Keep this separate
+    from the initial Immich deployment, which retains internal HTTP, and
+    coordinate with any future ingress/SSO changes in item 7.
 
 ## Optional monitoring and recovery follow-ups
 
