@@ -32,7 +32,7 @@ spec:
       containers:
         - name: node-exporter
           # Official v1.12.1 multi-platform image index, reviewed 2026-10-19.
-          image: quay.io/prometheus/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+          image: quay.io/prometheus/node-exporter:v1.13.1@sha256:011e2d12c5bff759b90804bda642664775d7b4b127bf5148539bb82d3f590bb7
           args:
             - --path.procfs=/host/proc
             - --path.rootfs=/host/root
@@ -87,7 +87,7 @@ spec:
               recursiveReadOnly: Enabled
         - name: node-exporter-network
           # Same reviewed v1.12.1 image as the main exporter; stateless process.
-          image: quay.io/prometheus/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+          image: quay.io/prometheus/node-exporter:v1.13.1@sha256:011e2d12c5bff759b90804bda642664775d7b4b127bf5148539bb82d3f590bb7
           args:
             # Only netdev may use this root: other collectors need /host/proc.
             # Disabling netlink makes netdev read /host/proc/1/net/dev (VM view).
